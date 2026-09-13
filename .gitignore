@@ -1,0 +1,28 @@
+# Visual Studio / .NET
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+
+# Publish / build output
+publish/
+dist/
+out/
+
+# Node
+node_modules/
+
+# Blazor build artifacts (optional)
+wwwroot/_framework/
+
+# Local config / secrets
+appsettings.Development.json
+.env
+secrets.json
+*.pfx
+
+# OS
+.DS_Store
+Thumbs.db
