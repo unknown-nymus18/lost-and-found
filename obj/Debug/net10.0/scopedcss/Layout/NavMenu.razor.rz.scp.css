@@ -1,0 +1,53 @@
+
+.nav-menu[b-ewq1rven3u] {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0 1rem;
+    height: 80px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    /*    background: var(--bs-body-bg, #fff);*/
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+
+
+.brand[b-ewq1rven3u] {
+    margin: 0;
+    font-weight: 600;
+    color: #2563EB;
+}
+
+.nav-links[b-ewq1rven3u] {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.nav-link[b-ewq1rven3u] {
+    padding: 0.375rem 0.75rem;
+    color: var(--bs-body-color, #333);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+
+/* NavLink adds the 'active' class automatically */
+.nav-link.active[b-ewq1rven3u],
+.nav-link:hover[b-ewq1rven3u] {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+
+.auth-nav[b-ewq1rven3u]{
+
+}

@@ -1,7 +1,7 @@
 # Visual Studio / .NET
 .vs/
-bin/
-obj/
+#bin/
+#obj/
 *.user
 *.suo
 *.userosscache
@@ -15,7 +15,7 @@ out/
 node_modules/
 
 # Blazor build artifacts (optional)
-wwwroot/_framework/
+#wwwroot/_framework/
 
 # Local config / secrets
 appsettings.Development.json
