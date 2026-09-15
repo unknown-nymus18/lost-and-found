@@ -33,10 +33,6 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/temp/websites/lost-and-found/Components/ItemCard.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJdGVtQ2FyZC5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
 [C:/Users/temp/websites/lost-and-found/Pages/Browse.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQnJvd3NlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -56,6 +52,10 @@ build_metadata.AdditionalFiles.CssScope =
 [C:/Users/temp/websites/lost-and-found/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/temp/websites/lost-and-found/Components/ItemCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJdGVtQ2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-ntridjet8b
 
 [C:/Users/temp/websites/lost-and-found/Layout/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE1haW5MYXlvdXQucmF6b3I=

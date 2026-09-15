@@ -1,14 +1,27 @@
-<div class="card p-3 shadow-sm mb-3">
-    <h4 class="card-title">@Title</h4>
-    <p class="card-text">@Description</p>
-    
-    <button class="btn btn-primary">
-        @ButtonText
-    </button>
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components
+
+<div class="report-card">
+    <div class="card-media" role="img" aria-label="@Title" style=@($"background-image: url('{ImageUrl}');")></div>
+
+    <div class="card-body">
+        <span class="status @StatusClass">@Status</span>
+
+        <h4 class="card-title">@Title</h4>
+
+        <a class="category" href="#">@Category</a>
+
+        <div class="card-meta">@Location · @TimeAgo</div>
+    </div>
 </div>
 
-@code{
-    string Title = "This is the Item";
-    string Description = "This is the description of the item. It provides more details about the item being displayed.";
-    string ButtonText = "View These Details";
+@code {
+    [Parameter] public string Title { get; set; } = "Item title";
+    [Parameter] public string Category { get; set; } = "Category";
+    [Parameter] public string ImageUrl { get; set; } = "https://via.placeholder.com/400x240?text=Item";
+    [Parameter] public string Status { get; set; } = "Found";
+    [Parameter] public string Location { get; set; } = "Location";
+    [Parameter] public string TimeAgo { get; set; } = "some time ago";
+
+    private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found";
 }
