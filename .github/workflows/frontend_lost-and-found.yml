@@ -6,7 +6,7 @@ name: Build and deploy ASP.Net Core app to Azure Web App - lost-and-found
 on:
   push:
     branches:
-      - frontend
+      - backend
   workflow_dispatch:
 
 jobs:
