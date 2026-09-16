@@ -12,8 +12,12 @@ namespace CampusLostAndFound.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "campus_lost_found");
+
             migrationBuilder.CreateTable(
                 name: "Users",
+                schema: "campus_lost_found",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -32,6 +36,7 @@ namespace CampusLostAndFound.Data.Migrations
 
             migrationBuilder.CreateTable(
                 name: "FoundReports",
+                schema: "campus_lost_found",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -52,6 +57,7 @@ namespace CampusLostAndFound.Data.Migrations
                     table.ForeignKey(
                         name: "FK_FoundReports_Users_UserId",
                         column: x => x.UserId,
+                        principalSchema: "campus_lost_found",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -59,6 +65,7 @@ namespace CampusLostAndFound.Data.Migrations
 
             migrationBuilder.CreateTable(
                 name: "LostReports",
+                schema: "campus_lost_found",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -79,6 +86,7 @@ namespace CampusLostAndFound.Data.Migrations
                     table.ForeignKey(
                         name: "FK_LostReports_Users_UserId",
                         column: x => x.UserId,
+                        principalSchema: "campus_lost_found",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -86,6 +94,7 @@ namespace CampusLostAndFound.Data.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Claims",
+                schema: "campus_lost_found",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -104,12 +113,14 @@ namespace CampusLostAndFound.Data.Migrations
                     table.ForeignKey(
                         name: "FK_Claims_FoundReports_FoundReportId",
                         column: x => x.FoundReportId,
+                        principalSchema: "campus_lost_found",
                         principalTable: "FoundReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Claims_Users_ClaimerId",
                         column: x => x.ClaimerId,
+                        principalSchema: "campus_lost_found",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -117,6 +128,7 @@ namespace CampusLostAndFound.Data.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Matches",
+                schema: "campus_lost_found",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -133,12 +145,14 @@ namespace CampusLostAndFound.Data.Migrations
                     table.ForeignKey(
                         name: "FK_Matches_FoundReports_FoundReportId",
                         column: x => x.FoundReportId,
+                        principalSchema: "campus_lost_found",
                         principalTable: "FoundReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Matches_LostReports_LostReportId",
                         column: x => x.LostReportId,
+                        principalSchema: "campus_lost_found",
                         principalTable: "LostReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -146,36 +160,43 @@ namespace CampusLostAndFound.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Claims_ClaimerId",
+                schema: "campus_lost_found",
                 table: "Claims",
                 column: "ClaimerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Claims_FoundReportId",
+                schema: "campus_lost_found",
                 table: "Claims",
                 column: "FoundReportId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FoundReports_UserId",
+                schema: "campus_lost_found",
                 table: "FoundReports",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LostReports_UserId",
+                schema: "campus_lost_found",
                 table: "LostReports",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Matches_FoundReportId",
+                schema: "campus_lost_found",
                 table: "Matches",
                 column: "FoundReportId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Matches_LostReportId",
+                schema: "campus_lost_found",
                 table: "Matches",
                 column: "LostReportId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
+                schema: "campus_lost_found",
                 table: "Users",
                 column: "Email",
                 unique: true);
@@ -185,19 +206,24 @@ namespace CampusLostAndFound.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Claims");
+                name: "Claims",
+                schema: "campus_lost_found");
 
             migrationBuilder.DropTable(
-                name: "Matches");
+                name: "Matches",
+                schema: "campus_lost_found");
 
             migrationBuilder.DropTable(
-                name: "FoundReports");
+                name: "FoundReports",
+                schema: "campus_lost_found");
 
             migrationBuilder.DropTable(
-                name: "LostReports");
+                name: "LostReports",
+                schema: "campus_lost_found");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Users",
+                schema: "campus_lost_found");
         }
     }
 }

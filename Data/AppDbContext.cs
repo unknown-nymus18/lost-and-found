@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(b);
 
+        b.HasDefaultSchema("campus_lost_found");
         b.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
         // Store enums as readable text in the database rather than integers.

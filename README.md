@@ -28,7 +28,7 @@ dotnet restore
 dotnet run
 ```
 
-The included PostgreSQL container uses the development connection string already present in `appsettings.json`. On startup, the API applies pending EF Core migrations and seeds demo data when the database is empty.
+The included PostgreSQL container uses the development connection string already present in `appsettings.json`. On startup, the API applies pending EF Core migrations in the isolated `campus_lost_found` PostgreSQL schema and seeds demo data when that schema is empty.
 
 Default URLs:
 
@@ -63,7 +63,7 @@ Environment values override `appsettings.json`. Use a strong `Jwt__Key` and data
 
 ## Database migrations
 
-Migrations are stored in `Data/Migrations` and are applied automatically when the API starts.
+Migrations are stored in `Data/Migrations` and are applied automatically when the API starts. All backend tables and migration history use the `campus_lost_found` PostgreSQL schema, preventing collisions when the configured database also contains tables from another application.
 
 After changing an entity or `AppDbContext`, create a migration and review it before running the API:
 

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CampusLostAndFound.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260916212850_InitialPostgreSql")]
+    [Migration("20260916214150_InitialPostgreSql")]
     partial class InitialPostgreSql
     {
         /// <inheritdoc />
@@ -20,6 +20,7 @@ namespace CampusLostAndFound.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("campus_lost_found")
                 .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -63,7 +64,7 @@ namespace CampusLostAndFound.Data.Migrations
 
                     b.HasIndex("FoundReportId");
 
-                    b.ToTable("Claims");
+                    b.ToTable("Claims", "campus_lost_found");
                 });
 
             modelBuilder.Entity("CampusLostAndFound.Models.FoundReport", b =>
@@ -113,7 +114,7 @@ namespace CampusLostAndFound.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("FoundReports");
+                    b.ToTable("FoundReports", "campus_lost_found");
                 });
 
             modelBuilder.Entity("CampusLostAndFound.Models.LostReport", b =>
@@ -163,7 +164,7 @@ namespace CampusLostAndFound.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LostReports");
+                    b.ToTable("LostReports", "campus_lost_found");
                 });
 
             modelBuilder.Entity("CampusLostAndFound.Models.Match", b =>
@@ -196,7 +197,7 @@ namespace CampusLostAndFound.Data.Migrations
 
                     b.HasIndex("LostReportId");
 
-                    b.ToTable("Matches");
+                    b.ToTable("Matches", "campus_lost_found");
                 });
 
             modelBuilder.Entity("CampusLostAndFound.Models.User", b =>
@@ -237,7 +238,7 @@ namespace CampusLostAndFound.Data.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", "campus_lost_found");
                 });
 
             modelBuilder.Entity("CampusLostAndFound.Models.Claim", b =>

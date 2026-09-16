@@ -17,7 +17,8 @@ var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
         "PostgreSQL is not configured. Set DATABASE_URL or ConnectionStrings:Default.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, npgsql =>
+        npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "campus_lost_found")));
 
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 if (Encoding.UTF8.GetByteCount(jwt.Key) < 32)
