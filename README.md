@@ -1,169 +1,84 @@
-# Campus Lost & Found API
+# Campus Lost & Found Backend
 
-ASP.NET Core 10 backend for the Campus Lost & Found system. The repository now contains the backend only; the frontend team can build and maintain a separate Blazor application against the REST and SignalR endpoints.
-
-## Backend features
-
-- ASP.NET Core Web API controllers under `/api/*`
-- PostgreSQL with EF Core and Npgsql
-- JWT bearer authentication with Student and Admin roles
-- SignalR match notifications at `/hubs/notifications`
-- Lost/found matching and claim approval workflows
-- Optional item photo uploads under `wwwroot/uploads`
-- Swagger API documentation in development
-- Seeded demo users and reports
+Standalone ASP.NET Core 10 API for the Campus Lost & Found system. The Blazor frontend runs separately and communicates with this server through REST APIs and SignalR.
 
 ## Requirements
 
-- .NET 10 SDK
-- Docker with Docker Compose, or an existing PostgreSQL server
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- Docker, or access to a PostgreSQL database
 
-## Start the backend
+## Quick start
 
-From this directory:
+### 1. Configure the environment
 
-```bash
-docker compose up -d
-dotnet restore
-dotnet run
-```
-
-The included PostgreSQL container uses the development connection string already present in `appsettings.json`. On startup, the API applies pending EF Core migrations in the isolated `campus_lost_found` PostgreSQL schema and seeds demo data when that schema is empty.
-
-Default URLs:
-
-- API: `http://localhost:5080`
-- Swagger: `http://localhost:5080/swagger`
-- Health check: `http://localhost:5080/health`
-- SignalR: `http://localhost:5080/hubs/notifications`
-
-Stop PostgreSQL with:
-
-```bash
-docker compose down
-```
-
-Use `docker compose down -v` only when you intentionally want to delete all local database data.
-
-## PostgreSQL configuration
-
-The default development connection is:
-
-```text
-Host=localhost;Port=5432;Database=campus_lost_found;Username=postgres;Password=postgres
-```
-
-For another PostgreSQL server, set `DATABASE_URL`. You can copy `.env.example` to `.env`; `DotNetEnv` loads it before ASP.NET configuration starts.
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Environment values override `appsettings.json`. Use a strong `Jwt__Key` and database password outside local development.
+The default values work with the included Docker PostgreSQL service. For another database, update `DATABASE_URL` in `.env`:
 
-## Database migrations
-
-Migrations are stored in `Data/Migrations` and are applied automatically when the API starts. All backend tables and migration history use the `campus_lost_found` PostgreSQL schema, preventing collisions when the configured database also contains tables from another application.
-
-After changing an entity or `AppDbContext`, create a migration and review it before running the API:
-
-```bash
-dotnet ef migrations add DescribeYourChange --output-dir Data/Migrations
-dotnet ef database update
+```env
+DATABASE_URL=Host=localhost;Port=5432;Database=campus_lost_found;Username=postgres;Password=postgres
+Jwt__Key=replace-with-a-random-secret-containing-at-least-32-bytes
 ```
 
-`dotnet ef database update` is optional during normal startup because `Program.cs` calls `MigrateAsync`.
+Do not commit `.env`. It is already ignored by Git.
 
-## Blazor frontend integration
+### 2. Start PostgreSQL
 
-### CORS
+```bash
+docker compose up -d
+```
 
-Add the Blazor application's exact origin to `Cors:AllowedOrigins` in `appsettings.Development.json` or production configuration. The default development origins include common HTTP/HTTPS ports `5000`, `5001`, `5081`, and `7081`.
+Skip this step when `DATABASE_URL` points to an existing PostgreSQL server.
 
-Do not include a trailing slash in an origin. For example:
+### 3. Start the API
+
+```bash
+dotnet restore
+dotnet run
+```
+
+The API automatically applies EF Core migrations and adds development seed data the first time it starts.
+
+## Swagger documentation
+
+After starting the API, open:
+
+```text
+http://localhost:5080/swagger
+```
+
+Swagger lists all available endpoints and lets you test them from the browser.
+
+### Test authenticated endpoints
+
+1. Open `POST /api/auth/login`.
+2. Use a demo account:
 
 ```json
 {
-  "Cors": {
-    "AllowedOrigins": ["https://localhost:7081"]
-  }
+  "email": "admin@ug.edu.gh",
+  "password": "Admin@123"
 }
 ```
 
-### Authentication
+3. Copy the `token` from the response.
+4. Click **Authorize** at the top of Swagger.
+5. Paste the token and submit.
+6. You can now call protected endpoints.
 
-Register or log in to receive an `AuthResponse` containing the JWT:
+## Useful URLs
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-
-Send that token on protected API requests:
-
-```http
-Authorization: Bearer <token>
-```
-
-### SignalR notifications
-
-The hub authenticates the connection and automatically puts it in the signed-in user's notification group. Clients must not provide a user ID.
-
-A Blazor client can connect with `Microsoft.AspNetCore.SignalR.Client`:
-
-```csharp
-var connection = new HubConnectionBuilder()
-    .WithUrl($"{apiBaseUrl}/hubs/notifications", options =>
-    {
-        options.AccessTokenProvider = () => Task.FromResult<string?>(jwtToken);
-    })
-    .WithAutomaticReconnect()
-    .Build();
-
-connection.On<MatchAlert>("MatchFound", alert =>
-{
-    // Update the Blazor UI.
-});
-
-await connection.StartAsync();
-```
-
-`MatchAlert` contains `MatchId`, `Score`, and `Message`.
-
-### Photos
-
-JSON-only report creation:
-
-- `POST /api/reports/lost`
-- `POST /api/reports/found`
-
-Multipart report creation with an optional `Photo` field:
-
-- `POST /api/reports/lost/with-photo`
-- `POST /api/reports/found/with-photo`
-
-Multipart fields are `Title`, `Description`, `Category`, `Location`, `Date`, and optional `Photo`. Supported image extensions are `.jpg`, `.jpeg`, `.png`, `.webp`, and `.gif`, with a 5 MB file limit.
-
-The returned `PhotoUrl` is relative, such as `/uploads/abc123.jpg`. Prefix it with the API base URL when displaying it from Blazor.
-
-## Main API endpoints
-
-| Method | Route                           | Access        |
-| ------ | ------------------------------- | ------------- |
-| POST   | `/api/auth/register`            | Anonymous     |
-| POST   | `/api/auth/login`               | Anonymous     |
-| GET    | `/api/reports`                  | Anonymous     |
-| GET    | `/api/reports/mine`             | Authenticated |
-| POST   | `/api/reports/lost`             | Authenticated |
-| POST   | `/api/reports/found`            | Authenticated |
-| POST   | `/api/reports/lost/with-photo`  | Authenticated |
-| POST   | `/api/reports/found/with-photo` | Authenticated |
-| GET    | `/api/matches/mine`             | Authenticated |
-| GET    | `/api/matches`                  | Admin         |
-| POST   | `/api/claims`                   | Authenticated |
-| GET    | `/api/claims/mine`              | Authenticated |
-| GET    | `/api/claims`                   | Admin         |
-| POST   | `/api/claims/{id}/decide`       | Admin         |
-
-Swagger contains the request and response schemas for all REST endpoints.
+| Service         | URL                                        |
+| --------------- | ------------------------------------------ |
+| Swagger         | `http://localhost:5080/swagger`            |
+| API root        | `http://localhost:5080`                    |
+| Health check    | `http://localhost:5080/health`             |
+| SignalR hub     | `http://localhost:5080/hubs/notifications` |
+| Uploaded photos | `http://localhost:5080/uploads/{filename}` |
 
 ## Demo accounts
 
@@ -174,22 +89,42 @@ Swagger contains the request and response schemas for all REST endpoints.
 | Student | `kofi@st.ug.edu.gh`     | `Password123` |
 | Student | `kingsley@st.ug.edu.gh` | `Password123` |
 
-These credentials are development seed data and must not be used in production.
+## Database migrations
 
-## Project layout
+Migrations run automatically when the API starts. After changing a model, create a new migration with:
 
-```text
-CampusLostAndFound/
-├── Controllers/       REST API controllers
-├── Data/              EF Core DbContext and seed data
-├── DTOs/              API request/response contracts
-├── Hubs/              Authenticated SignalR notification hub
-├── Models/            Database entities and enums
-├── Services/          Authentication, reports, matching, claims, files, JWT
-├── wwwroot/uploads/   Uploaded item photos
-├── Program.cs         API, PostgreSQL, JWT, CORS, Swagger, SignalR wiring
-├── docker-compose.yml Local PostgreSQL service
-└── appsettings.json   Development defaults
+```bash
+dotnet ef migrations add DescribeYourChange --output-dir Data/Migrations
 ```
 
-The frontend is intentionally not included in this project.
+## Blazor frontend setup
+
+Add the Blazor application's URL to `Cors:AllowedOrigins` in `appsettings.Development.json`:
+
+```json
+{
+  "Cors": {
+    "AllowedOrigins": ["https://localhost:7081"]
+  }
+}
+```
+
+Send the JWT on protected API requests:
+
+```http
+Authorization: Bearer <token>
+```
+
+The frontend can connect to `/hubs/notifications` with the same JWT to receive `MatchFound` SignalR events.
+
+## Stop the local database
+
+```bash
+docker compose down
+```
+
+To also delete all Docker PostgreSQL data:
+
+```bash
+docker compose down -v
+```
