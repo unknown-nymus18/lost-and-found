@@ -1,0 +1,19 @@
+# Build output
+bin/
+obj/
+
+# Local environment and legacy local database files
+.env
+*.db
+*.db-shm
+*.db-wal
+
+# Uploaded photos (keep the folder, ignore its contents)
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+
+# IDE / OS
+.vs/
+.vscode/
+*.user
+.DS_Store
