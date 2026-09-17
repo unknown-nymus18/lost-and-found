@@ -1,0 +1,70 @@
+@page "/report"
+
+<div class="report-page">
+    <div class="report-card">
+        <div class="card-header">
+            <h2>Report an Item</h2>
+            <p class="subtitle">Fill in as much detail as possible — clear descriptions and photos help our matching system find the right pair faster.</p>
+        </div>
+
+        <div class="report-toggle">
+            <button class="toggle lost active">?? I Lost Something</button>
+            <button class="toggle found">? I Found Something</button>
+        </div>
+
+        <form class="report-form" onsubmit="return false;">
+            <div class="form-row">
+                <label>Item Title</label>
+                <input class="input" type="text" placeholder="e.g. Black leather wallet with UG student card" />
+            </div>
+
+            <div class="form-row two-col">
+                <div>
+                    <label>Category</label>
+                    <select class="input">
+                        <option>Select a category</option>
+                        <option>Electronics</option>
+                        <option>Wallets</option>
+                        <option>Clothing</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Location</label>
+                    <input class="input" type="text" placeholder="e.g. Balme Library, 2nd floor" />
+                </div>
+            </div>
+
+            <div class="form-row two-col">
+                <div>
+                    <label>Date</label>
+                    <input class="input" type="date" />
+                </div>
+                <div>
+                    <label>Color</label>
+                    <input class="input" type="text" placeholder="e.g. Black, Blue" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Description</label>
+                <textarea class="textarea" placeholder="Describe distinguishing features, contents, or marks that would help verify ownership..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <label>Photo Evidence</label>
+                <div class="upload-area">
+                    <div class="upload-inner">
+                        <div class="upload-icon">??</div>
+                        <div class="upload-text">Drag & drop a photo, or click to upload</div>
+                        <div class="upload-sub">PNG or JPG, up to 10MB</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
