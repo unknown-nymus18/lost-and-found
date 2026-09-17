@@ -1,0 +1,187 @@
+﻿@page "/"
+@using lost_and_found.Components
+
+
+<div class="hero-1">
+    <div class="info">
+        <h1>Lost something on campus? Found something?</h1>
+        <p>Report it in seconds and let our matching system reconnect you with your belongings.</p>
+        <div class="search-wrap">
+            <select aria-label="Category">    
+                <option>All Categories</option>
+                <option>Electronics</option>
+                <option>Wallets</option>
+                <option>Clothing</option>
+            </select>
+            <input type="text" placeholder="Search by item, e.g. 'black wallet"/>
+            <button >Search</button>
+        </div>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-item">
+        <div class="stat-value">1,284</div>
+        <div class="stat-label">Items Reported</div>
+    </div>
+
+    <div class="stat-item">
+        <div class="stat-value">412</div>
+        <div class="stat-label">Matches Found</div>
+    </div>
+
+    <div class="stat-item">
+        <div class="stat-value">356</div>
+        <div class="stat-label">Successfully Reunited</div>
+    </div>
+</div>
+
+<div class="reports">
+    <div class="reports-header">
+        <h3>Recent Reports</h3>
+        <a class="view-all" href="/browse">View All →</a>
+    </div>
+
+    <div class="report-items">
+        <ItemCard Title="Black Leather Wallet"
+                  Category="Wallet"
+                  Status="Lost"
+                  ImageUrl="/images/wallet.jpg"
+                  Location="Balme Library"
+                  TimeAgo="2 days ago" />
+
+        <ItemCard Title="iPhone 13 (Blue)"
+                  Category="Electronics"
+                  Status="Found"
+                  ImageUrl="/images/iphone13.jpg"
+                  Location="Night Market"
+                  TimeAgo="1 day ago" />
+
+        <ItemCard Title="Blue Water Bottle"
+                  Category="Personal Item"
+                  Status="Found"
+                  ImageUrl="/images/waterbottle.jpg"
+                  Location="JQB Complex"
+                  TimeAgo="3 days ago" />
+
+        <ItemCard Title="Student ID Card"
+                  Category="ID Card"
+                  Status="Lost"
+                  ImageUrl="/images/idcard.jpg"
+                  Location="Commonwealth Hall"
+                  TimeAgo="Today" />
+    </div>
+</div>
+<div class="steps">
+    <h3>How it works</h3>
+    <p>Three simple steps to get your belongings back where they belong.</p>
+    <div class="actions">
+        <div class="action">
+            <div class="icon" aria-hidden="true">📝</div>
+            <h5>1. Report</h5>
+            <p>Submit a lost or found item with photos and key details in under two minutes.</p>
+        </div>
+        <div class="action">
+            <div class="icon" aria-hidden="true">⚡</div>
+            <h5>2. Get Matched</h5>
+            <p>Our matching engine automatically scans active reports for likely pairs.</p>
+        </div>
+        <div class="action">
+            <div class="icon" aria-hidden="true">🤝</div>
+            <h5>3. Reunite</h5>
+            <p>Verify ownership through our claim process and arrange a secure campus pickup.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Browse by Category -->
+<section class="categories-section">
+    <div class="section-header">
+        <h3>Browse by Category</h3>
+        <a class="see-all" href="/browse">See all categories →</a>
+    </div>
+
+    <div class="categories-grid">
+        <div class="category-card">
+            <div class="cat-icon">💻</div>
+            <div class="cat-title">Electronics</div>
+            <div class="cat-count">142 items</div>
+        </div>
+
+        <div class="category-card">
+            <div class="cat-icon">👜</div>
+            <div class="cat-title">Wallets & Bags</div>
+            <div class="cat-count">96 items</div>
+        </div>
+
+        <div class="category-card">
+            <div class="cat-icon">🪪</div>
+            <div class="cat-title">ID Cards</div>
+            <div class="cat-count">208 items</div>
+        </div>
+
+        <div class="category-card">
+            <div class="cat-icon">🔑</div>
+            <div class="cat-title">Keys</div>
+            <div class="cat-count">64 items</div>
+        </div>
+
+        <div class="category-card">
+            <div class="cat-icon">📚</div>
+            <div class="cat-title">Books & Stationery</div>
+            <div class="cat-count">51 items</div>
+        </div>
+
+        <div class="category-card">
+            <div class="cat-icon">👕</div>
+            <div class="cat-title">Clothing</div>
+            <div class="cat-count">33 items</div>
+        </div>
+    </div>
+</section>
+
+<!-- Success Stories -->
+<section class="stories-section">
+    <div class="stories-header">
+        <h3>Success Stories</h3>
+        <p class="sub">Real students, real reunions.</p>
+    </div>
+
+    <div class="stories-grid">
+        <div class="story-card">
+            <p class="quote">“I lost my laptop bag near Legon Hall and had it back within a day thanks to the match alert.”</p>
+            <div class="story-meta">
+                <div class="avatar">NA</div>
+                <div class="meta-text">
+                    <div class="name">Nana A.</div>
+                    <div class="role">Level 300, Sociology</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="story-card">
+            <p class="quote">“Found a wallet at the night market and the claim process made it easy to verify the real owner.”</p>
+            <div class="story-meta">
+                <div class="avatar">KB</div>
+                <div class="meta-text">
+                    <div class="name">Kojo B.</div>
+                    <div class="role">Level 200, Computer Science</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="story-card">
+            <p class="quote">“My student ID turned up in Browse Items within hours of reporting it lost. Such a relief!”</p>
+            <div class="story-meta">
+                <div class="avatar">ED</div>
+                <div class="meta-text">
+                    <div class="name">Efua D.</div>
+                    <div class="role">Level 400, Nursing</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<Footer></Footer>
+
