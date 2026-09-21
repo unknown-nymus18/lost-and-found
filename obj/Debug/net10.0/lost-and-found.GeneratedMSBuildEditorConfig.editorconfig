@@ -53,6 +53,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJdGVtQ2FyZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-ntridjet8b
 
+[C:/Users/temp/websites/lost-and-found/Layout/EmptyLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XEVtcHR5TGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-p4onldh5cx
+
 [C:/Users/temp/websites/lost-and-found/Layout/Footer.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XEZvb3Rlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-894c5xw1p0
@@ -80,3 +84,7 @@ build_metadata.AdditionalFiles.CssScope = b-t5kntugukr
 [C:/Users/temp/websites/lost-and-found/Pages/Report/Report.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0XFJlcG9ydC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-xtpx75zkqs
+
+[C:/Users/temp/websites/lost-and-found/Pages/SignIn/SignIn.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2lnbkluXFNpZ25Jbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-2k2hoyyl50

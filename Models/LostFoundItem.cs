@@ -11,7 +11,9 @@ public sealed record LostFoundItem(
     string Reporter,
     string HoldingLocation,
     int? PotentialMatchPercent = null,
-    string? MatchingReportTitle = null);
+    string? MatchingReportTitle = null,
+    string? ImageUrl = null
+    );
 
 public static class LostFoundData
 {

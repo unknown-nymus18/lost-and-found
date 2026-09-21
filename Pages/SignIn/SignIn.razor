@@ -1,0 +1,35 @@
+@page "/sign-in"
+@layout EmptyLayout
+
+<div class="sign-in">
+    <div class="left">
+        <a href="/">Go Home</a>
+        <p class="heading">UG Lost & Found</p>
+        <p class="title">Reuniting the campus community, one item at a time.</p>
+        <p class="subtitle">Sign in with your University of Ghana account to report items, track claims, and get
+            notified
+            the moment a match is found.</p>
+        </div>
+        <div class="right">
+            <fieldset>
+                <legend class="heading">Welcome Back</legend>
+                <p class="subtitle">Sign in to continue to your dashboard</p>
+                <label>
+                    Email Address
+                    <input type="email" placeholder="you@st.ug.edu.gh" />
+                </label>
+                <label>
+                    Password
+                    <input type="password" />
+                </label>
+                <a href="#" class="forgot-passwd">Forgot password?</a>
+                <button type="submit">Sign In</button>
+                <span class="nav">Don't have an account? <a href="#">Register</a></span>
+                <span class="nav">Campus staff? <a href=""> Sign in to admin portal</a></span>
+            </fieldset>
+        </div>
+    </div>
+
+
+@code {
+}
