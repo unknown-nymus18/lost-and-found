@@ -1,19 +1,23 @@
+@using System.Dynamic
 @using Microsoft.AspNetCore.Components
 @* @using Microsoft.AspNetCore.Components *@
+@inject NavigationManager Navigation
+<a href="/item-detail">
+    
+    <div class="report-card" @onclick="OpenDetails">
+        <div class="card-media" role="img" aria-label="@Title" style=@($"background-image: url('{ImageUrl}');")></div>
 
-<div class="report-card">
-    <div class="card-media" role="img" aria-label="@Title" style=@($"background-image: url('{ImageUrl}');")></div>
+        <div class="card-body">
+            <span class="status @StatusClass">@Status</span>
 
-    <div class="card-body">
-        <span class="status @StatusClass">@Status</span>
+            <h4 class="card-title">@Title</h4>
 
-        <h4 class="card-title">@Title</h4>
+            <span class="category" href="/item-detail?id=20">@Category</span>
 
-        <a class="category" href="/item-detail?id=20">@Category</a>
-
-        <div class="card-meta">@Location � @TimeAgo</div>
+            <div class="card-meta">@Location � @TimeAgo</div>
+        </div>
     </div>
-</div>
+</a>
 
 @code {
     [Parameter] public string Title { get; set; } = "Item title";
@@ -24,4 +28,9 @@
     [Parameter] public string TimeAgo { get; set; } = "some time ago";
 
     private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found";
+
+    public void OpenDetails()
+    {
+        Navigation.NavigateTo($"/item-detail?id=20");
+    }
 }
