@@ -1,0 +1,132 @@
+.browse {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+}
+
+.header{
+    padding-top: 20px;
+    padding-bottom:20px;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    width: min(100%, 480px);
+    height: 36px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border: 1px solid #d5d9e0;
+    border-radius: 8px;
+    background: #fff;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.input-wrapper:focus-within {
+    border-color: #9aa4b2;
+    box-shadow: 0 0 0 2px rgba(80, 96, 120, 0.12);
+}
+
+.search-icon {
+    flex: 0 0 auto;
+    margin-right: 8px;
+    color: #344054;
+    font-size: 21px;
+    line-height: 1;
+    transform: rotate(-20deg);
+}
+
+.input-wrapper input {
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    color: #344054;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+}
+
+.input-wrapper input::placeholder {
+    color: #858c9b;
+    opacity: 1;
+}
+
+.input-wrapper input::-webkit-search-cancel-button {
+    cursor: pointer;
+}
+
+.main{
+    display:flex;
+    flex:1;
+    flex-direction: row;
+    /* background-color: purple; */
+}
+
+.filters{
+    width: 216px;
+    box-sizing: border-box;
+    align-self: flex-start;
+    margin: 0 20px 20px 0;
+    padding: 16px;
+    border: 1px solid #e7e9ed;
+    border-radius: 10px;
+    color: #596273;
+    background: #fff;
+    font-size: 12px;
+}
+
+.filters h4 {
+    margin: 0 0 16px;
+    color: #1f2937;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.filters fieldset {
+    border: 0;
+    margin: 0 0 14px;
+    padding: 0;
+}
+
+.filters fieldset:last-child {
+    margin-bottom: 0;
+}
+
+.filters legend {
+    margin-bottom: 6px;
+    color: #465064;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.filters label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 23px;
+    cursor: pointer;
+    line-height: 1.35;
+}
+
+.filters input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: #52657d;
+}
+
+.data{
+    /* flex-grow:1; */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap:15px;
+    /* background-color: blue; */
+}

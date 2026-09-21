@@ -1,0 +1,96 @@
+@page "/browse"
+@using lost_and_found.Components
+@using lost_and_found.Models
+
+
+
+
+<div class="browse">
+    <div class="header">
+        <h3>Browse Reports</h3>
+        <div class="input-wrapper">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input type="search" placeholder="Search by keyword, location, or category" aria-label="Search reports" />
+        </div>
+    </div>
+    <div class="main">
+        <div class="filters">
+            <h4>Filters</h4>
+
+            <fieldset>
+                <legend>Status</legend>
+                <label>
+                    <InputCheckbox @bind-Value="Lost" /> Lost Items
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="Found" /> Found Items
+                </label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Category</legend>
+                <label>
+                    <InputCheckbox @bind-Value="Electronics" /> Electronics
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="WalletsAndBags" /> Wallets &amp; Bags
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="IdCards" /> ID Cards
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="Keys" /> Keys
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="BooksAndStationery" /> Books &amp; Stationery
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="Clothing" /> Clothing
+                </label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Location</legend>
+                <label>
+                    <InputCheckbox @bind-Value="BalmeLibrary" /> Balme Library
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="NightMarket" /> Night Market
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="JqbComplex" /> JQB Complex
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="CommonwealthHall" /> Commonwealth Hall
+                </label>
+            </fieldset>
+        </div>
+        <div class="data">
+            @foreach (LostFoundItem items in @Items)
+            {
+                <ItemCard Category="@items.Category"></ItemCard>
+            }
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    private bool Lost;
+    private bool Found;
+    private bool Electronics;
+    private bool WalletsAndBags;
+    private bool IdCards;
+    private bool Keys;
+    private bool BooksAndStationery;
+    private bool Clothing;
+    private bool BalmeLibrary;
+    private bool NightMarket;
+    private bool JqbComplex;
+    private bool CommonwealthHall;
+
+
+    public IReadOnlyList<LostFoundItem> Items = LostFoundData.Items;
+    
+}

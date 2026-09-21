@@ -33,10 +33,6 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/temp/websites/lost-and-found/Pages/Browse.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQnJvd3NlLnJhem9y
-build_metadata.AdditionalFiles.CssScope = 
-
 [C:/Users/temp/websites/lost-and-found/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -69,9 +65,17 @@ build_metadata.AdditionalFiles.CssScope = b-zcpn0ul4wk
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE5hdk1lbnUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-ewq1rven3u
 
+[C:/Users/temp/websites/lost-and-found/Pages/Browse/Browse.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQnJvd3NlXEJyb3dzZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-jtaomho63z
+
 [C:/Users/temp/websites/lost-and-found/Pages/Home/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZVxIb21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = b-plz6urlg72
+
+[C:/Users/temp/websites/lost-and-found/Pages/ItemDetail/ItemDetail.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSXRlbURldGFpbFxJdGVtRGV0YWlsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-t5kntugukr
 
 [C:/Users/temp/websites/lost-and-found/Pages/Report/Report.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0XFJlcG9ydC5yYXpvcg==

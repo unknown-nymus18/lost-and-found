@@ -1,5 +1,5 @@
 @using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.Components
+@* @using Microsoft.AspNetCore.Components *@
 
 <div class="report-card">
     <div class="card-media" role="img" aria-label="@Title" style=@($"background-image: url('{ImageUrl}');")></div>
@@ -9,9 +9,9 @@
 
         <h4 class="card-title">@Title</h4>
 
-        <a class="category" href="#">@Category</a>
+        <a class="category" href="/item-detail?id=20">@Category</a>
 
-        <div class="card-meta">@Location · @TimeAgo</div>
+        <div class="card-meta">@Location ï¿½ @TimeAgo</div>
     </div>
 </div>
 

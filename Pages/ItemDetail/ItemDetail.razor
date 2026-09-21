@@ -1,0 +1,77 @@
+@page "/item-detail"
+
+<div class="item-detail">
+    <section class="item-main">
+        <a class="back-link" href="/browse">&#8592; Back to results</a>
+
+        <div class="item-img" role="img" aria-label="Photo of @Title"></div>
+
+        <div class="item-heading">
+            <span class="status @StatusClass">@Status</span>
+            <h1>@Title</h1>
+        </div>
+
+        <div class="item-meta">
+            <span>&#128205; JQB Complex, Ground Floor</span>
+            <span>&#9632; Found on Aug 23, 2026</span>
+            <span>&#9644; Personal Item</span>
+        </div>
+
+        <section class="description">
+            <h2>Description</h2>
+            <p>A steel blue water bottle with a UG Alumni Association sticker on the side and a small dent near the
+                base. Found near the vending machines and handed in to the JQB porters' lodge.</p>
+            </section>
+
+            <div class="reporter">
+                <div class="avatar" aria-hidden="true"></div>
+                <div>
+                    <strong>Reported by Ama K. (Admin verified)</strong>
+                    <span>Held at Campus Security Office &mdash; Legon</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="item-actions">
+            <div class="match-alert">
+                <strong>&#9889; 91% Potential Match</strong>
+                <p>This matches a Lost Report: "Blue Steel Bottle" filed 2 days ago near JQB Complex.</p>
+                <button class="dark-button" type="button">View Matching Report</button>
+            </div>
+
+            <div class="claim-panel">
+                <h2>Claim This Item</h2>
+
+                <div class="claim-steps" aria-label="Claim progress">
+                    <div class="step active"><span>1</span><small>Submit Proof</small></div>
+                    <div class="step-line"></div>
+                    <div class="step"><span>2</span><small>Admin Review</small></div>
+                    <div class="step-line"></div>
+                    <div class="step"><span>3</span><small>Resolution</small></div>
+                </div>
+
+                <label class="proof-label" for="proof">Proof of Ownership</label>
+                <textarea id="proof"
+                          placeholder="Describe a unique detail only the true owner would know (e.g. contents, purchase receipt)..."></textarea>
+                <button class="primary-button" type="button">Submit Claim Request</button>
+
+                <p class="claim-note">&#128172; Once approved, you can message the finder directly to arrange pickup.</p>
+            </div>
+        </section>
+    </div>
+
+@code {
+
+
+    [SupplyParameterFromQuery] public int Id { get; set; }
+
+    public string Title { get; set; } = "Item title";
+    public string Category { get; set; } = "Category";
+    public string ImageUrl { get; set; } = "https://via.placeholder.com/400x240?text=Item";
+    public string Status { get; set; } = "Found";
+    public string Location { get; set; } = "Location";
+    public string TimeAgo { get; set; } = "some time ago";
+
+    private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found";
+    
+}
