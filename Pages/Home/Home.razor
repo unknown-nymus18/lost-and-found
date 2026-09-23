@@ -230,13 +230,13 @@
         if (selectedCategory != "All Categories")
         {
             var categoryParameter = selectedCategory == "ID Cards" ? "IdCards" : selectedCategory;
-            string url = $"/browse?{categoryParameter}=true?searchTerm={@searchTerm}";
+            string url = $"/browse?{categoryParameter}=true&searchTerm={Uri.EscapeDataString(searchTerm)}";
             Navigation.NavigateTo(url);
         }
 
         else
         {
-            Navigation.NavigateTo($"/browse?searchTerm={@searchTerm}");
+            Navigation.NavigateTo($"/browse?searchTerm={Uri.EscapeDataString(searchTerm)}");
         }
     }
 }
