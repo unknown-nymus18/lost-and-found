@@ -1,0 +1,72 @@
+.claims{
+    padding:20px
+}
+
+.stats{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 10px;
+    
+}
+.action{
+    padding:10px;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    border-radius: 10px;
+    border: 2px solid #F3F4F6;
+    color: #6B7280;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.selection{
+    position: relative;
+    margin-top: 10px;
+    display: flex;
+    width: fit-content;
+    flex-direction: row;
+    border-radius: 10px;
+    background-color: #F3F4F6;
+    padding: 4px;
+    overflow: hidden;
+    user-select: none;
+}
+
+.selection::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 6px);
+    border-radius: 10px;
+    background-color: white;
+    transition: transform 250ms ease;
+    pointer-events: none;
+}
+
+.selection.claims-selected::before {
+    transform: translateX(100%);
+
+}
+
+.select-item{
+    position: relative;
+    z-index: 1;
+    display: flex;
+    border-radius: 10px;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px 10px 20px;
+    cursor: pointer;
+    color: #111827;
+}
+
+.select-item p{
+    margin: 0;
+    text-align: center;
+}
+

@@ -65,12 +65,14 @@
 
     [SupplyParameterFromQuery] public int Id { get; set; } = 0;
 
-    public string Title { get; set; } = "Item title";
-    public string Category { get; set; } = "Category";
-    public string ImageUrl { get; set; } = "https://via.placeholder.com/400x240?text=Item";
-    public string Status { get; set; } = "Found";
-    public string Location { get; set; } = "Location";
-    public string TimeAgo { get; set; } = "some time ago";
+
+
+    [Parameter] public string Title { get; set; } = "Item title";
+    [Parameter] public string Category { get; set; } = "Category";
+    [Parameter] public string ImageUrl { get; set; } = "https://via.placeholder.com/400x240?text=Item";
+    [Parameter] public string Status { get; set; } = "Found";
+    [Parameter] public string Location { get; set; } = "Location";
+    [Parameter] public string TimeAgo { get; set; } = "some time ago";
 
     private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found";
     

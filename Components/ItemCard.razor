@@ -4,7 +4,7 @@
 @inject NavigationManager Navigation
 <a href="/item-detail">
     
-    <div class="report-card" @onclick="OpenDetails">
+    <div class="report-card">
         <div class="card-media" role="img" aria-label="@Title" style=@($"background-image: url('{ImageUrl}');")></div>
 
         <div class="card-body">
@@ -12,7 +12,7 @@
 
             <h4 class="card-title">@Title</h4>
 
-            <span class="category" href="/item-detail?id=20">@Category</span>
+            <span class="category">@Category</span>
 
             <div class="card-meta">@Location � @TimeAgo</div>
         </div>
@@ -29,8 +29,4 @@
 
     private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found";
 
-    public void OpenDetails()
-    {
-        Navigation.NavigateTo($"/item-detail?id=20");
-    }
 }

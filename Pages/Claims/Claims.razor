@@ -1,0 +1,39 @@
+@page "/claims"
+
+
+
+<div class="claims">
+    <h2>My Reports & Claims</h2>
+    <div class="stats">
+        <div class="action">
+            <p class="reports-stats">2</p>
+            <p>Active reports</p>
+        </div>
+        <div class="action">
+            <p class="claim-stats">1</p>
+            <p>Pending Claim</p>
+        </div>
+        <div class="action">
+            <p class="resolved-stats col-red">3</p>
+            <p>Resolved</p>
+        </div>
+        
+    </div>
+    <div class="selection @(isReports ? "reports-selected" : "claims-selected")" @onclick="triggerSelected">
+        <div class="select-item @(isReports ? "is-selected" : "")">
+            <p>My reports</p>
+        </div>
+        <div class="select-item @(!isReports ? "is-selected" : "")">
+            <p>My Claims</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isReports = true;
+
+    private void triggerSelected()
+    {
+        isReports = !isReports;
+    }
+}

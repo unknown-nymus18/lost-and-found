@@ -1,20 +1,25 @@
 ﻿@page "/"
 @using lost_and_found.Components
-
+@using lost_and_found.Models
+@using lost_and_found.Services
+@inject ApiService ApiService
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <div class="hero-1">
     <div class="info">
         <h1>Lost something on campus? Found something?</h1>
         <p>Report it in seconds and let our matching system reconnect you with your belongings.</p>
         <div class="search-wrap">
-            <select aria-label="Category">
+            <select aria-label="Category" @bind="selectedCategory">
                 <option>All Categories</option>
-                <option>Electronics</option>
-                <option>Wallets</option>
-                <option>Clothing</option>
+                @foreach (var cat in cats)
+                {
+                    <option>@cat</option>
+                }
             </select>
-            <input type="text" placeholder="Search by item, e.g. 'black wallet" />
-            <button>Search</button>
+            <input type="text" placeholder="Search by item, e.g. 'black wallet" @bind="searchTerm" />
+            <button @onclick="search">Search</button>
         </div>
     </div>
 </div>
@@ -43,17 +48,12 @@
     </div>
 
     <div class="report-items">
-        <ItemCard Title="Black Leather Wallet" Category="Wallet" Status="Lost" Location="Balme Library"
-                  TimeAgo="2 days ago" />
-
-        <ItemCard Title="iPhone 13 (Blue)" Category="Electronics" Status="Found" Location="Night Market"
-                  TimeAgo="1 day ago" />
-
-        <ItemCard Title="Blue Water Bottle" Category="Personal Item" Status="Found" Location="JQB Complex"
-                  TimeAgo="3 days ago" />
-
-        <ItemCard Title="Student ID Card" Category="ID Card" Status="Lost" Location="Commonwealth Hall"
-                  TimeAgo="Today" />
+        @foreach (var report in Reports.Take(4))
+        {
+            <ItemCard Title="@report.Title" Category="@GetCategoryName(report.Category)" ImageUrl="@report.PhotoUrl"
+                      Status="@GetStatusName(report.Status)" Location="@report.Location" TimeAgo="@FormatTimeAgo(report.Date)" />
+        }
+        
     </div>
 </div>
 <div class="steps">
@@ -172,3 +172,71 @@
 
 <Footer></Footer>
 
+
+
+@code {
+
+    private List<ReportItem> Reports { get; set; } = new();
+    private string selectedCategory = "All Categories";
+    private string searchTerm = "";
+    private static List<string> cats = new List<string> {
+        "Electronics",
+            "ID Cards",
+            "Wallet",
+            "Keys",
+            "Bags",
+            "Books",
+            "Clothing",
+            "Jewellery",
+            "Others"
+            };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Reports = await ApiService.GetReportItemsAsync();
+    }
+
+    private static string GetStatusName(int status)
+    {
+        return status == 0 ? "Lost" : "Found";
+    }
+
+    private static string GetCategoryName(int category)
+    {
+        return category >= 0 && category < cats.Count ? cats[category] : cats[^1];
+    }
+
+    private static string FormatTimeAgo(DateTimeOffset date)
+    {
+        var diff = DateTimeOffset.UtcNow - date;
+
+        if (diff.TotalDays >= 365)
+            return $"{Math.Floor(diff.TotalDays / 365)} years ago";
+
+        if (diff.TotalDays >= 30)
+            return $"{Math.Floor(diff.TotalDays / 30)} months ago";
+
+        if (diff.TotalDays >= 1)
+            return $"{Math.Floor(diff.TotalDays)} days ago";
+
+        if (diff.TotalHours >= 1)
+            return $"{Math.Floor(diff.TotalHours)} hours ago";
+
+        return "just now";
+    }
+
+    private void search()
+    {
+        if (selectedCategory != "All Categories")
+        {
+            var categoryParameter = selectedCategory == "ID Cards" ? "IdCards" : selectedCategory;
+            string url = $"/browse?{categoryParameter}=true?searchTerm={@searchTerm}";
+            Navigation.NavigateTo(url);
+        }
+
+        else
+        {
+            Navigation.NavigateTo($"/browse?searchTerm={@searchTerm}");
+        }
+    }
+}

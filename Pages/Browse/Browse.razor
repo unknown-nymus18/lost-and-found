@@ -1,7 +1,9 @@
 @page "/browse"
 @using lost_and_found.Components
 @using lost_and_found.Models
-
+@using lost_and_found.Services
+@inject ApiService ApiService
+@inject NavigationManager Navigation
 
 
 
@@ -11,7 +13,8 @@
         <h3>Browse Reports</h3>
         <div class="input-wrapper">
             <span class="search-icon" aria-hidden="true">⌕</span>
-            <input type="search" placeholder="Search by keyword, location, or category" aria-label="Search reports" />
+            <input type="search" placeholder="Search by keyword, location, or category" aria-label="Search reports"
+                   @bind="SearchTerm" @bind:event="oninput" @bind:after="SearchReports" />
         </div>
     </div>
     <div class="main">
@@ -21,55 +24,88 @@
             <fieldset>
                 <legend>Status</legend>
                 <label>
-                    <InputCheckbox @bind-Value="Lost" /> Lost Items
+                    <InputCheckbox @bind-Value="Lost" @bind-Value:after="ApplyFilters" /> Lost Items
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Found" /> Found Items
+                    <InputCheckbox @bind-Value="Found" @bind-Value:after="ApplyFilters" /> Found Items
                 </label>
             </fieldset>
 
             <fieldset>
                 <legend>Category</legend>
                 <label>
-                    <InputCheckbox @bind-Value="Electronics" /> Electronics
+                    <InputCheckbox @bind-Value="Electronics" @bind-Value:after="ApplyFilters" /> Electronics
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="WalletsAndBags" /> Wallets &amp; Bags
+                    <InputCheckbox @bind-Value="IdCards" @bind-Value:after="ApplyFilters" /> @cats[1]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="IdCards" /> ID Cards
+                    <InputCheckbox @bind-Value="Wallet" @bind-Value:after="ApplyFilters" /> @cats[2]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Keys" /> Keys
+                    <InputCheckbox @bind-Value="Bags" @bind-Value:after="ApplyFilters" /> @cats[4]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="BooksAndStationery" /> Books &amp; Stationery
+                    <InputCheckbox @bind-Value="Keys" @bind-Value:after="ApplyFilters" /> @cats[3]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Clothing" /> Clothing
+                    <InputCheckbox @bind-Value="Books" @bind-Value:after="ApplyFilters" /> @cats[5]
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="Clothing" @bind-Value:after="ApplyFilters" /> @cats[6]
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="Jewellery" @bind-Value:after="ApplyFilters" /> @cats[7]
+                </label>
+                <label>
+                    <InputCheckbox @bind-Value="Others" @bind-Value:after="ApplyFilters" /> @cats[8]
                 </label>
             </fieldset>
 
             <fieldset>
                 <legend>Location</legend>
                 <label>
-                    <InputCheckbox @bind-Value="BalmeLibrary" /> Balme Library
+                    <InputCheckbox @bind-Value="BalmeLibrary" @bind-Value:after="ApplyFilters" /> Balme Library
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="NightMarket" /> Night Market
+                    <InputCheckbox @bind-Value="NightMarket" @bind-Value:after="ApplyFilters" /> Night Market
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="JqbComplex" /> JQB Complex
+                    <InputCheckbox @bind-Value="JqbComplex" @bind-Value:after="ApplyFilters" /> JQB Complex
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="CommonwealthHall" /> Commonwealth Hall
+                    <InputCheckbox @bind-Value="CommonwealthHall" @bind-Value:after="ApplyFilters" /> Commonwealth Hall
                 </label>
             </fieldset>
         </div>
         <div class="data">
-            @foreach (LostFoundItem items in @Items)
+            @if (isLoading)
             {
-                <ItemCard Category="@items.Category"></ItemCard>
+                <div
+                    class="d-flex flex-column justify-content-center align-items-center text-center min-vh-50 w-100 p-4 mx-auto">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 mb-0 text-muted text-center">Loading reports...</p>
+                </div>
+            }
+            else if (Filter is not null && Filter.Count > 0)
+            {
+                @foreach (var filter in Filter)
+                {
+                    <ItemCard Title="@filter.Title" Category="@GetCategoryName(filter.Category)" ImageUrl="@filter.PhotoUrl"
+                              Status="@GetStatusName(filter.Status)" Location="@filter.Location"
+                              TimeAgo="@FormatTimeAgo(filter.Date)" />
+                }
+            }
+            else
+            {
+                <div
+                    class="d-flex flex-column justify-content-center align-items-center text-center text-muted border rounded-4 bg-light min-vh-50 w-100 p-4 align-self-center">
+                    @* <div class="display-6 mb-2">📭</div> *@
+                    <h5 class="mb-2">No report items found</h5>
+                    <p class="mb-0">Try changing the filters or check back later.</p>
+                </div>
             }
         </div>
     </div>
@@ -78,14 +114,18 @@
 
 @code {
 
-    private bool Lost;
-    private bool Found;
-    private bool Electronics;
-    private bool WalletsAndBags;
-    private bool IdCards;
-    private bool Keys;
-    private bool BooksAndStationery;
-    private bool Clothing;
+    [SupplyParameterFromQuery] private bool Lost { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Found { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Electronics { get; set; } = false;
+    [SupplyParameterFromQuery] private bool IdCards { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Wallet { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Bags { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Keys { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Books { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Clothing { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Jewellery { get; set; } = false;
+    [SupplyParameterFromQuery] private bool Others { get; set; } = false;
+    
     private bool BalmeLibrary;
     private bool NightMarket;
     private bool JqbComplex;
@@ -93,5 +133,129 @@
 
 
     public IReadOnlyList<LostFoundItem> Items = LostFoundData.Items;
-    
+
+    private List<ReportItem> Reports { get; set; } = new();
+
+    private List<ReportItem> Filter { get; set; } = new();
+
+    [SupplyParameterFromQuery(Name = "searchTerm")]
+    public string SearchTerm { get; set; } = string.Empty;
+
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        Reports = await ApiService.GetReportItemsAsync();
+        ApplyFilters();
+        isLoading = false;
+    }
+
+    private void ApplyFilters()
+    {
+        if (Reports.Count == 0)
+        {
+            Filter = new List<ReportItem>();
+            return;
+        }
+
+        var selectedStatuses = new List<int>();
+        if (Lost) selectedStatuses.Add(0);
+        if (Found) selectedStatuses.Add(1);
+
+        var selectedCategories = new List<int>();
+        if (Electronics) selectedCategories.Add(0);
+        if (IdCards) selectedCategories.Add(1);
+        if (Wallet) selectedCategories.Add(2);
+        if (Keys) selectedCategories.Add(3);
+        if (Bags) selectedCategories.Add(4);
+        if (Books) selectedCategories.Add(5);
+        if (Clothing) selectedCategories.Add(6);
+        if (Jewellery) selectedCategories.Add(7);
+        if (Others) selectedCategories.Add(8);
+
+        var selectedLocations = new List<string>();
+        if (BalmeLibrary) selectedLocations.Add("balme");
+        if (NightMarket) selectedLocations.Add("night market");
+        if (JqbComplex) selectedLocations.Add("jqb");
+        if (CommonwealthHall) selectedLocations.Add("commonwealth");
+
+        var normalizedSearchTerm = SearchTerm?.Trim() ?? string.Empty;
+
+        Filter = Reports
+            .Where(report =>
+                (selectedStatuses.Count == 0 || selectedStatuses.Contains(report.Status)) &&
+                (selectedCategories.Count == 0 || selectedCategories.Contains(report.Category)) &&
+                (selectedLocations.Count == 0 || selectedLocations.Any(location => (report.Location ?? string.Empty).Contains(location,
+StringComparison.OrdinalIgnoreCase))) &&
+                (string.IsNullOrEmpty(normalizedSearchTerm) ||
+                 (report.Title ?? string.Empty).Contains(normalizedSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                 (report.Location ?? string.Empty).Contains(normalizedSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                 GetCategoryName(report.Category).Contains(normalizedSearchTerm, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+    }
+
+    private void SearchReports()
+    {
+        ApplyFilters();
+
+        var uri = Navigation.GetUriWithQueryParameter("searchTerm", SearchTerm);
+        Navigation.NavigateTo(uri, replace: true);
+    }
+
+    private static string GetStatusName(int status)
+    {
+        return status == 0 ? "Lost" : "Found";
+    }
+
+    private static readonly List<string> cats = new()
+    {
+        "Electronics",
+            "ID Cards",
+            "Wallet",
+            "Keys",
+            "Bags",
+            "Books",
+            "Clothing",
+            "Jewellery",
+            "Others"
+            };
+
+    private static string GetCategoryName(int category)
+    {
+        return category >= 0 && category < cats.Count ? cats[category] : cats[^1];
+    }
+
+    private static readonly Dictionary<string, int> categoryLookup = new()
+    {
+        [cats[0]] = 0,
+        [cats[1]] = 1,
+        [cats[2]] = 2,
+        [cats[3]] = 3,
+        [cats[4]] = 4,
+        [cats[5]] = 5,
+        [cats[6]] = 6,
+        [cats[7]] = 7,
+        [cats[8]] = 8
+    };
+
+    private static string FormatTimeAgo(DateTimeOffset date)
+    {
+        var diff = DateTimeOffset.UtcNow - date;
+
+        if (diff.TotalDays >= 365)
+            return $"{Math.Floor(diff.TotalDays / 365)} years ago";
+
+        if (diff.TotalDays >= 30)
+            return $"{Math.Floor(diff.TotalDays / 30)} months ago";
+
+        if (diff.TotalDays >= 1)
+            return $"{Math.Floor(diff.TotalDays)} days ago";
+
+        if (diff.TotalHours >= 1)
+            return $"{Math.Floor(diff.TotalHours)} hours ago";
+
+        return "just now";
+    }
+
 }

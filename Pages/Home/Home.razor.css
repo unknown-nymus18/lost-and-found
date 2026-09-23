@@ -102,7 +102,7 @@
     padding: 0px 1rem;
     display:flex;
     flex-direction:column;
-    justify-content:space-around;
+    justify-content:flex-start;
 
 }
 

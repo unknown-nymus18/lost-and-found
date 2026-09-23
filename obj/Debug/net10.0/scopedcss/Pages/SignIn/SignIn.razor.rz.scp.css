@@ -94,6 +94,12 @@ button[b-2k2hoyyl50]{
     color: white;
     border-radius: 8px;
     padding:10px;
+    transition: all 0.2s ease;
+}
+
+button:hover[b-2k2hoyyl50]{
+    background-color: #336dea;
+    scale: 1.06;
 }
 
 .nav[b-2k2hoyyl50]{
