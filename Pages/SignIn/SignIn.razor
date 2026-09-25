@@ -1,5 +1,8 @@
 @page "/sign-in"
+@using lost_and_found.Services
 @layout EmptyLayout
+@inject ApiService ApiService
+@inject AuthService AuthService
 
 <div class="sign-in">
     <div class="left">
@@ -16,14 +19,14 @@
                 <p class="subtitle">Sign in to continue to your dashboard</p>
                 <label>
                     Email Address
-                    <input type="email" placeholder="you@st.ug.edu.gh" />
+                    <input type="email" placeholder="you@st.ug.edu.gh" @bind="email" />
                 </label>
                 <label>
                     Password
-                    <input type="password" required />
+                    <input type="password" required @bind="password" />
                 </label>
                 <a href="#" class="forgot-passwd">Forgot password?</a>
-                <button type="submit">Sign In</button>
+                <button type="submit" @onclick="loginUser">Sign In</button>
                 <span class="nav">Don't have an account? <a href="#">Register</a></span>
                 <span class="nav">Campus staff? <a href=""> Sign in to admin portal</a></span>
             </fieldset>
@@ -32,4 +35,30 @@
 
 
 @code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        AuthService.OnChange += StateHasChanged;
+    }
+    async public void submitButton()
+    {
+        var res = await ApiService.RegisterUser("Felix", "felix@gmail.com", "12345678");
+        Console.WriteLine(res);
+    }
+
+    public async Task loginUser()
+    {
+        if (email == string.Empty || password == string.Empty)
+        {
+            return;
+        }
+        var res = await ApiService.LoginUser(email, password);
+        if (res is not null)
+        {
+            AuthService.SetUser(res);
+        }
+        Console.WriteLine(res);
+    }
 }

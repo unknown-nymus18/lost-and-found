@@ -34,31 +34,33 @@
             <fieldset>
                 <legend>Category</legend>
                 <label>
-                    <InputCheckbox @bind-Value="Electronics" @bind-Value:after="ApplyFilters" /> Electronics
+                    <InputCheckbox @bind-Value="Electronics" @bind-Value:after="ApplyFilters" />
+                    @CategoryOptions.Values[0]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="IdCards" @bind-Value:after="ApplyFilters" /> @cats[1]
+                    <InputCheckbox @bind-Value="IdCards" @bind-Value:after="ApplyFilters" /> @CategoryOptions.Values[1]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Wallet" @bind-Value:after="ApplyFilters" /> @cats[2]
+                    <InputCheckbox @bind-Value="Wallet" @bind-Value:after="ApplyFilters" /> @CategoryOptions.Values[2]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Bags" @bind-Value:after="ApplyFilters" /> @cats[4]
+                    <InputCheckbox @bind-Value="Bags" @bind-Value:after="ApplyFilters" /> @CategoryOptions.Values[4]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Keys" @bind-Value:after="ApplyFilters" /> @cats[3]
+                    <InputCheckbox @bind-Value="Keys" @bind-Value:after="ApplyFilters" /> @CategoryOptions.Values[3]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Books" @bind-Value:after="ApplyFilters" /> @cats[5]
+                    <InputCheckbox @bind-Value="Books" @bind-Value:after="ApplyFilters" /> @CategoryOptions.Values[5]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Clothing" @bind-Value:after="ApplyFilters" /> @cats[6]
+                    <InputCheckbox @bind-Value="Clothing" @bind-Value:after="ApplyFilters" /> @CategoryOptions.Values[6]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Jewellery" @bind-Value:after="ApplyFilters" /> @cats[7]
+                    <InputCheckbox @bind-Value="Jewellery" @bind-Value:after="ApplyFilters" />
+                    @CategoryOptions.Values[7]
                 </label>
                 <label>
-                    <InputCheckbox @bind-Value="Others" @bind-Value:after="ApplyFilters" /> @cats[8]
+                    <InputCheckbox @bind-Value="Others" @bind-Value:after="ApplyFilters" /> @CategoryOptions.Values[8]
                 </label>
             </fieldset>
 
@@ -78,7 +80,8 @@
                 </label>
             </fieldset>
         </div>
-        <div class="data">
+        <div
+            class="@($"data  {((Filter.Count == 0 && Filter is not null) ? "justify-content-center flex-fill" : "")}")">
             @if (isLoading)
             {
                 <div
@@ -208,36 +211,11 @@ StringComparison.OrdinalIgnoreCase))) &&
         return status == 0 ? "Lost" : "Found";
     }
 
-    private static readonly List<string> cats = new()
-    {
-        "Electronics",
-            "ID Cards",
-            "Wallet",
-            "Keys",
-            "Bags",
-            "Books",
-            "Clothing",
-            "Jewellery",
-            "Others"
-            };
-
     private static string GetCategoryName(int category)
     {
-        return category >= 0 && category < cats.Count ? cats[category] : cats[^1];
+        return CategoryOptions.GetCategoryName(category);
     }
 
-    private static readonly Dictionary<string, int> categoryLookup = new()
-    {
-        [cats[0]] = 0,
-        [cats[1]] = 1,
-        [cats[2]] = 2,
-        [cats[3]] = 3,
-        [cats[4]] = 4,
-        [cats[5]] = 5,
-        [cats[6]] = 6,
-        [cats[7]] = 7,
-        [cats[8]] = 8
-    };
 
     private static string FormatTimeAgo(DateTimeOffset date)
     {

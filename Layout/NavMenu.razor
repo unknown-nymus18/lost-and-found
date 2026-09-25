@@ -1,4 +1,6 @@
-﻿@* <div id="nav-sentinel"></div> *@
+﻿@using lost_and_found.Models
+@using lost_and_found.Services
+@inject AuthService AuthService
 <nav id="nav-main" class="nav-menu">
     <p class="brand">UG Lost & Found</p>
     <div class="nav-links">
@@ -8,11 +10,35 @@
         <NavLink class="nav-link" href="/claims" ActiveClass="active">My Claims </NavLink>
     </div>
 
-    <div class="auth-nav">
-        <NavLink class="btn">Sign up</NavLink>
-        <NavLink class="btn btn-primary" href="/sign-in">Sign in</NavLink>
-    </div>
+    @if (AuthService.CurrentUser is not null)
+    {
+        
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center"
+                 style="width: 32px; height: 32px; flex-shrink: 0;">
+                <i class="bi bi-bell-fill text-warning"></i>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold"
+                     style="width: 32px; height: 32px; flex-shrink: 0;">
+                    @(string.IsNullOrEmpty(AuthService.CurrentUser?.name) ? "" :
+                        AuthService.CurrentUser.name[0].ToString().ToUpper())
+                </div>
+                <p class="m-0 fs-6">@AuthService.CurrentUser?.name</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="auth-nav">
+            <NavLink class="btn">Sign up</NavLink>
+            <NavLink class="btn btn-primary" href="/sign-in">Sign in</NavLink>
+        </div>
+    }
 </nav>
+
+
 
 
 

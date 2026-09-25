@@ -1,5 +1,21 @@
 @inherits LayoutComponentBase
 
+@using lost_and_found.Services
+@inject AuthService AuthService
+
 <div class="empty-layout">
     @Body
 </div>
+
+
+@code {
+    protected override void OnInitialized()
+    {
+        AuthService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnChange -= StateHasChanged;
+    }
+}

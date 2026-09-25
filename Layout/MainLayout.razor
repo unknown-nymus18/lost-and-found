@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
-
+@using lost_and_found.Services
+@inject AuthService AuthService
 
 
 <NavMenu></NavMenu>
@@ -7,3 +8,15 @@
 <div class="main-content">
     @Body
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AuthService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnChange -= StateHasChanged;
+    }
+}

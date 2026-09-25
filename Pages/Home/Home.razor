@@ -12,8 +12,8 @@
         <p>Report it in seconds and let our matching system reconnect you with your belongings.</p>
         <div class="search-wrap">
             <select aria-label="Category" @bind="selectedCategory">
-                <option>All Categories</option>
-                @foreach (var cat in cats)
+                <option>@CategoryOptions.AllCategories</option>
+                @foreach (var cat in CategoryOptions.Values)
                 {
                     <option>@cat</option>
                 }
@@ -177,19 +177,8 @@
 @code {
 
     private List<ReportItem> Reports { get; set; } = new();
-    private string selectedCategory = "All Categories";
+    private string selectedCategory = CategoryOptions.AllCategories;
     private string searchTerm = "";
-    private static List<string> cats = new List<string> {
-        "Electronics",
-            "ID Cards",
-            "Wallet",
-            "Keys",
-            "Bags",
-            "Books",
-            "Clothing",
-            "Jewellery",
-            "Others"
-            };
 
     protected override async Task OnInitializedAsync()
     {
@@ -203,7 +192,7 @@
 
     private static string GetCategoryName(int category)
     {
-        return category >= 0 && category < cats.Count ? cats[category] : cats[^1];
+        return CategoryOptions.GetCategoryName(category);
     }
 
     private static string FormatTimeAgo(DateTimeOffset date)
@@ -227,7 +216,7 @@
 
     private void search()
     {
-        if (selectedCategory != "All Categories")
+        if (selectedCategory != CategoryOptions.AllCategories)
         {
             var categoryParameter = selectedCategory == "ID Cards" ? "IdCards" : selectedCategory;
             string url = $"/browse?{categoryParameter}=true&searchTerm={Uri.EscapeDataString(searchTerm)}";

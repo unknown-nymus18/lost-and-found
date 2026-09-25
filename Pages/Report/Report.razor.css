@@ -47,11 +47,11 @@
 .toggle.found.active{ background: #ecfdf5; color:#16a34a; border-color: rgba(34,197,94,0.12); }
 
 .report-form .form-row{ margin-bottom:14px; display:flex; flex-direction:column; }
+.report-form .form-row.two-col{ display:flex; flex-direction:row; gap:12px; }
 .report-form label{ font-size:13px; color:#374151; margin-bottom:8px; }
 .input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid #e6eef8; background:#fff; outline:none; box-sizing:border-box; }
 .textarea{ min-height:96px; padding:10px 12px; border-radius:8px; border:1px solid #e6eef8; resize:vertical; }
 
-.two-col{ display:flex; gap:12px; }
 .two-col > div{ flex:1; display:flex; flex-direction:column; }
 
 .upload-area{ border:2px dashed #e5e7eb; border-radius:8px; padding:22px; display:flex; align-items:center; justify-content:center; background:transparent; }
@@ -67,6 +67,6 @@
 
 @media (max-width:720px){
     .report-card{ width:100%; padding:18px; }
-    .two-col{ flex-direction:column; }
+    .report-form .form-row.two-col{ flex-direction:column; }
 }
 
