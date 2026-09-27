@@ -1,3 +1,104 @@
+/* /Components/ClaimReportCard.razor.rz.scp.css */
+.claim-card[b-mx9l6qeqds] {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        font-family: system-ui, -apple-system, sans-serif;
+    }
+
+.claim-icon[b-mx9l6qeqds] {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #e9e9ee;
+    flex-shrink: 0;
+}
+
+.claim-main[b-mx9l6qeqds] {
+    flex: 1;
+    min-width: 0;
+}
+
+.claim-title-row[b-mx9l6qeqds] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.claim-title[b-mx9l6qeqds] {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1a1a1a;
+}
+
+.claim-tag[b-mx9l6qeqds] {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: capitalize;
+}
+
+.tag-lost[b-mx9l6qeqds] {
+    background: #fde2e2;
+    color: #c0392b;
+}
+
+.tag-found[b-mx9l6qeqds] {
+    background: #dcf5e3;
+    color: #1e8449;
+}
+
+.claim-subtitle[b-mx9l6qeqds] {
+    font-size: 12.5px;
+    color: #8a8a8a;
+    margin-top: 2px;
+}
+
+.claim-right[b-mx9l6qeqds] {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-shrink: 0;
+}
+
+.claim-status-pill[b-mx9l6qeqds] {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.status-active[b-mx9l6qeqds] {
+    background: #fdf0d5;
+    color: #b9770e;
+}
+
+.status-pending[b-mx9l6qeqds] {
+    background: #eaeaea;
+    color: #555;
+}
+
+.status-resolved[b-mx9l6qeqds] {
+    background: #dcf5e3;
+    color: #1e8449;
+}
+
+.claim-link[b-mx9l6qeqds] {
+    font-size: 13px;
+    font-weight: 500;
+    color: #2563eb;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.claim-link:hover[b-mx9l6qeqds] {
+    text-decoration: underline;
+}
 /* /Components/ItemCard.razor.rz.scp.css */
 .report-card[b-ntridjet8b] {
     width: 280px;
@@ -77,6 +178,27 @@ a[b-ntridjet8b]{
     height: 100vh;
 }
 
+.loading-container[b-p4onldh5cx] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.spinner[b-p4onldh5cx] {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #e0e0e0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin-b-p4onldh5cx 0.8s linear infinite;
+}
+
+@keyframes spin-b-p4onldh5cx {
+    to {
+        transform: rotate(360deg);
+    }
+}
 /* /Layout/Footer.razor.rz.scp.css */
 .footer[b-894c5xw1p0]{
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
@@ -176,6 +298,27 @@ a[b-ntridjet8b]{
     padding-top: 80px;
 }
 
+.loading-container[b-zcpn0ul4wk] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.spinner[b-zcpn0ul4wk] {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #e0e0e0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin-b-zcpn0ul4wk 0.8s linear infinite;
+}
+
+@keyframes spin-b-zcpn0ul4wk {
+    to {
+        transform: rotate(360deg);
+    }
+}
 /* /Layout/NavMenu.razor.rz.scp.css */
 
 .nav-menu[b-ewq1rven3u] {
@@ -357,7 +500,8 @@ a[b-ntridjet8b]{
 }
 /* /Pages/Claims/Claims.razor.rz.scp.css */
 .claims[b-tn81rhlod3]{
-    padding:20px
+    padding:20px;
+    flex:1
 }
 
 .stats[b-tn81rhlod3]{
@@ -428,6 +572,13 @@ a[b-ntridjet8b]{
     text-align: center;
 }
 
+.data-container[b-tn81rhlod3]{
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    border:#111827 solid 1px;
+    border-radius: 20px;
+}
 /* /Pages/Home/Home.razor.rz.scp.css */
 .hero-1[b-plz6urlg72] {
     width: 100%;

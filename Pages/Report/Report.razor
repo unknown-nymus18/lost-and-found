@@ -23,8 +23,7 @@
                 <div class="form-row two-col">
                     <div>
                         <label>Category</label>
-                        <select class="input" @bind="selectedCategory">
-                            <option>@CategoryOptions.AllCategories</option>
+                        <select class="input" @bind="selectedCategory" @bind:event="get">
                             @foreach (var cat in CategoryOptions.Values)
                             {
                                 <option>@cat</option>
@@ -76,6 +75,13 @@
 
 @code {
 
+    public bool lost = true;
+
     private string selectedCategory = CategoryOptions.AllCategories;
+
+    private void get()
+    {
+        Console.WriteLine(selectedCategory);
+    }
 
 }

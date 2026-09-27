@@ -1,16 +1,24 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using lost_and_found.Models;
 
+
 namespace lost_and_found.Services;
+
+using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
+using System.Security.Claims;
+using lost_and_found.Services;
 
 public class ApiService
 {
     private readonly HttpClient _httpClient;
-    private const string ReportsUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/api/reports/";
-    private const string RegisterUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/api/auth/register/";
-    private const string LoginUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/api/auth/login/";
+
+    private readonly AuthService _authService;
+    private const string baseUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/api/";
+
 
     public class RegisterRequest
     {
@@ -26,16 +34,28 @@ public class ApiService
 
     }
 
-    public ApiService(HttpClient httpClient)
+    public class ReportRequest
+    {
+        public required string Title { get; set; }
+        public required string Description { get; set; }
+        public required string Category { get; set; }
+        public required string Location { get; set; }
+        public required DateTimeOffset Date { get; set; }
+
+    }
+
+
+    public ApiService(HttpClient httpClient, AuthService authService)
     {
         _httpClient = httpClient;
+        _authService = authService;
     }
 
     public async Task<string> GetRawApiDataAsync()
     {
         try
         {
-            var response = await _httpClient.GetAsync(ReportsUrl);
+            var response = await _httpClient.GetAsync($"{baseUrl}/reports/");
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -64,7 +84,7 @@ public class ApiService
     {
         try
         {
-            var response = await _httpClient.GetAsync(ReportsUrl);
+            var response = await _httpClient.GetAsync($"{baseUrl}/reports/");
             response.EnsureSuccessStatusCode();
 
             var items = await response.Content.ReadFromJsonAsync<List<ReportItem>>();
@@ -92,6 +112,25 @@ public class ApiService
         }
     }
 
+    public async Task<ReportItem?> ReportItem(string category, string title, string description, DateTimeOffset date, string location)
+
+    {
+
+        var requestBody = new ReportRequest { Category = category, Date = date, Description = description, Location = location, Title = title };
+        try
+        {
+            var request = await _httpClient.PostAsJsonAsync($"{baseUrl}/reports/lost", requestBody);
+            request.EnsureSuccessStatusCode();
+            var response = await request.Content.ReadFromJsonAsync<ReportItem>();
+            return response;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
     public async Task<UserModels?> RegisterUser(string name, string email, string password)
     {
         var requestBody = new RegisterRequest
@@ -103,11 +142,16 @@ public class ApiService
 
         try
         {
-            var response = await _httpClient.PostAsJsonAsync(RegisterUrl, requestBody);
+            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/auth/register/", requestBody);
             response.EnsureSuccessStatusCode();
 
             var registeredUser = await response.Content.ReadFromJsonAsync<UserModels>();
             Console.WriteLine(registeredUser);
+
+            if (registeredUser is not null)
+            {
+                await _authService.SetUserAsync(registeredUser);
+            }
 
             return registeredUser;
         }
@@ -138,11 +182,16 @@ public class ApiService
         try
         {
             var requestBody = new LoginRequest { Email = email, Password = password };
-            var response = await _httpClient.PostAsJsonAsync(LoginUrl, requestBody);
+            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/auth/login/", requestBody);
             response.EnsureSuccessStatusCode();
 
             var registeredUser = await response.Content.ReadFromJsonAsync<UserModels>();
             Console.WriteLine(registeredUser);
+
+            if (registeredUser is not null)
+            {
+                await _authService.SetUserAsync(registeredUser);
+            }
 
             return registeredUser;
 
@@ -168,6 +217,66 @@ public class ApiService
             return null;
         }
 
+    }
+
+    public async Task<List<ClaimItem>?> GetUserClaims()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/claims/mine");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var userClaims = await response.Content.ReadFromJsonAsync<List<ClaimItem>>();
+            return userClaims;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
+
+    public async Task<UserModels?> GetUser()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/auth/me");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var node = JsonNode.Parse(json)!.AsObject();
+
+            // /auth/me doesn't return a token, but UserModels.token is required,
+            // so carry the existing token forward before deserializing.
+            node["token"] = _authService.CurrentUser.token;
+
+            var user = JsonSerializer.Deserialize<UserModels>(node);
+
+            return user;
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
     }
 
 }

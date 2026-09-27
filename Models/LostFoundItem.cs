@@ -15,6 +15,21 @@ public sealed record LostFoundItem(
     string? ImageUrl = null
     );
 
+
+//     {
+//   "id": 0,
+//   "kind": "string",
+//   "title": "string",
+//   "description": "string",
+//   "category": 0,
+//   "location": "string",
+//   "date": "2026-09-27T12:51:19.824Z",
+//   "photoUrl": "string",
+//   "status": 0,
+//   "reportedBy": "string",
+//   "createdAt": "2026-09-27T12:51:19.824Z"
+// }
+
 public static class LostFoundData
 {
     public static IReadOnlyList<LostFoundItem> Items { get; } = new[]

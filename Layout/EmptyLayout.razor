@@ -1,21 +1,43 @@
 @inherits LayoutComponentBase
-
+@using lost_and_found.Models
 @using lost_and_found.Services
 @inject AuthService AuthService
-
-<div class="empty-layout">
-    @Body
-</div>
+@inject ApiService ApiService
 
 
+@if (!@_isReady)
+{
+    <div class="loading-container">
+        <div class="spinner"></div>
+    </div>
+}
+
+else
+{
+    
+    <div class="empty-layout">
+        @Body
+    </div>
+
+}
 @code {
-    protected override void OnInitialized()
+    private bool _isReady = false;
+
+    protected override async Task OnInitializedAsync()
     {
         AuthService.OnChange += StateHasChanged;
-    }
 
-    public void Dispose()
-    {
-        AuthService.OnChange -= StateHasChanged;
+        await AuthService.InitializeAsync();
+
+        if (AuthService.isLoggedIn)
+        {
+            var user = await ApiService.GetUser();
+            if (user is not null)
+                await AuthService.SetUserAsync(user);
+            else
+                await AuthService.LogoutAsync();
+        }
+
+        _isReady = true;
     }
 }

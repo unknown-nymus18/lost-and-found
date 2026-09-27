@@ -1,5 +1,6 @@
 .claims{
-    padding:20px
+    padding:20px;
+    flex:1
 }
 
 .stats{
@@ -70,3 +71,10 @@
     text-align: center;
 }
 
+.data-container{
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    border:#111827 solid 1px;
+    border-radius: 20px;
+}

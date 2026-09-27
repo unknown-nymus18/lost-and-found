@@ -1,5 +1,8 @@
 @page "/claims"
-
+@using System.Security.Claims
+@using lost_and_found.Components
+@using lost_and_found.Services
+@inject ApiService ApiService
 
 
 <div class="claims">
@@ -27,13 +30,43 @@
             <p>My Claims</p>
         </div>
     </div>
+    <div class="data-container">
+        @foreach (var item in Items)
+        {
+            <ClaimReportCard item="item"></ClaimReportCard>
+        }
+    </div>
 </div>
 
 @code {
     private bool isReports = true;
+    public IReadOnlyList<ClaimItem> Items = ClaimItemData.Items;
 
     private void triggerSelected()
     {
         isReports = !isReports;
+    }
+
+
+
+    async public void getClaims()
+    {
+        var response = await ApiService.GetUserClaims();
+        if (response is null) return;
+        foreach (var item in response!)
+        {
+            Console.WriteLine("Found");
+            Console.WriteLine(item.claimerName);
+        }
+        @* Console.WriteLine(response); *@
+    }
+
+
+
+
+
+    protected override async void OnInitialized()
+    {
+        getClaims();
     }
 }

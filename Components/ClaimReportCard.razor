@@ -1,0 +1,57 @@
+@using lost_and_found.Services
+
+<div class="claim-card">
+    <div class="claim-icon"></div>
+
+    <div class="claim-main">
+        <div class="claim-title-row">
+            <span class="claim-title">@item.foundItemTitle</span>
+        </div>
+        <div class="claim-subtitle">
+            <p>@item.createdAt</p>
+        </div>
+    </div>
+
+    <div class="claim-right">
+        <span class="claim-status-pill @GetStatusClass(item.status)">
+            @GetClaimStatus(item.status)
+        </span>
+        <a href="@($"/claims/{item.id}")" class="claim-link">View Details</a>
+    </div>
+</div>
+
+@code {
+    [Parameter] public required ClaimItem item { get; set; }
+
+    public string GetClaimStatus(int statusCode)
+    {
+        return statusCode switch
+        {
+            0 => "Active — Awaiting Match",
+            1 => "Pending",
+            2 => "Resolved",
+            _ => "Pending"
+        };
+    }
+
+    public string GetStatusClass(int statusCode)
+    {
+        return statusCode switch
+        {
+            0 => "status-active",
+            1 => "status-pending",
+            2 => "status-resolved",
+            _ => "status-pending"
+        };
+    }
+
+    public string GetTagClass(string itemType)
+    {
+        return itemType?.ToLower() switch
+        {
+            "lost" => "tag-lost",
+            "found" => "tag-found",
+            _ => "tag-lost"
+        };
+    }
+}

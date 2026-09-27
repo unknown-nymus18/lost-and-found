@@ -3,6 +3,7 @@
 @layout EmptyLayout
 @inject ApiService ApiService
 @inject AuthService AuthService
+@inject NavigationManager NavManager
 
 <div class="sign-in">
     <div class="left">
@@ -42,7 +43,8 @@
     {
         AuthService.OnChange += StateHasChanged;
     }
-    async public void submitButton()
+
+    public async Task submitButton()
     {
         var res = await ApiService.RegisterUser("Felix", "felix@gmail.com", "12345678");
         Console.WriteLine(res);
@@ -57,7 +59,10 @@
         var res = await ApiService.LoginUser(email, password);
         if (res is not null)
         {
-            AuthService.SetUser(res);
+            if (res.role == "Student")
+            {
+                NavManager.NavigateTo("/");
+            }
         }
         Console.WriteLine(res);
     }

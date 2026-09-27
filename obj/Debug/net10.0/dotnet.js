@@ -5,7 +5,7 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
   "mainAssemblyName": "lost-and-found",
   "applicationEnvironment": "Development",
   "resources": {
-    "hash": "sha256-dO3YQc2w7hcXsakeJxjyJsgQ8NWUdrPamxBwgJc4tgo=",
+    "hash": "sha256-14q6QRDO3XDuL4FccnrmR7CCnkHnDB2MjNkXBzFnU9g=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.ikrs475e5v.js"
@@ -58,6 +58,12 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       }
     ],
     "assembly": [
+      {
+        "virtualPath": "Blazored.LocalStorage.wasm",
+        "name": "Blazored.LocalStorage.12n6dz54qr.wasm",
+        "hash": "sha256-OaMAAd5n7ORfyur5e3QIyEVKJ76MKIvwbg7/icnnYcU=",
+        "cache": "force-cache"
+      },
       {
         "virtualPath": "Microsoft.AspNetCore.Authorization.wasm",
         "name": "Microsoft.AspNetCore.Authorization.wp5b4xwrtz.wasm",
@@ -1242,16 +1248,16 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       },
       {
         "virtualPath": "lost-and-found.wasm",
-        "name": "lost-and-found.rq3mqcdunz.wasm",
-        "hash": "sha256-jenD8X99TteJSxW6QnBgL9hslJShWcbW3IT2HS3QLkQ=",
+        "name": "lost-and-found.i93ebau77a.wasm",
+        "hash": "sha256-+gQbLFbj8WKtxW3tTmN6gwSI4kE9iIORI3p3DPnGE0E=",
         "cache": "force-cache"
       }
     ],
     "pdb": [
       {
         "virtualPath": "lost-and-found.pdb",
-        "name": "lost-and-found.qk47rjwww3.pdb",
-        "hash": "sha256-FsaGN09eeH7LDuFXNdd/bUmgzUIGqWWDd/IxBjxQqE8=",
+        "name": "lost-and-found.zu1ssvppsy.pdb",
+        "hash": "sha256-a0DMW/b5al8lmyITyGoLevoR5eKUo+5lqha/a9FqPLM=",
         "cache": "force-cache"
       }
     ],

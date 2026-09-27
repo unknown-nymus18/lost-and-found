@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "FITmsGSMvjw=",
+  "dgSpecHash": "+VOhV5G9EJU=",
   "success": true,
   "projectFilePath": "C:\\Users\\temp\\websites\\lost-and-found\\lost-and-found.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\temp\\.nuget\\packages\\blazored.localstorage\\4.5.0\\blazored.localstorage.4.5.0.nupkg.sha512",
     "C:\\Users\\temp\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.9\\microsoft.aspnetcore.app.internal.assets.10.0.9.nupkg.sha512",
     "C:\\Users\\temp\\.nuget\\packages\\microsoft.aspnetcore.authorization\\10.0.9\\microsoft.aspnetcore.authorization.10.0.9.nupkg.sha512",
     "C:\\Users\\temp\\.nuget\\packages\\microsoft.aspnetcore.components\\10.0.9\\microsoft.aspnetcore.components.10.0.9.nupkg.sha512",
