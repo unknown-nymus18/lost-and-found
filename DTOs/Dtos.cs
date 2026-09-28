@@ -7,6 +7,7 @@ namespace CampusLostAndFound.DTOs;
 public record RegisterRequest(string Name, string Email, string Password);
 public record LoginRequest(string Email, string Password);
 public record AuthResponse(int UserId, string Name, string Email, string Role, string Token);
+public record MeResponse(int UserId, string Name, string Email, string Role);
 
 // ---------- Reports ----------
 public record CreateReportRequest(
