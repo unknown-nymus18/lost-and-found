@@ -7,20 +7,31 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
-DotNetEnv.Env.Load();
-
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+if (builder.Environment.IsDevelopment())
+{
+    DotNetEnv.Env.Load();
+}
+
+var connectionString =
+    Environment.GetEnvironmentVariable("DATABASE_URL")
     ?? builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException(
         "PostgreSQL is not configured. Set DATABASE_URL or ConnectionStrings:Default.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString, npgsql =>
-        npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "campus_lost_found")));
+    options.UseNpgsql(
+        connectionString,
+        npgsql =>
+            npgsql.MigrationsHistoryTable(
+                "__EFMigrationsHistory",
+                "campus_lost_found")));
 
-var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+var jwt =
+    builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
+    ?? new JwtOptions();
+
 if (Encoding.UTF8.GetByteCount(jwt.Key) < 32)
 {
     throw new InvalidOperationException(
@@ -30,6 +41,7 @@ if (Encoding.UTF8.GetByteCount(jwt.Key) < 32)
 builder.Services.AddSingleton(jwt);
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddSingleton<FileStorage>();
+
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<MatchingService>();
@@ -37,29 +49,23 @@ builder.Services.AddScoped<MatchQueryService>();
 builder.Services.AddScoped<ClaimService>();
 builder.Services.AddScoped<INotificationService, SignalRNotificationService>();
 
-const string frontendCorsPolicy = "Frontend";
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? Array.Empty<string>();
-
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(frontendCorsPolicy, policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        if (allowedOrigins.Length > 0)
-        {
-            policy.WithOrigins(allowedOrigins)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials()
-                .WithExposedHeaders("X-Matches-Found");
-        }
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
     });
 });
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddHealthChecks();
+
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -84,6 +90,7 @@ builder.Services.AddSwaggerGen(options =>
     };
 
     options.AddSecurityDefinition("Bearer", scheme);
+
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         [scheme] = Array.Empty<string>()
@@ -93,8 +100,11 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services
     .AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+
+        options.DefaultChallengeScheme =
+            JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
@@ -102,12 +112,18 @@ builder.Services
         {
             ValidateIssuer = true,
             ValidIssuer = jwt.Issuer,
+
             ValidateAudience = true,
             ValidAudience = jwt.Audience,
+
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+            IssuerSigningKey =
+                new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwt.Key)),
+
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero,
+
             RoleClaimType = System.Security.Claims.ClaimTypes.Role,
             NameClaimType = System.Security.Claims.ClaimTypes.Name
         };
@@ -116,9 +132,12 @@ builder.Services
         {
             OnMessageReceived = context =>
             {
-                var accessToken = context.Request.Query["access_token"];
-                if (!string.IsNullOrEmpty(accessToken)
-                    && context.HttpContext.Request.Path.StartsWithSegments("/hubs/notifications"))
+                var accessToken =
+                    context.Request.Query["access_token"];
+
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    context.HttpContext.Request.Path
+                        .StartsWithSegments("/hubs/notifications"))
                 {
                     context.Token = accessToken;
                 }
@@ -138,15 +157,20 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Campus Lost & Found API v1"));
-}
+app.UseSwagger();
 
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint(
+        "/swagger/v1/swagger.json",
+        "Campus Lost & Found API v1");
+});
+
+app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseCors(frontendCorsPolicy);
+
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -157,8 +181,11 @@ app.MapGet("/", () => Results.Ok(new
     documentation = "/swagger",
     health = "/health"
 }));
+
 app.MapHealthChecks("/health");
+
 app.MapControllers();
+
 app.MapHub<NotificationHub>("/hubs/notifications");
 
 await DbSeeder.SeedAsync(app.Services);
