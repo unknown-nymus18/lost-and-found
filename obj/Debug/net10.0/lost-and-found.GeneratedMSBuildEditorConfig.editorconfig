@@ -49,13 +49,17 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/temp/websites/lost-and-found/Components/ClaimReportCard.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDbGFpbVJlcG9ydENhcmQucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = b-mx9l6qeqds
+[C:/Users/temp/websites/lost-and-found/Components/ClaimCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDbGFpbUNhcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-8oqpry0red
 
 [C:/Users/temp/websites/lost-and-found/Components/ItemCard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xJdGVtQ2FyZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-ntridjet8b
+
+[C:/Users/temp/websites/lost-and-found/Components/ReportCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSZXBvcnRDYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-gxstrjg6fv
 
 [C:/Users/temp/websites/lost-and-found/Layout/EmptyLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XEVtcHR5TGF5b3V0LnJhem9y

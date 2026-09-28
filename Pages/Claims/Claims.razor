@@ -1,6 +1,7 @@
 @page "/claims"
 @using System.Security.Claims
 @using lost_and_found.Components
+@using lost_and_found.Models
 @using lost_and_found.Services
 @inject ApiService ApiService
 
@@ -9,7 +10,7 @@
     <h2>My Reports & Claims</h2>
     <div class="stats">
         <div class="action">
-            <p class="reports-stats">2</p>
+            <p class="reports-stats">@(ReportItems.Count)</p>
             <p>Active reports</p>
         </div>
         <div class="action">
@@ -17,10 +18,10 @@
             <p>Pending Claim</p>
         </div>
         <div class="action">
-            <p class="resolved-stats col-red">3</p>
+            <p class="resolved-stats col-red">@(ClaimItems.Count)</p>
             <p>Resolved</p>
         </div>
-        
+
     </div>
     <div class="selection @(isReports ? "reports-selected" : "claims-selected")" @onclick="triggerSelected">
         <div class="select-item @(isReports ? "is-selected" : "")">
@@ -31,42 +32,47 @@
         </div>
     </div>
     <div class="data-container">
-        @foreach (var item in Items)
+        @if (isReports)
         {
-            <ClaimReportCard item="item"></ClaimReportCard>
+            @foreach (var item in ReportItems!)
+            {
+                @* <ClaimReportCard item="item"></ClaimReportCard> *@
+                <div>
+                    @* <p>@(item.Title)</p> *@
+                    <ReportCard Item="@item"></ReportCard>
+                </div>
+            }
+        }
+        else
+        {
+            @foreach (var item in ClaimItems!)
+            {
+                @* <ClaimReportCard item="item"></ClaimReportCard> *@
+                <ClaimCard item="item"></ClaimCard>
+            }
         }
     </div>
 </div>
 
 @code {
     private bool isReports = true;
-    public IReadOnlyList<ClaimItem> Items = ClaimItemData.Items;
+    public IReadOnlyList<ClaimItem> ClaimItems = ClaimItemData.Items;
+    public List<ReportItem> ReportItems { get; set; } = [];
 
     private void triggerSelected()
     {
         isReports = !isReports;
     }
 
-
-
-    async public void getClaims()
+    private async Task GetClaims()
     {
-        var response = await ApiService.GetUserClaims();
-        if (response is null) return;
-        foreach (var item in response!)
-        {
-            Console.WriteLine("Found");
-            Console.WriteLine(item.claimerName);
-        }
-        @* Console.WriteLine(response); *@
+        var reportresponse = await ApiService.GetUserReports();
+
+        if (reportresponse is not null) ReportItems = reportresponse;
     }
 
-
-
-
-
-    protected override async void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        getClaims();
+        await GetClaims();
     }
 }

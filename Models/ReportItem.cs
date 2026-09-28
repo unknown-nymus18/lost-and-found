@@ -14,3 +14,9 @@ public class ReportItem
     public string ReportedBy { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
 }
+
+
+public class NewReportItem
+{
+
+}

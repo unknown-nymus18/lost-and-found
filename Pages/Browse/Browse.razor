@@ -97,8 +97,8 @@
                 @foreach (var filter in Filter)
                 {
                     <ItemCard Title="@filter.Title" Category="@GetCategoryName(filter.Category)" ImageUrl="@filter.PhotoUrl"
-                              Status="@GetStatusName(filter.Status)" Location="@filter.Location"
-                              TimeAgo="@FormatTimeAgo(filter.Date)" />
+                              Status="@GetStatusName(filter.Status)" Location="@filter.Location" TimeAgo="@FormatTimeAgo(filter.Date)"
+                              Id="@filter.Id" />
                 }
             }
             else

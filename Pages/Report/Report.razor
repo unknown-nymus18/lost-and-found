@@ -1,5 +1,8 @@
 @page "/report"
 @using lost_and_found.Models
+@using lost_and_found.Services
+@inject NavigationManager Navigation
+@inject ApiService ApiService
 
 <div class="report-page">
     <div class="report-card">
@@ -9,48 +12,52 @@
                 system find the right pair faster.</p>
             </div>
 
-            <div class="report-toggle">
-                <button class="toggle lost active">?? I Lost Something</button>
-                <button class="toggle found">? I Found Something</button>
+            <div class="report-toggle" @onclick="toggleLost">
+                <button class="@($"toggle lost {(islost ? "active" : "")}")"> I Lost Something</button>
+                <button class="@($"toggle found {(islost ? "" : "active")}")"> I Found Something</button>
             </div>
 
             <form class="report-form" onsubmit="return false;">
                 <div class="form-row">
                     <label>Item Title</label>
-                    <input class="input" type="text" placeholder="e.g. Black leather wallet with UG student card" />
+                    <input class="input" type="text" placeholder="e.g. Black leather wallet with UG student card"
+                           @bind="Title" required />
                 </div>
 
                 <div class="form-row two-col">
                     <div>
                         <label>Category</label>
-                        <select class="input" @bind="selectedCategory" @bind:event="get">
-                            @foreach (var cat in CategoryOptions.Values)
+                        <select class="input" @bind="selectedCategory" @oninput="changeOptions" required>
+                            @for (int i = 0; i < CategoryOptions.Values.Count; i++)
                             {
-                                <option>@cat</option>
+                            
+                                <option value="@i">@(CategoryOptions.Values[i])</option>
                             }
                         </select>
                     </div>
                     <div>
                         <label>Location</label>
-                        <input class="input" type="text" placeholder="e.g. Balme Library, 2nd floor" />
+                        <input class="input" type="text" placeholder="e.g. Balme Library, 2nd floor" @bind="Location"
+                               required />
                     </div>
                 </div>
 
                 <div class="form-row two-col">
                     <div>
                         <label>Date</label>
-                        <input class="input" type="date" />
+                        <input class="input" type="date" @bind="Date" required />
                     </div>
                     <div>
                         <label>Color</label>
-                        <input class="input" type="text" placeholder="e.g. Black, Blue" />
+                        <input class="input" type="text" placeholder="e.g. Black, Blue" @bind="Color" required />
                     </div>
                 </div>
 
                 <div class="form-row">
                     <label>Description</label>
                     <textarea class="textarea"
-                              placeholder="Describe distinguishing features, contents, or marks that would help verify ownership..."></textarea>
+                              placeholder="Describe distinguishing features, contents, or marks that would help verify ownership..."
+                              @bind="Description" required></textarea>
                 </div>
 
                 <div class="form-row">
@@ -65,8 +72,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Report</button>
+                    <button type="button" class="btn btn-cancel" @onclick="Cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" @onclick="Submit">Submit Report</button>
                 </div>
             </form>
         </div>
@@ -75,13 +82,46 @@
 
 @code {
 
-    public bool lost = true;
+    public bool islost = true;
+    private int selectedCategory = 0;
 
-    private string selectedCategory = CategoryOptions.AllCategories;
+    private string Title { get; set; } = string.Empty;
+    private string Location { get; set; } = string.Empty;
+    private DateTimeOffset Date { get; set; } = DateTimeOffset.Now;
 
-    private void get()
+    private string Description { get; set; } = string.Empty;
+
+    private string Color { get; set; } = string.Empty;
+
+    public void toggleLost()
     {
-        Console.WriteLine(selectedCategory);
+        islost = !islost;
     }
 
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Console.WriteLine(CategoryOptions.Values.First());
+    }
+    private void changeOptions(ChangeEventArgs eventArgs)
+    {
+        Console.WriteLine(eventArgs.Value?.ToString() ?? string.Empty);
+
+    }
+
+    public void Cancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+
+    async public void Submit()
+    {
+        @* var report = new ReportItem { Category = selectedCategory, CreatedAt} *@
+        string newDescription = "Lost" + Color + Description;
+
+        var response = await ApiService.ReportLostItem(selectedCategory, Title, newDescription, Date, Location);
+
+    }
 }

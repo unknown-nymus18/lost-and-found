@@ -51,7 +51,8 @@
         @foreach (var report in Reports.Take(4))
         {
             <ItemCard Title="@report.Title" Category="@GetCategoryName(report.Category)" ImageUrl="@report.PhotoUrl"
-                      Status="@GetStatusName(report.Status)" Location="@report.Location" TimeAgo="@FormatTimeAgo(report.Date)" />
+                      Status="@GetStatusName(report.Status)" Location="@report.Location" TimeAgo="@FormatTimeAgo(report.Date)"
+                      Id="@report.Id" />
         }
         
     </div>

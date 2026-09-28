@@ -1,0 +1,58 @@
+@using lost_and_found.Models
+
+<div class="claim-report-card">
+    <div class="thumbnail" role="img" aria-label="Photo of @Item.Title" style="background-image:url('@Item.PhotoUrl')">
+    </div>
+
+    <div class="card-info">
+        <div class="title-row">
+            <strong>@Item.Title</strong>
+            <span class="type-badge @TypeClass">@Item.Kind</span>
+        </div>
+        <span class="subtext">@Item.Location &middot; @TimeAgoLabel</span>
+    </div>
+
+    <span class="report-status @ReportStatusClass">@ReportStatusLabel</span>
+
+    <a class="view-details" href="/item-detail/@Item.Id">View Details</a>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public ReportItem Item { get; set; } = default!;
+
+    private string TypeClass =>
+        (Item.Kind ?? string.Empty).ToLower().Contains("lost") ? "type-lost" : "type-found";
+
+    // ASSUMPTION: Status is 0 = Active, 1 = MatchFound, 2 = Resolved.
+    // Replace with your real enum/values if these don't match.
+    private string ReportStatusClass => Item.Status switch
+    {
+        1 => "status-match",
+        2 => "status-resolved",
+        _ => "status-active",
+    };
+
+    private string ReportStatusLabel => Item.Status switch
+    {
+        1 => "Match Found \u2014 Claim Pending",
+        2 => "Resolved \u2014 Reunited",
+        _ => "Active \u2014 Awaiting Match",
+    };
+
+    private string TimeAgoLabel
+    {
+        get
+        {
+            var days = (DateTimeOffset.UtcNow.Date - Item.Date.Date).Days;
+            return days switch
+            {
+                0 => "Today",
+                1 => "1 day ago",
+                < 7 => $"{days} days ago",
+                < 14 => "1 week ago",
+                _ => $"{days / 7} weeks ago",
+            };
+        }
+    }
+}

@@ -10,6 +10,7 @@ namespace lost_and_found.Services;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
+using lost_and_found.Pages.Report;
 using lost_and_found.Services;
 
 public class ApiService
@@ -38,7 +39,7 @@ public class ApiService
     {
         public required string Title { get; set; }
         public required string Description { get; set; }
-        public required string Category { get; set; }
+        public required int Category { get; set; }
         public required string Location { get; set; }
         public required DateTimeOffset Date { get; set; }
 
@@ -112,24 +113,7 @@ public class ApiService
         }
     }
 
-    public async Task<ReportItem?> ReportItem(string category, string title, string description, DateTimeOffset date, string location)
 
-    {
-
-        var requestBody = new ReportRequest { Category = category, Date = date, Description = description, Location = location, Title = title };
-        try
-        {
-            var request = await _httpClient.PostAsJsonAsync($"{baseUrl}/reports/lost", requestBody);
-            request.EnsureSuccessStatusCode();
-            var response = await request.Content.ReadFromJsonAsync<ReportItem>();
-            return response;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            return null;
-        }
-    }
 
     public async Task<UserModels?> RegisterUser(string name, string email, string password)
     {
@@ -239,6 +223,63 @@ public class ApiService
         }
         catch (Exception e)
         {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
+    public async Task<List<ReportItem>?> GetUserReports()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/reports/mine");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var userReports = await response.Content.ReadFromJsonAsync<List<ReportItem>>();
+            return userReports;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
+    public async Task<ReportItem?> ReportLostItem(int category, string title, string description, DateTimeOffset date, string location)
+    {
+        if (_authService.CurrentUser is null)
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+
+        var requestBody = new ReportRequest { Category = category, Date = date, Description = description, Location = location, Title = title };
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}reports/lost")
+            {
+                Content = JsonContent.Create(requestBody)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            var reportItem = await response.Content.ReadFromJsonAsync<ReportItem>();
+            return reportItem;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
             return null;
         }
     }
@@ -263,8 +304,6 @@ public class ApiService
             var json = await response.Content.ReadAsStringAsync();
             var node = JsonNode.Parse(json)!.AsObject();
 
-            // /auth/me doesn't return a token, but UserModels.token is required,
-            // so carry the existing token forward before deserializing.
             node["token"] = _authService.CurrentUser.token;
 
             var user = JsonSerializer.Deserialize<UserModels>(node);

@@ -1,0 +1,89 @@
+.claim-report-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.thumbnail {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background-color: #e5e5e5;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.subtext {
+    display: block;
+    color: #71717a;
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+.type-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    line-height: 1.6;
+}
+
+.type-lost {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.type-found {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.report-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.status-active {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+.status-match {
+    background-color: #ede9fe;
+    color: #6d28d9;
+}
+
+.status-resolved {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.view-details {
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.view-details:hover {
+    text-decoration: underline;
+}

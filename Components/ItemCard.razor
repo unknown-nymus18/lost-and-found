@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Components
 @* @using Microsoft.AspNetCore.Components *@
 @inject NavigationManager Navigation
-<a href="/item-detail">
+<a href="/item-detail/@Id">
     
     <div class="report-card">
         <div class="card-media" role="img" aria-label="@Title" style=@($"background-image: url('{ImageUrl}');")></div>
@@ -20,6 +20,7 @@
 </a>
 
 @code {
+    [Parameter] public int Id { get; set; }
     [Parameter] public string Title { get; set; } = "Item title";
     [Parameter] public string Category { get; set; } = "Category";
     [Parameter] public string ImageUrl { get; set; } = "https://picsum.photos/id/237/200/300";
@@ -28,5 +29,6 @@
     [Parameter] public string TimeAgo { get; set; } = "some time ago";
 
     private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found";
+
 
 }
