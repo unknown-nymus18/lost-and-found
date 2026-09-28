@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using CampusLostAndFound.DTOs;
 using CampusLostAndFound.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CampusLostAndFound.Controllers;
@@ -37,5 +39,17 @@ public class AuthController : ControllerBase
 
         var u = result.User!;
         return Ok(new AuthResponse(u.Id, u.Name, u.Email, u.Role, _tokens.CreateToken(u)));
+    }
+
+    /// <summary>Return the profile of the currently authenticated user.</summary>
+    [Authorize]
+    [HttpGet("me")]
+    public ActionResult<MeResponse> Me()
+    {
+        var id   = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var name  = User.FindFirstValue(ClaimTypes.Name)!;
+        var email = User.FindFirstValue(ClaimTypes.Email)!;
+        var role  = User.FindFirstValue(ClaimTypes.Role)!;
+        return Ok(new MeResponse(id, name, email, role));
     }
 }
