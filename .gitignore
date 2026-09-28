@@ -1,9 +1,11 @@
 # Build output
 bin/
 obj/
+publish/
 
 # Local environment and legacy local database files
 .env
+*.zip
 *.db
 *.db-shm
 *.db-wal
