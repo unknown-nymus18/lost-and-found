@@ -44,6 +44,24 @@ public class ReportsController : ApiControllerBase
         return Ok(await _reports.BrowseAsync(filter));
     }
 
+    /// <summary>Get a lost-item report by ID.</summary>
+    [HttpGet("lost/{id:int}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ReportDto>> GetLost(int id)
+    {
+        var report = await _reports.GetLostAsync(id);
+        return report is null ? NotFound() : Ok(report);
+    }
+
+    /// <summary>Get a found-item report by ID.</summary>
+    [HttpGet("found/{id:int}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ReportDto>> GetFound(int id)
+    {
+        var report = await _reports.GetFoundAsync(id);
+        return report is null ? NotFound() : Ok(report);
+    }
+
     /// <summary>Reports filed by the authenticated user.</summary>
     [HttpGet("mine")]
     public async Task<ActionResult<List<ReportDto>>> Mine() =>
