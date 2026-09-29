@@ -87,6 +87,20 @@ public class ReportService
         return results.OrderByDescending(r => r.CreatedAt).ToList();
     }
 
+    public async Task<ReportDto?> GetLostAsync(int id)
+    {
+        var report = await _db.LostReports.Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.Id == id);
+        return report is null ? null : Map(report);
+    }
+
+    public async Task<ReportDto?> GetFoundAsync(int id)
+    {
+        var report = await _db.FoundReports.Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.Id == id);
+        return report is null ? null : Map(report);
+    }
+
     public async Task<List<ReportDto>> ForUserAsync(int userId)
     {
         var lost = await _db.LostReports.Include(r => r.User)
