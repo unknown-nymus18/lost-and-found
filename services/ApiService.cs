@@ -56,7 +56,7 @@ public class ApiService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"{baseUrl}/reports/");
+            var response = await _httpClient.GetAsync($"{baseUrl}reports/");
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -85,7 +85,7 @@ public class ApiService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"{baseUrl}/reports/");
+            var response = await _httpClient.GetAsync($"{baseUrl}reports/");
             response.EnsureSuccessStatusCode();
 
             var items = await response.Content.ReadFromJsonAsync<List<ReportItem>>();
@@ -112,6 +112,26 @@ public class ApiService
             return new List<ReportItem>();
         }
     }
+
+
+    public async Task<ReportItem?> GetLostItemById(int id)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"{baseUrl}reports/lost/{id}");
+            response.EnsureSuccessStatusCode();
+
+            var report = await response.Content.ReadFromJsonAsync<ReportItem>();
+            return report;
+        }
+
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
+
 
 
 

@@ -1,33 +1,53 @@
 @page "/item-detail/{Id:int}"
+@using lost_and_found.Models
+@using lost_and_found.Services
 
-<div class="item-detail">
-    <section class="item-main">
-        <a class="back-link" href="/browse">&#8592; Back to results</a>
+@inject ApiService ApiService
 
-        <div class="item-img" role="img" aria-label="Photo of @Title"></div>
+@if (isLoading)
+{
+    <div class="item-detail">
+        <p>Loading...</p>
+    </div>
+}
+else if (item is null)
+{
+    <div class="item-detail">
+        <section class="item-main">
+            <a class="back-link" href="/browse">&#8592; Back to results</a>
+            <p>Sorry, we couldn't find that item.</p>
+        </section>
+    </div>
+}
+else
+{
+    <div class="item-detail">
+        <section class="item-main">
+            <a class="back-link" href="/browse">&#8592; Back to results</a>
 
-        <div class="item-heading">
-            <span class="status @StatusClass">@Status</span>
-            <h1>@Title</h1>
-        </div>
+            <div class="item-img" role="img" aria-label="Photo of @item.Title" style="@ImageStyle"></div>
 
-        <div class="item-meta">
-            <span>&#128205; JQB Complex, Ground Floor</span>
-            <span>&#9632; Found on Aug 23, 2026</span>
-            <span>&#9644; Personal Item</span>
-        </div>
+            <div class="item-heading">
+                <span class="status @StatusClass">@item.Kind</span>
+                <h1>@item.Title</h1>
+            </div>
 
-        <section class="description">
-            <h2>Description</h2>
-            <p>A steel blue water bottle with a UG Alumni Association sticker on the side and a small dent near the
-                base. Found near the vending machines and handed in to the JQB porters' lodge.</p>
+            <div class="item-meta">
+                <span>&#128205; @item.Location</span>
+                <span>&#9632; @DateLabel @item.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                <span>&#9644; @CategoryName</span>
+            </div>
+
+            <section class="description">
+                <h2>Description</h2>
+                <p>@item.Description</p>
             </section>
 
             <div class="reporter">
                 <div class="avatar" aria-hidden="true"></div>
                 <div>
-                    <strong>Reported by Ama K. (Admin verified)</strong>
-                    <span>Held at Campus Security Office &mdash; Legon</span>
+                    <strong>Reported by @item.ReportedBy</strong>
+                    <span>Posted @item.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</span>
                 </div>
             </div>
         </section>
@@ -59,27 +79,49 @@
             </div>
         </section>
     </div>
+}
 
 @code {
+    [Parameter] public int Id { get; set; }
 
+    private ReportItem? item;
+    private bool isLoading = true;
 
-    [Parameter] public int Id { get; set; } = 0;
-
-
-
-    [Parameter] public string Title { get; set; } = "Item ";
-    [Parameter] public string Category { get; set; } = "Category";
-    [Parameter] public string ImageUrl { get; set; } = "https://via.placeholder.com/400x240?text=Item";
-    [Parameter] public string Status { get; set; } = "Found";
-    [Parameter] public string Location { get; set; } = "Location";
-    [Parameter] public string TimeAgo { get; set; } = "some time ago";
-
-    private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found";
-
-    protected override void OnParametersSet()
+    // Adjust these to match your real category IDs.
+    private static readonly Dictionary<int, string> Categories = new()
     {
-        base.OnParametersSet();
-        Console.WriteLine(Id);
-    }
+        [0] = "Personal Item",
+        [1] = "Electronics",
+        [2] = "Clothing",
+        [3] = "Documents",
+        [4] = "Other"
+    };
 
+    private string StatusClass =>
+        (item?.Kind ?? string.Empty).Contains("lost", StringComparison.OrdinalIgnoreCase) ? "lost" : "found";
+
+    private string DateLabel => StatusClass == "lost" ? "Lost on" : "Found on";
+
+    private string CategoryName =>
+        item is not null && Categories.TryGetValue(item.Category, out var name) ? name : "Other";
+
+    private string ImageStyle =>
+        string.IsNullOrWhiteSpace(item?.PhotoUrl)
+            ? string.Empty
+            : $"background-image: url('{item!.PhotoUrl}'); background-size: cover; background-position: center;";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        try
+        {
+            item = await ApiService.GetLostItemById(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load item {Id}: {ex.Message}");
+            item = null;
+        }
+        isLoading = false;
+    }
 }

@@ -1,44 +1,57 @@
 ﻿@using lost_and_found.Models
 @using lost_and_found.Services
 @inject AuthService AuthService
+
 <nav id="nav-main" class="nav-menu">
-    <p class="brand">UG Lost & Found</p>
-    <div class="nav-links">
-        <NavLink class="nav-link" href="/" Match="NavLinkMatch.All" ActiveClass="active">Home</NavLink>
-        <NavLink class="nav-link" href="/browse" ActiveClass="active">Browse</NavLink>
-        <NavLink class="nav-link" href="/report" ActiveClass="active">Report Item</NavLink>
-        <NavLink class="nav-link" href="/claims" ActiveClass="active">My Claims </NavLink>
-    </div>
+    <p class="brand">UG Lost &amp; Found</p>
 
-    @if (AuthService.CurrentUser is not null)
-    {
-        
-        <div class="d-flex align-items-center gap-3">
-            <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center"
-                 style="width: 32px; height: 32px; flex-shrink: 0;">
-                <i class="bi bi-bell-fill text-warning"></i>
-            </div>
+    <button class="nav-toggle @(menuOpen ? "open" : "")" type="button" aria-label="Toggle navigation"
+            aria-expanded="@menuOpen" aria-controls="nav-collapse" @onclick="ToggleMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 
-            <div class="d-flex align-items-center gap-2">
-                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold"
+    <div id="nav-collapse" class="nav-collapse @(menuOpen ? "open" : "")" @onclick="CloseMenu">
+        <div class="nav-links">
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All" ActiveClass="active">Home</NavLink>
+            <NavLink class="nav-link" href="/browse" ActiveClass="active">Browse</NavLink>
+            <NavLink class="nav-link" href="/report" ActiveClass="active">Report Item</NavLink>
+            <NavLink class="nav-link" href="/claims" ActiveClass="active">My Claims</NavLink>
+        </div>
+
+        @if (AuthService.CurrentUser is not null)
+        {
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center"
                      style="width: 32px; height: 32px; flex-shrink: 0;">
-                    @(string.IsNullOrEmpty(AuthService.CurrentUser?.name) ? "" :
-                        AuthService.CurrentUser.name[0].ToString().ToUpper())
+                    <i class="bi bi-bell-fill text-warning"></i>
                 </div>
-                <p class="m-0 fs-6">@AuthService.CurrentUser?.name</p>
+
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold"
+                         style="width: 32px; height: 32px; flex-shrink: 0;">
+                        @(string.IsNullOrEmpty(AuthService.CurrentUser?.name) ? "" :
+                            AuthService.CurrentUser.name[0].ToString().ToUpper())
+                    </div>
+                    <p class="m-0 fs-6">@AuthService.CurrentUser?.name</p>
+                </div>
             </div>
-        </div>
-    }
-    else
-    {
-        <div class="auth-nav">
-            <NavLink class="btn">Sign up</NavLink>
-            <NavLink class="btn btn-primary" href="/sign-in">Sign in</NavLink>
-        </div>
-    }
+        }
+        else
+        {
+            <div class="auth-nav">
+                <NavLink class="btn">Sign up</NavLink>
+                <NavLink class="btn btn-primary" href="/sign-in">Sign in</NavLink>
+            </div>
+        }
+    </div>
 </nav>
 
+@code {
+    private bool menuOpen;
 
+    private void ToggleMenu() => menuOpen = !menuOpen;
 
-
-
+    private void CloseMenu() => menuOpen = false;
+}

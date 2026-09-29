@@ -3,7 +3,7 @@ namespace lost_and_found.Models;
 public sealed record LostFoundItem(
     int Id,
     string Title,
-    string Category,
+    int Kind,
     string Status,
     string Location,
     string TimeAgo,
@@ -16,19 +16,6 @@ public sealed record LostFoundItem(
     );
 
 
-//     {
-//   "id": 0,
-//   "kind": "string",
-//   "title": "string",
-//   "description": "string",
-//   "category": 0,
-//   "location": "string",
-//   "date": "2026-09-27T12:51:19.824Z",
-//   "photoUrl": "string",
-//   "status": 0,
-//   "reportedBy": "string",
-//   "createdAt": "2026-09-27T12:51:19.824Z"
-// }
 
 public static class LostFoundData
 {
@@ -37,7 +24,7 @@ public static class LostFoundData
         new LostFoundItem(
             1,
             "Black Leather Wallet",
-            "Wallet",
+            4,
             "Lost",
             "Balme Library",
             "2 days ago",
@@ -47,7 +34,7 @@ public static class LostFoundData
         new LostFoundItem(
             2,
             "iPhone 13 (Blue)",
-            "Electronics",
+            3,
             "Found",
             "Night Market",
             "1 day ago",
@@ -57,7 +44,7 @@ public static class LostFoundData
         new LostFoundItem(
             3,
             "Blue Water Bottle",
-            "Personal Item",
+            1,
             "Found",
             "JQB Complex",
             "3 days ago",
@@ -69,7 +56,7 @@ public static class LostFoundData
         new LostFoundItem(
             4,
             "Student ID Card",
-            "ID Card",
+            2,
             "Lost",
             "Commonwealth Hall",
             "Today",
@@ -79,7 +66,7 @@ public static class LostFoundData
         new LostFoundItem(
             5,
             "Silver Car Keys",
-            "Keys",
+            4,
             "Found",
             "Night Market",
             "4 days ago",
@@ -89,7 +76,7 @@ public static class LostFoundData
         new LostFoundItem(
             6,
             "Grey Backpack",
-            "Bag",
+            6,
             "Lost",
             "JQB Complex",
             "5 days ago",
