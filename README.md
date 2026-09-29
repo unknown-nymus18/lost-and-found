@@ -80,6 +80,15 @@ Swagger lists all available endpoints and lets you test them from the browser.
 | SignalR hub     | `http://localhost:5080/hubs/notifications` |
 | Uploaded photos | `http://localhost:5080/uploads/{filename}` |
 
+## Item details
+
+Use the report's `kind` and `id` from `GET /api/reports` to load its details:
+
+- `GET /api/reports/lost/{id}`
+- `GET /api/reports/found/{id}`
+
+Both endpoints are public and return the same `ReportDto` as the browse list, or `404` if the report does not exist. Lost and found reports have separate ID sequences, so the kind is required to identify the item.
+
 ## Demo accounts
 
 | Role    | Email                   | Password      |
