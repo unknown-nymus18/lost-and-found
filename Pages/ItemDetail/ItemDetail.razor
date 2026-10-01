@@ -1,4 +1,4 @@
-@page "/item-detail/{Id:int}"
+@page "/item-detail/{Kind}/{Id:int}"
 @using lost_and_found.Models
 @using lost_and_found.Services
 
@@ -52,37 +52,41 @@ else
             </div>
         </section>
 
-        <section class="item-actions">
-            <div class="match-alert">
-                <strong>&#9889; 91% Potential Match</strong>
-                <p>This matches a Lost Report: "Blue Steel Bottle" filed 2 days ago near JQB Complex.</p>
-                <button class="dark-button" type="button">View Matching Report</button>
-            </div>
-
-            <div class="claim-panel">
-                <h2>Claim This Item</h2>
-
-                <div class="claim-steps" aria-label="Claim progress">
-                    <div class="step active"><span>1</span><small>Submit Proof</small></div>
-                    <div class="step-line"></div>
-                    <div class="step"><span>2</span><small>Admin Review</small></div>
-                    <div class="step-line"></div>
-                    <div class="step"><span>3</span><small>Resolution</small></div>
+        @if (Kind == "found")
+        {
+            <section class="item-actions">
+                <div class="match-alert">
+                    <strong>&#9889; 91% Potential Match</strong>
+                    <p>This matches a Lost Report: "Blue Steel Bottle" filed 2 days ago near JQB Complex.</p>
+                    <button class="dark-button" type="button">View Matching Report</button>
                 </div>
 
-                <label class="proof-label" for="proof">Proof of Ownership</label>
-                <textarea id="proof"
-                          placeholder="Describe a unique detail only the true owner would know (e.g. contents, purchase receipt)..."></textarea>
-                <button class="primary-button" type="button">Submit Claim Request</button>
+                <div class="claim-panel">
+                    <h2>Claim This Item</h2>
 
-                <p class="claim-note">&#128172; Once approved, you can message the finder directly to arrange pickup.</p>
-            </div>
-        </section>
+                    <div class="claim-steps" aria-label="Claim progress">
+                        <div class="step active"><span>1</span><small>Submit Proof</small></div>
+                        <div class="step-line"></div>
+                        <div class="step"><span>2</span><small>Admin Review</small></div>
+                        <div class="step-line"></div>
+                        <div class="step"><span>3</span><small>Resolution</small></div>
+                    </div>
+
+                    <label class="proof-label" for="proof">Proof of Ownership</label>
+                    <textarea id="proof"
+                              placeholder="Describe a unique detail only the true owner would know (e.g. contents, purchase receipt)..."></textarea>
+                    <button class="primary-button" type="button">Submit Claim Request</button>
+
+                    <p class="claim-note">&#128172; Once approved, you can message the finder directly to arrange pickup.</p>
+                </div>
+            </section>
+        }
     </div>
 }
 
 @code {
     [Parameter] public int Id { get; set; }
+    [Parameter] public string Kind { get; set; }
 
     private ReportItem? item;
     private bool isLoading = true;
@@ -115,7 +119,7 @@ else
         isLoading = true;
         try
         {
-            item = await ApiService.GetLostItemById(Id);
+            item = Kind == "lost" ? await ApiService.GetLostItemById(Id) : await ApiService.GetFoundItemById(Id);
         }
         catch (Exception ex)
         {

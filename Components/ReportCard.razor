@@ -14,7 +14,7 @@
 
     <span class="report-status @ReportStatusClass">@ReportStatusLabel</span>
 
-    <a class="view-details" href="/item-detail/@Item.Id">View Details</a>
+    <a class="view-details" href="/item-detail/@(Item.Kind.ToLower())/@Item.Id">View Details</a>
 </div>
 
 @code {

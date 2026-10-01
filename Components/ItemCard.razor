@@ -2,17 +2,18 @@
 @using Microsoft.AspNetCore.Components
 @* @using Microsoft.AspNetCore.Components *@
 @inject NavigationManager Navigation
-<a href="/item-detail/@Id">
+<a href="/item-detail/@(Kind.ToLower())/@Id">
     
     <div class="report-card">
         <div class="card-media" role="img" aria-label="@Title" style=@($"background-image: url('{ImageUrl}');")></div>
 
         <div class="card-body">
-            <span class="status @StatusClass">@Status</span>
+            <span class="status @(Kind.ToLower())">@Kind</span>
 
             <h4 class="card-title">@Title</h4>
 
             <p class="category">@Category</p>
+            @* <p>@Id</p> *@
 
             <div class="card-meta">@Location � @TimeAgo</div>
         </div>
@@ -27,8 +28,13 @@
     [Parameter] public string Status { get; set; } = "Found";
     [Parameter] public string Location { get; set; } = "Location";
     [Parameter] public string TimeAgo { get; set; } = "some time ago";
+    [Parameter] public string Kind { get; set; } = string.Empty;
 
-    private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found";
+    @* private string StatusClass => (Status ?? string.Empty).ToLower().Contains("lost") ? "lost" : "found"; *@
 
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
 
 }

@@ -8,120 +8,149 @@
     <div class="report-card">
         <div class="card-header">
             <h2>Report an Item</h2>
-            <p class="subtitle">Fill in as much detail as possible � clear descriptions and photos help our matching
-                system find the right pair faster.</p>
-            </div>
-
-            <div class="report-toggle" @onclick="toggleLost">
-                <button class="@($"toggle lost {(islost ? "active" : "")}")"> I Lost Something</button>
-                <button class="@($"toggle found {(islost ? "" : "active")}")"> I Found Something</button>
-            </div>
-
-            <form class="report-form" onsubmit="return false;">
-                <div class="form-row">
-                    <label>Item Title</label>
-                    <input class="input" type="text" placeholder="e.g. Black leather wallet with UG student card"
-                           @bind="Title" required />
-                </div>
-
-                <div class="form-row two-col">
-                    <div>
-                        <label>Category</label>
-                        <select class="input" @bind="selectedCategory" @oninput="changeOptions" required>
-                            @for (int i = 0; i < CategoryOptions.Values.Count; i++)
-                            {
-                            
-                                <option value="@i">@(CategoryOptions.Values[i])</option>
-                            }
-                        </select>
-                    </div>
-                    <div>
-                        <label>Location</label>
-                        <input class="input" type="text" placeholder="e.g. Balme Library, 2nd floor" @bind="Location"
-                               required />
-                    </div>
-                </div>
-
-                <div class="form-row two-col">
-                    <div>
-                        <label>Date</label>
-                        <input class="input" type="date" @bind="Date" required />
-                    </div>
-                    <div>
-                        <label>Color</label>
-                        <input class="input" type="text" placeholder="e.g. Black, Blue" @bind="Color" required />
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <label>Description</label>
-                    <textarea class="textarea"
-                              placeholder="Describe distinguishing features, contents, or marks that would help verify ownership..."
-                              @bind="Description" required></textarea>
-                </div>
-
-                <div class="form-row">
-                    <label>Photo Evidence</label>
-                    <div class="upload-area">
-                        <div class="upload-inner">
-                            <div class="upload-icon">??</div>
-                            <div class="upload-text">Drag & drop a photo, or click to upload</div>
-                            <div class="upload-sub">PNG or JPG, up to 10MB</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn btn-cancel" @onclick="Cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary" @onclick="Submit">Submit Report</button>
-                </div>
-            </form>
+            <p class="subtitle">
+                Fill in as much detail as possible. Clear descriptions and photos help our matching
+                system find the right pair faster.
+            </p>
         </div>
-    </div>
 
+        <div class="report-toggle">
+            <button type="button" class="@($"toggle lost {(isLost ? "active" : "")}")" @onclick="() => isLost = true">
+                I Lost Something
+            </button>
+            <button type="button" class="@($"toggle found {(isLost ? "" : "active")}")" @onclick="() => isLost = false">
+                I Found Something
+            </button>
+        </div>
+
+        <form class="report-form" @onsubmit="Submit">
+            <div class="form-row">
+                <label>Item Title</label>
+                <input class="input" type="text" placeholder="e.g. Black leather wallet with UG student card"
+                       @bind="Title" required />
+            </div>
+
+            <div class="form-row two-col">
+                <div>
+                    <label>Category</label>
+                    <select class="input" @bind="selectedCategory" required>
+                        @for (int i = 0; i < CategoryOptions.Values.Count; i++)
+                        {
+                            <option value="@i">@(CategoryOptions.Values[i])</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Location</label>
+                    <input class="input" type="text" placeholder="e.g. Balme Library, 2nd floor" @bind="Location"
+                           required />
+                </div>
+            </div>
+
+            <div class="form-row two-col">
+                <div>
+                    <label>Date</label>
+                    <input class="input" type="date" @bind="Date" max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                           required />
+                </div>
+                <div>
+                    <label>Color</label>
+                    <input class="input" type="text" placeholder="e.g. Black, Blue" @bind="Color" required />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Description</label>
+                <textarea class="textarea"
+                          placeholder="Describe distinguishing features, contents, or marks that would help verify ownership..."
+                          @bind="Description" required></textarea>
+            </div>
+
+            <div class="form-row">
+                <label>Photo Evidence</label>
+                <div class="upload-area">
+                    <div class="upload-inner">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Drag &amp; drop a photo, or click to upload</div>
+                        <div class="upload-sub">PNG or JPG, up to 10MB</div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="form-error" role="alert">@errorMessage</p>
+            }
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel" @onclick="Cancel" disabled="@isSubmitting">Cancel</button>
+                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                    @(isSubmitting ? "Submitting..." : "Submit Report")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 @code {
+    private bool isLost = true;
+    private bool isSubmitting;
+    private string? errorMessage;
 
-    public bool islost = true;
+    // Index in CategoryOptions.Values. It must match the category value the API
+    // expects (the ItemCategory enum). Map it if the numbering differs.
     private int selectedCategory = 0;
 
     private string Title { get; set; } = string.Empty;
     private string Location { get; set; } = string.Empty;
-    private DateTimeOffset Date { get; set; } = DateTimeOffset.Now;
-
     private string Description { get; set; } = string.Empty;
-
     private string Color { get; set; } = string.Empty;
 
-    public void toggleLost()
+    // Plain DateTime bound to <input type="date">: holds only the day the user picked.
+    private DateTime Date { get; set; } = DateTime.Today;
+
+    private void Cancel() => Navigation.NavigateTo("/");
+
+    private async Task Submit()
     {
-        islost = !islost;
-    }
+        if (isSubmitting) return;
 
+        errorMessage = null;
+        isSubmitting = true;
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        Console.WriteLine(CategoryOptions.Values.First());
-    }
-    private void changeOptions(ChangeEventArgs eventArgs)
-    {
-        Console.WriteLine(eventArgs.Value?.ToString() ?? string.Empty);
+        try
+        {
+            // Keep the picked calendar day and send it as UTC (offset +00:00).
+            var reportDate = new DateTimeOffset(DateTime.SpecifyKind(Date.Date, DateTimeKind.Utc));
 
-    }
+            var fullDescription = $"Color: {Color.Trim()}. {Description.Trim()}";
 
-    public void Cancel()
-    {
-        Navigation.NavigateTo("/");
-    }
+            Console.WriteLine(
+                $"Submitting: kind={(isLost ? "lost" : "found")}, cat={selectedCategory}, " +
+                $"title='{Title}', date={reportDate:O}, loc='{Location}'");
 
+            // Assumes ApiService.ReportFoundItem exists and posts to "reports/found".
+            var result = isLost
+                ? await ApiService.ReportLostItem(selectedCategory, Title.Trim(), fullDescription, reportDate, Location.Trim())
+                : await ApiService.ReportFoundItem(selectedCategory, Title.Trim(), fullDescription, reportDate, Location.Trim());
 
-    async public void Submit()
-    {
-        @* var report = new ReportItem { Category = selectedCategory, CreatedAt} *@
-        string newDescription = "Lost" + Color + Description;
-
-        var response = await ApiService.ReportLostItem(selectedCategory, Title, newDescription, Date, Location);
-
+            if (result.Ok)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Could not submit the report. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            errorMessage = "Something went wrong while submitting. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 }

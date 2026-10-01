@@ -56,7 +56,10 @@
 
 @code {
     private bool isReports = true;
-    public IReadOnlyList<ClaimItem> ClaimItems = ClaimItemData.Items;
+    private string errorMessage;
+    private bool isLoading;
+
+    public List<ClaimItem> ClaimItems { get; set; } = [];
     public List<ReportItem> ReportItems { get; set; } = [];
 
     private void triggerSelected()
@@ -64,15 +67,34 @@
         isReports = !isReports;
     }
 
-    private async Task GetClaims()
+    private async Task GetReportsClaims()
     {
         var reportresponse = await ApiService.GetUserReports();
+        var claimresponse = await ApiService.GetUserClaims();
 
-        if (reportresponse is not null) ReportItems = reportresponse;
+        @* if (reportresponse is not null) ReportItems = reportresponse; *@
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await GetClaims();
+        try
+        {
+            var reportsTask = ApiService.GetUserReports();
+            var claimsTask = ApiService.GetUserClaims();
+
+            await Task.WhenAll(reportsTask, claimsTask);
+
+            ReportItems = reportsTask.Result ?? [];
+            ClaimItems = claimsTask.Result ?? [];
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            errorMessage = "Couldn't load your data. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 }
