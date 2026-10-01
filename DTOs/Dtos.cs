@@ -5,21 +5,21 @@ namespace CampusLostAndFound.DTOs;
 
 // ---------- Auth ----------
 public record RegisterRequest(
-    [property: Required, MaxLength(120)] string Name,
-    [property: Required, EmailAddress, MaxLength(160)] string Email,
-    [property: Required] string Password);
+    [Required, MaxLength(120)] string Name,
+    [Required, EmailAddress, MaxLength(160)] string Email,
+    [Required] string Password);
 public record LoginRequest(
-    [property: Required] string Email,
-    [property: Required] string Password);
+    [Required] string Email,
+    [Required] string Password);
 public record AuthResponse(int UserId, string Name, string Email, string Role, string Token);
 public record MeResponse(int UserId, string Name, string Email, string Role);
 
 // ---------- Reports ----------
 public record CreateReportRequest(
-    [property: Required, MaxLength(140)] string Title,
-    [property: Required, MaxLength(2000)] string Description,
-    [property: EnumDataType(typeof(ItemCategory))] ItemCategory Category,
-    [property: Required, MaxLength(160)] string Location,
+    [Required, MaxLength(140)] string Title,
+    [Required, MaxLength(2000)] string Description,
+    [EnumDataType(typeof(ItemCategory))] ItemCategory Category,
+    [Required, MaxLength(160)] string Location,
     DateTime Date) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -81,8 +81,8 @@ public record MatchDto(
 
 // ---------- Claims ----------
 public record CreateClaimRequest(
-    [property: Range(1, int.MaxValue)] int FoundReportId,
-    [property: Required] string ProofDescription);
+    [Range(1, int.MaxValue)] int FoundReportId,
+    [Required] string ProofDescription);
 public record DecideClaimRequest(bool Approve, string? Note);
 
 public record ClaimDto(
