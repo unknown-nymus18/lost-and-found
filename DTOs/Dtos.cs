@@ -4,35 +4,54 @@ using CampusLostAndFound.Models;
 namespace CampusLostAndFound.DTOs;
 
 // ---------- Auth ----------
-public record RegisterRequest(string Name, string Email, string Password);
-public record LoginRequest(string Email, string Password);
+public record RegisterRequest(
+    [property: Required, MaxLength(120)] string Name,
+    [property: Required, EmailAddress, MaxLength(160)] string Email,
+    [property: Required] string Password);
+public record LoginRequest(
+    [property: Required] string Email,
+    [property: Required] string Password);
 public record AuthResponse(int UserId, string Name, string Email, string Role, string Token);
 public record MeResponse(int UserId, string Name, string Email, string Role);
 
 // ---------- Reports ----------
 public record CreateReportRequest(
-    string Title,
-    string Description,
-    ItemCategory Category,
-    string Location,
-    DateTime Date);
-
-public sealed class CreateReportWithPhotoRequest
+    [property: Required, MaxLength(140)] string Title,
+    [property: Required, MaxLength(2000)] string Description,
+    [property: EnumDataType(typeof(ItemCategory))] ItemCategory Category,
+    [property: Required, MaxLength(160)] string Location,
+    DateTime Date) : IValidatableObject
 {
-    [Required]
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Date == default)
+            yield return new ValidationResult("Date is required.", [nameof(Date)]);
+    }
+}
+
+public sealed class CreateReportWithPhotoRequest : IValidatableObject
+{
+    [Required, MaxLength(140)]
     public string Title { get; init; } = string.Empty;
 
-    [Required]
+    [Required, MaxLength(2000)]
     public string Description { get; init; } = string.Empty;
 
+    [EnumDataType(typeof(ItemCategory))]
     public ItemCategory Category { get; init; }
 
-    [Required]
+    [Required, MaxLength(160)]
     public string Location { get; init; } = string.Empty;
 
     public DateTime Date { get; init; }
 
     public IFormFile? Photo { get; init; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Date == default)
+            yield return new ValidationResult("Date is required.", [nameof(Date)]);
+    }
 
     public CreateReportRequest ToReportRequest() =>
         new(Title, Description, Category, Location, Date);
@@ -61,7 +80,9 @@ public record MatchDto(
     DateTime CreatedAt);
 
 // ---------- Claims ----------
-public record CreateClaimRequest(int FoundReportId, string ProofDescription);
+public record CreateClaimRequest(
+    [property: Range(1, int.MaxValue)] int FoundReportId,
+    [property: Required] string ProofDescription);
 public record DecideClaimRequest(bool Approve, string? Note);
 
 public record ClaimDto(

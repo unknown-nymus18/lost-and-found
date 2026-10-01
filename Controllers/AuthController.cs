@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<AuthResponse>> Register(RegisterRequest req)
     {
         var result = await _auth.RegisterAsync(req.Name, req.Email, req.Password);
-        if (!result.Succeeded) return BadRequest(new { error = result.Error });
+        if (!result.Succeeded) return Problem(statusCode: result.StatusCode, detail: result.Error);
 
         var u = result.User!;
         return Ok(new AuthResponse(u.Id, u.Name, u.Email, u.Role, _tokens.CreateToken(u)));
@@ -35,7 +35,7 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest req)
     {
         var result = await _auth.ValidateAsync(req.Email, req.Password);
-        if (!result.Succeeded) return Unauthorized(new { error = result.Error });
+        if (!result.Succeeded) return Problem(statusCode: result.StatusCode, detail: result.Error);
 
         var u = result.User!;
         return Ok(new AuthResponse(u.Id, u.Name, u.Email, u.Role, _tokens.CreateToken(u)));
@@ -46,10 +46,10 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     public ActionResult<MeResponse> Me()
     {
-        var id   = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var name  = User.FindFirstValue(ClaimTypes.Name)!;
+        var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var name = User.FindFirstValue(ClaimTypes.Name)!;
         var email = User.FindFirstValue(ClaimTypes.Email)!;
-        var role  = User.FindFirstValue(ClaimTypes.Role)!;
+        var role = User.FindFirstValue(ClaimTypes.Role)!;
         return Ok(new MeResponse(id, name, email, role));
     }
 }

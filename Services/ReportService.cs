@@ -36,7 +36,7 @@ public class ReportService
             Description = req.Description.Trim(),
             Category = req.Category,
             Location = req.Location.Trim(),
-            DateLost = req.Date,
+            DateLost = ToUtc(req.Date),
             PhotoUrl = photoUrl
         };
         _db.LostReports.Add(report);
@@ -56,7 +56,7 @@ public class ReportService
             Description = req.Description.Trim(),
             Category = req.Category,
             Location = req.Location.Trim(),
-            DateFound = req.Date,
+            DateFound = ToUtc(req.Date),
             PhotoUrl = photoUrl
         };
         _db.FoundReports.Add(report);
@@ -116,6 +116,14 @@ public class ReportService
         await _db.LostReports.CountAsync(r => r.Status == ReportStatus.Open || r.Status == ReportStatus.Matched)
         + await _db.FoundReports.CountAsync(r => r.Status == ReportStatus.Open || r.Status == ReportStatus.Matched);
 
+    // Date-only inputs have no timezone; interpret them as UTC midnight.
+    private static DateTime ToUtc(DateTime date) => date.Kind switch
+    {
+        DateTimeKind.Utc => date,
+        DateTimeKind.Local => date.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(date, DateTimeKind.Utc)
+    };
+
     // ---- filtering --------------------------------------------------------
 
     private static IQueryable<LostReport> ApplyLost(IQueryable<LostReport> q, ReportFilter f)
@@ -126,8 +134,16 @@ public class ReportService
         if (!string.IsNullOrWhiteSpace(f.Query))
             q = q.Where(r => r.Title.ToLower().Contains(f.Query.ToLower())
                           || r.Description.ToLower().Contains(f.Query.ToLower()));
-        if (f.From is not null) q = q.Where(r => r.DateLost >= f.From);
-        if (f.To is not null) q = q.Where(r => r.DateLost <= f.To);
+        if (f.From is not null)
+        {
+            var from = ToUtc(f.From.Value);
+            q = q.Where(r => r.DateLost >= from);
+        }
+        if (f.To is not null)
+        {
+            var to = ToUtc(f.To.Value);
+            q = q.Where(r => r.DateLost <= to);
+        }
         return q;
     }
 
@@ -139,8 +155,16 @@ public class ReportService
         if (!string.IsNullOrWhiteSpace(f.Query))
             q = q.Where(r => r.Title.ToLower().Contains(f.Query.ToLower())
                           || r.Description.ToLower().Contains(f.Query.ToLower()));
-        if (f.From is not null) q = q.Where(r => r.DateFound >= f.From);
-        if (f.To is not null) q = q.Where(r => r.DateFound <= f.To);
+        if (f.From is not null)
+        {
+            var from = ToUtc(f.From.Value);
+            q = q.Where(r => r.DateFound >= from);
+        }
+        if (f.To is not null)
+        {
+            var to = ToUtc(f.To.Value);
+            q = q.Where(r => r.DateFound <= to);
+        }
         return q;
     }
 

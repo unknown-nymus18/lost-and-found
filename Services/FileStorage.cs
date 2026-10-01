@@ -8,14 +8,22 @@ public class FileStorage
 
     public FileStorage(IWebHostEnvironment env) => _env = env;
 
-    /// <returns>A relative URL like /uploads/xyz.jpg, or null if no valid file was supplied.</returns>
+    public string? Validate(IFormFile? file)
+    {
+        if (file is null) return null;
+        if (file.Length == 0) return "The photo is empty.";
+        if (file.Length > 5 * 1024 * 1024) return "The photo must be 5 MB or smaller.";
+        if (!Allowed.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
+            return "The photo must be a JPG, PNG, WebP, or GIF file.";
+        return null;
+    }
+
+    /// <returns>A relative URL like /uploads/xyz.jpg, or null if no file was supplied.</returns>
     public async Task<string?> SaveAsync(IFormFile? file)
     {
-        if (file is null || file.Length == 0) return null;
+        if (file is null) return null;
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (!Allowed.Contains(ext)) return null;
-        if (file.Length > 5 * 1024 * 1024) return null; // cap at 5 MB
 
         var folder = Path.Combine(_env.WebRootPath, "uploads");
         Directory.CreateDirectory(folder);

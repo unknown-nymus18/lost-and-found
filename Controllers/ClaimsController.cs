@@ -21,7 +21,7 @@ public class ClaimsController : ApiControllerBase
     public async Task<ActionResult<ClaimDto>> Create(CreateClaimRequest req)
     {
         var result = await _claims.CreateAsync(CurrentUserId, req);
-        if (!result.Succeeded) return BadRequest(new { error = result.Error });
+        if (!result.Succeeded) return Problem(statusCode: result.StatusCode, detail: result.Error);
         return Ok(ClaimService.Map(result.Claim!));
     }
 
@@ -42,7 +42,7 @@ public class ClaimsController : ApiControllerBase
     public async Task<ActionResult<ClaimDto>> Decide(int id, DecideClaimRequest req)
     {
         var result = await _claims.DecideAsync(id, req.Approve, req.Note);
-        if (!result.Succeeded) return BadRequest(new { error = result.Error });
+        if (!result.Succeeded) return Problem(statusCode: result.StatusCode, detail: result.Error);
         return Ok(ClaimService.Map(result.Claim!));
     }
 }

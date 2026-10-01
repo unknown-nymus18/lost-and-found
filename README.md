@@ -80,6 +80,14 @@ Swagger lists all available endpoints and lets you test them from the browser.
 | SignalR hub     | `http://localhost:5080/hubs/notifications` |
 | Uploaded photos | `http://localhost:5080/uploads/{filename}` |
 
+## API errors
+
+Application-generated errors use JSON problem details (`application/problem+json`) with `status`, `title`, and `detail`; validation errors include an `errors` object keyed by field. Invalid or missing Bearer tokens return `401`, insufficient permissions return `403`, missing resources return `404`, and duplicate accounts, pending claims, or already-decided claims return `409`. Unexpected server failures return `500` with a trace ID instead of exposing internal exception details. Successful response bodies are unchanged.
+
+## Report dates
+
+When creating a report, send `date` as an ISO 8601 timestamp with an offset (for example, `2026-09-30T14:30:00+00:00`) or as a date-only value (`2026-09-30`). Date-only values and timestamps without an offset are interpreted as UTC; offset timestamps are converted to UTC before storage.
+
 ## Item details
 
 Use the report's `kind` and `id` from `GET /api/reports` to load its details:

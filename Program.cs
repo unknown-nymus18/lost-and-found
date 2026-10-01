@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using CampusLostAndFound.Data;
 using CampusLostAndFound.Hubs;
@@ -58,6 +59,23 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
+});
+
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Extensions["traceId"] =
+            Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
+
+        context.ProblemDetails.Detail ??= context.ProblemDetails.Status switch
+        {
+            StatusCodes.Status404NotFound => "The requested endpoint was not found.",
+            StatusCodes.Status405MethodNotAllowed => "This endpoint does not support that HTTP method.",
+            StatusCodes.Status500InternalServerError => "An unexpected server error occurred. Refer to the trace ID when reporting it.",
+            _ => null
+        };
+    };
 });
 
 builder.Services.AddControllers();
@@ -143,6 +161,22 @@ builder.Services
                 }
 
                 return Task.CompletedTask;
+            },
+            OnChallenge = async context =>
+            {
+                context.HandleResponse();
+                context.Response.Headers["WWW-Authenticate"] = "Bearer";
+                await Results.Problem(
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    detail: "A valid Bearer token is required to access this endpoint.")
+                    .ExecuteAsync(context.HttpContext);
+            },
+            OnForbidden = async context =>
+            {
+                await Results.Problem(
+                    statusCode: StatusCodes.Status403Forbidden,
+                    detail: "You do not have permission to access this endpoint.")
+                    .ExecuteAsync(context.HttpContext);
             }
         };
     });
@@ -166,10 +200,12 @@ app.UseSwaggerUI(options =>
         "Campus Lost & Found API v1");
 });
 
+app.UseRouting();
+app.UseCors("AllowAll");
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

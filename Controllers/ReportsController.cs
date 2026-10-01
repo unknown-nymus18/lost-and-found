@@ -50,7 +50,9 @@ public class ReportsController : ApiControllerBase
     public async Task<ActionResult<ReportDto>> GetLost(int id)
     {
         var report = await _reports.GetLostAsync(id);
-        return report is null ? NotFound() : Ok(report);
+        return report is null
+            ? Problem(statusCode: StatusCodes.Status404NotFound, detail: $"Lost report {id} was not found.")
+            : Ok(report);
     }
 
     /// <summary>Get a found-item report by ID.</summary>
@@ -59,7 +61,9 @@ public class ReportsController : ApiControllerBase
     public async Task<ActionResult<ReportDto>> GetFound(int id)
     {
         var report = await _reports.GetFoundAsync(id);
-        return report is null ? NotFound() : Ok(report);
+        return report is null
+            ? Problem(statusCode: StatusCodes.Status404NotFound, detail: $"Found report {id} was not found.")
+            : Ok(report);
     }
 
     /// <summary>Reports filed by the authenticated user.</summary>
@@ -92,6 +96,13 @@ public class ReportsController : ApiControllerBase
     public async Task<ActionResult<ReportDto>> ReportLostWithPhoto(
         [FromForm] CreateReportWithPhotoRequest req)
     {
+        var photoError = _files.Validate(req.Photo);
+        if (photoError is not null)
+        {
+            ModelState.AddModelError(nameof(req.Photo), photoError);
+            return ValidationProblem(ModelState);
+        }
+
         var photoUrl = await _files.SaveAsync(req.Photo);
         var (report, matches) = await _reports.CreateLostAsync(
             CurrentUserId, req.ToReportRequest(), photoUrl);
@@ -106,6 +117,13 @@ public class ReportsController : ApiControllerBase
     public async Task<ActionResult<ReportDto>> ReportFoundWithPhoto(
         [FromForm] CreateReportWithPhotoRequest req)
     {
+        var photoError = _files.Validate(req.Photo);
+        if (photoError is not null)
+        {
+            ModelState.AddModelError(nameof(req.Photo), photoError);
+            return ValidationProblem(ModelState);
+        }
+
         var photoUrl = await _files.SaveAsync(req.Photo);
         var (report, matches) = await _reports.CreateFoundAsync(
             CurrentUserId, req.ToReportRequest(), photoUrl);

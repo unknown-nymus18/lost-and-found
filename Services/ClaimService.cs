@@ -9,9 +9,11 @@ public class ClaimResult
 {
     public bool Succeeded { get; init; }
     public string? Error { get; init; }
+    public int StatusCode { get; init; }
     public Claim? Claim { get; init; }
     public static ClaimResult Ok(Claim c) => new() { Succeeded = true, Claim = c };
-    public static ClaimResult Fail(string e) => new() { Succeeded = false, Error = e };
+    public static ClaimResult Fail(string e, int statusCode) =>
+        new() { Succeeded = false, Error = e, StatusCode = statusCode };
 }
 
 public class ClaimService
@@ -28,24 +30,26 @@ public class ClaimService
     public async Task<ClaimResult> CreateAsync(int claimerId, CreateClaimRequest req)
     {
         var found = await _db.FoundReports.FindAsync(req.FoundReportId);
-        if (found is null) return ClaimResult.Fail("That found item no longer exists.");
+        if (found is null) return ClaimResult.Fail("Found item not found.", StatusCodes.Status404NotFound);
         if (string.IsNullOrWhiteSpace(req.ProofDescription))
-            return ClaimResult.Fail("Describe something only the owner would know.");
+            return ClaimResult.Fail("Describe something only the owner would know.", StatusCodes.Status400BadRequest);
 
         var already = await _db.Claims.AnyAsync(c =>
             c.FoundReportId == req.FoundReportId &&
             c.ClaimerId == claimerId &&
             c.Status == ClaimStatus.Pending);
-        if (already) return ClaimResult.Fail("You already have a pending claim on this item.");
+        if (already) return ClaimResult.Fail("You already have a pending claim on this item.", StatusCodes.Status409Conflict);
 
         var claim = new Claim
         {
             FoundReportId = req.FoundReportId,
+            FoundReport = found,
             ClaimerId = claimerId,
             ProofDescription = req.ProofDescription.Trim()
         };
         _db.Claims.Add(claim);
         await _db.SaveChangesAsync();
+        await _db.Entry(claim).Reference(c => c.Claimer).LoadAsync();
         return ClaimResult.Ok(claim);
     }
 
@@ -53,10 +57,11 @@ public class ClaimService
     {
         var claim = await _db.Claims
             .Include(c => c.FoundReport)
+            .Include(c => c.Claimer)
             .FirstOrDefaultAsync(c => c.Id == claimId);
-        if (claim is null) return ClaimResult.Fail("Claim not found.");
+        if (claim is null) return ClaimResult.Fail("Claim not found.", StatusCodes.Status404NotFound);
         if (claim.Status != ClaimStatus.Pending)
-            return ClaimResult.Fail("This claim has already been decided.");
+            return ClaimResult.Fail("This claim has already been decided.", StatusCodes.Status409Conflict);
 
         claim.Status = approve ? ClaimStatus.Approved : ClaimStatus.Rejected;
         claim.ReviewNote = note?.Trim();
