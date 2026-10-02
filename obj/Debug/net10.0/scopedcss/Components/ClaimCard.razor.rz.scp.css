@@ -1,22 +1,20 @@
-.claim-card[b-8oqpry0red] {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 14px 18px;
-        background: #fff;
-        border-bottom: 1px solid #eee;
-        font-family: system-ui, -apple-system, sans-serif;
-    }
-
-.claim-icon[b-8oqpry0red] {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    background: #e9e9ee;
-    flex-shrink: 0;
+.claim-report-card[b-8oqpry0red] {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 8px;
+    border-bottom: 1px solid #f0f0f0;
 }
 
-.claim-main[b-8oqpry0red] {
+.claim-thumbnail[b-8oqpry0red] {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 8px;
+    background: #e5e7eb;
+}
+
+.claim-info[b-8oqpry0red] {
     flex: 1;
     min-width: 0;
 }
@@ -24,77 +22,84 @@
 .claim-title-row[b-8oqpry0red] {
     display: flex;
     align-items: center;
-    gap: 8px;
+    min-width: 0;
 }
 
-.claim-title[b-8oqpry0red] {
+.claim-title-row strong[b-8oqpry0red] {
+    overflow-wrap: anywhere;
     font-weight: 600;
-    font-size: 14px;
-    color: #1a1a1a;
+    color: #18181b;
 }
 
-.claim-tag[b-8oqpry0red] {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 10px;
-    text-transform: capitalize;
-}
-
-.tag-lost[b-8oqpry0red] {
-    background: #fde2e2;
-    color: #c0392b;
-}
-
-.tag-found[b-8oqpry0red] {
-    background: #dcf5e3;
-    color: #1e8449;
-}
-
-.claim-subtitle[b-8oqpry0red] {
-    font-size: 12.5px;
-    color: #8a8a8a;
+.claim-subtext[b-8oqpry0red] {
+    display: block;
     margin-top: 2px;
+    color: #71717a;
+    font-size: 0.85rem;
 }
 
-.claim-right[b-8oqpry0red] {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    flex-shrink: 0;
-}
-
-.claim-status-pill[b-8oqpry0red] {
-    font-size: 12px;
+.claim-status[b-8oqpry0red] {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
     font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 12px;
     white-space: nowrap;
 }
 
-.status-active[b-8oqpry0red] {
-    background: #fdf0d5;
-    color: #b9770e;
-}
-
 .status-pending[b-8oqpry0red] {
-    background: #eaeaea;
-    color: #555;
+    background: #fef3c7;
+    color: #b45309;
 }
 
-.status-resolved[b-8oqpry0red] {
-    background: #dcf5e3;
-    color: #1e8449;
+.status-approved[b-8oqpry0red] {
+    background: #dcfce7;
+    color: #15803d;
 }
 
-.claim-link[b-8oqpry0red] {
-    font-size: 13px;
-    font-weight: 500;
+.status-rejected[b-8oqpry0red] {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-unknown[b-8oqpry0red] {
+    background: #f4f4f5;
+    color: #52525b;
+}
+
+.claim-view-details[b-8oqpry0red] {
     color: #2563eb;
+    font-size: 0.9rem;
+    font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
 }
 
-.claim-link:hover[b-8oqpry0red] {
+.claim-view-details:hover[b-8oqpry0red] {
     text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    .claim-report-card[b-8oqpry0red] {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        gap: 8px 12px;
+        padding: 14px 8px;
+    }
+
+    .claim-thumbnail[b-8oqpry0red] {
+        grid-row: 1 / span 3;
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+    }
+
+    .claim-status[b-8oqpry0red],
+    .claim-view-details[b-8oqpry0red] {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .claim-status[b-8oqpry0red] {
+        white-space: normal;
+    }
 }

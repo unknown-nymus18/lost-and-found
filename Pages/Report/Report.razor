@@ -1,8 +1,10 @@
 @page "/report"
 @using lost_and_found.Models
 @using lost_and_found.Services
+@using Microsoft.AspNetCore.Components.Forms
 @inject NavigationManager Navigation
 @inject ApiService ApiService
+@inject IJSRuntime JS
 
 <div class="report-page">
     <div class="report-card">
@@ -23,7 +25,7 @@
             </button>
         </div>
 
-        <form class="report-form" @onsubmit="Submit">
+        <form class="report-form" @onsubmit="Submit" @onsubmit:preventDefault="true">
             <div class="form-row">
                 <label>Item Title</label>
                 <input class="input" type="text" placeholder="e.g. Black leather wallet with UG student card"
@@ -66,16 +68,25 @@
                           @bind="Description" required></textarea>
             </div>
 
-            <div class="form-row">
-                <label>Photo Evidence</label>
-                <div class="upload-area">
-                    <div class="upload-inner">
-                        <div class="upload-icon">📷</div>
-                        <div class="upload-text">Drag &amp; drop a photo, or click to upload</div>
-                        <div class="upload-sub">PNG or JPG, up to 10MB</div>
-                    </div>
+            @if (isLost)
+            {
+                <div class="form-row">
+                    <label for="photo-upload">Photo Evidence</label>
+                    <label id="photo-drop-zone" class="upload-area @(selectedPhoto is null ? "" : "has-photo")"
+                           for="photo-upload">
+                        <InputFile id="photo-upload" class="photo-input" OnChange="HandlePhotoSelected"
+                                   accept="image/png,image/jpeg" disabled="@isSubmitting" />
+                        <div class="upload-inner">
+                            <div class="upload-icon">&#128247;</div>
+                            <div class="upload-copy">
+                                <div class="upload-text">@(selectedPhoto is null ? "Add a photo" : selectedPhoto.Name)</div>
+                                <div class="upload-sub">PNG or JPG, up to 10 MB</div>
+                            </div>
+                            <span class="upload-action">@(selectedPhoto is null ? "Browse files" : "Change")</span>
+                        </div>
+                    </label>
                 </div>
-            </div>
+            }
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
@@ -96,6 +107,7 @@
     private bool isLost = true;
     private bool isSubmitting;
     private string? errorMessage;
+    private IBrowserFile? selectedPhoto;
 
     // Index in CategoryOptions.Values. It must match the category value the API
     // expects (the ItemCategory enum). Map it if the numbering differs.
@@ -110,6 +122,33 @@
     private DateTime Date { get; set; } = DateTime.Today;
 
     private void Cancel() => Navigation.NavigateTo("/");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isLost)
+            await JS.InvokeVoidAsync("photoDrop.attach", "photo-drop-zone", "photo-upload");
+    }
+
+    private void HandlePhotoSelected(InputFileChangeEventArgs args)
+    {
+        errorMessage = null;
+        var photo = args.File;
+        if (photo.Size > 10 * 1024 * 1024)
+        {
+            selectedPhoto = null;
+            errorMessage = "The photo must be 10 MB or smaller.";
+            return;
+        }
+
+        if (photo.ContentType is not ("image/png" or "image/jpeg"))
+        {
+            selectedPhoto = null;
+            errorMessage = "Choose a PNG or JPG photo.";
+            return;
+        }
+
+        selectedPhoto = photo;
+    }
 
     private async Task Submit()
     {
@@ -129,9 +168,9 @@
                 $"Submitting: kind={(isLost ? "lost" : "found")}, cat={selectedCategory}, " +
                 $"title='{Title}', date={reportDate:O}, loc='{Location}'");
 
-            // Assumes ApiService.ReportFoundItem exists and posts to "reports/found".
             var result = isLost
-                ? await ApiService.ReportLostItem(selectedCategory, Title.Trim(), fullDescription, reportDate, Location.Trim())
+                ? await ApiService.ReportLostItemWithPhoto(selectedCategory, Title.Trim(), fullDescription, reportDate, Location.Trim(),
+selectedPhoto)
                 : await ApiService.ReportFoundItem(selectedCategory, Title.Trim(), fullDescription, reportDate, Location.Trim());
 
             if (result.Ok)

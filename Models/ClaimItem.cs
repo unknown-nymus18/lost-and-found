@@ -22,6 +22,13 @@ public class ClaimItem
         return $"{id}-{claimerName}-{status}";
     }
 
+
+}
+
+public class ClaimItemRequest
+{
+    public required string foundReportId { get; set; }
+    public required string proofDescription { get; set; }
 }
 
 

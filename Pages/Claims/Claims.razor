@@ -4,6 +4,8 @@
 @using lost_and_found.Models
 @using lost_and_found.Services
 @inject ApiService ApiService
+@inject NavigationManager Navigation
+@inject AuthService AuthService
 
 
 <div class="claims">
@@ -77,6 +79,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine(AuthService.CurrentUser);
+        if (!AuthService.isLoggedIn)
+        {
+            Navigation.NavigateTo("/sign-in");
+            return;
+        }
+
         try
         {
             var reportsTask = ApiService.GetUserReports();

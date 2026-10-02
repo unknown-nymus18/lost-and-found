@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Components.Forms;
 using lost_and_found.Pages.Report;
 using lost_and_found.Services;
 
@@ -155,6 +156,7 @@ public class ApiService
 
 
 
+
     public async Task<UserModels?> RegisterUser(string name, string email, string password)
     {
         var requestBody = new RegisterRequest
@@ -268,6 +270,36 @@ public class ApiService
         }
     }
 
+    public async Task<ClaimItem?> MakeClaim(string foundReportId, string proofDescription)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+        try
+        {
+            var body = new ClaimItemRequest { foundReportId = foundReportId, proofDescription = proofDescription };
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}claims")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<ClaimItem>();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
     public async Task<List<ReportItem>?> GetUserReports()
     {
         if (_authService.CurrentUser is null)
@@ -326,6 +358,67 @@ public class ApiService
 
             using var response = await _httpClient.SendAsync(request);
 
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return new(null, "Your session has expired. Please log in again.");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(null, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            var item = await response.Content.ReadFromJsonAsync<ReportItem>();
+            return item is null
+                ? new(null, "The server returned an empty response.")
+                : new(item, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Something went wrong. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult<ReportItem>> ReportLostItemWithPhoto(
+        int category, string title, string description, DateTimeOffset date, string location, IBrowserFile? photo)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(null, "Please log in first.");
+
+        const long maxPhotoSize = 10 * 1024 * 1024;
+        if (photo is not null && photo.Size > maxPhotoSize)
+            return new(null, "The photo must be 10 MB or smaller.");
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new StringContent(title), "Title");
+        content.Add(new StringContent(description), "Description");
+        content.Add(new StringContent(category.ToString()), "Category");
+        content.Add(new StringContent(location), "Location");
+        content.Add(new StringContent(date.ToUniversalTime().ToString("O")), "Date");
+
+        try
+        {
+            if (photo is not null)
+            {
+                var streamContent = new StreamContent(photo.OpenReadStream(maxPhotoSize));
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(
+                    string.IsNullOrWhiteSpace(photo.ContentType) ? "application/octet-stream" : photo.ContentType);
+                content.Add(streamContent, "Photo", photo.Name);
+            }
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}reports/lost/with-photo")
+            {
+                Content = content
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 return new(null, "Your session has expired. Please log in again.");
 

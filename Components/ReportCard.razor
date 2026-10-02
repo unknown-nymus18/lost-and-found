@@ -1,7 +1,7 @@
 @using lost_and_found.Models
 
 <div class="claim-report-card">
-    <div class="thumbnail" role="img" aria-label="Photo of @Item.Title" style="background-image:url('@Item.PhotoUrl')">
+    <div class="thumbnail" role="img" aria-label="Photo of @Item.Title" style="background-image:url('@ReportImageUrl.Resolve(Item.PhotoUrl)')">
     </div>
 
     <div class="card-info">

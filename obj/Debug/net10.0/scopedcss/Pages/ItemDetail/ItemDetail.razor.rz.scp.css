@@ -298,6 +298,24 @@ textarea[b-t5kntugukr]::placeholder {
     background: #2563eb;
 }
 
+.primary-button:disabled[b-t5kntugukr] {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.claim-feedback[b-t5kntugukr] {
+    margin: 12px 0 0;
+    font-size: 14px;
+}
+
+.claim-feedback.success[b-t5kntugukr] {
+    color: #15803d;
+}
+
+.claim-feedback.error[b-t5kntugukr] {
+    color: #b91c1c;
+}
+
 .claim-note[b-t5kntugukr] {
     margin: 16px 0 0;
     padding: 12px 14px;

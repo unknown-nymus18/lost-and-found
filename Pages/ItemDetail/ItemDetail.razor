@@ -74,8 +74,16 @@ else
 
                     <label class="proof-label" for="proof">Proof of Ownership</label>
                     <textarea id="proof"
-                              placeholder="Describe a unique detail only the true owner would know (e.g. contents, purchase receipt)..."></textarea>
-                    <button class="primary-button" type="button">Submit Claim Request</button>
+                              placeholder="Describe a unique detail only the true owner would know (e.g. contents, purchase receipt)..."
+                              @bind="proofDescription" required></textarea>
+                    <button class="primary-button" type="button" @onclick="MakeClaim"
+                            disabled="@(isSubmitting || claimSubmitted)">
+                        @(isSubmitting ? "Submitting..." : claimSubmitted ? "Claim Submitted" : "Submit Claim Request")
+                    </button>
+                    @if (!string.IsNullOrEmpty(claimMessage))
+                    {
+                        <p class="claim-feedback @(claimSubmitted ? "success" : "error")" role="status">@claimMessage</p>
+                    }
 
                     <p class="claim-note">&#128172; Once approved, you can message the finder directly to arrange pickup.</p>
                 </div>
@@ -90,6 +98,9 @@ else
 
     private ReportItem? item;
     private bool isLoading = true;
+    private bool isSubmitting;
+    private bool claimSubmitted;
+    private string? claimMessage;
 
     // Adjust these to match your real category IDs.
     private static readonly Dictionary<int, string> Categories = new()
@@ -112,7 +123,9 @@ else
     private string ImageStyle =>
         string.IsNullOrWhiteSpace(item?.PhotoUrl)
             ? string.Empty
-            : $"background-image: url('{item!.PhotoUrl}'); background-size: cover; background-position: center;";
+            : $"background-image: url('{ReportImageUrl.Resolve(item!.PhotoUrl)}'); background-size: cover; background-position: center;";
+
+    public string proofDescription { get; set; } = string.Empty;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -127,5 +140,43 @@ else
             item = null;
         }
         isLoading = false;
+    }
+
+
+    private async Task MakeClaim()
+    {
+        if (string.IsNullOrWhiteSpace(proofDescription))
+        {
+            claimSubmitted = false;
+            claimMessage = "Please describe how you can verify ownership.";
+            return;
+        }
+
+        isSubmitting = true;
+        claimMessage = null;
+
+        try
+        {
+            var claim = await ApiService.MakeClaim(Id.ToString(), proofDescription.Trim());
+            if (claim is null)
+            {
+                claimSubmitted = false;
+                claimMessage = "We couldn't submit your claim. Please sign in and try again.";
+                return;
+            }
+
+            claimSubmitted = true;
+            claimMessage = "Your claim was submitted successfully.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to submit claim for found item {Id}: {ex.Message}");
+            claimSubmitted = false;
+            claimMessage = "Something went wrong while submitting your claim. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 }
