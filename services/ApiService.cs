@@ -47,6 +47,39 @@ public class ApiService
 
     }
 
+    public class ForgotPasswordRequest
+    {
+        public required string Email { get; set; }
+    }
+
+    public class ResetPasswordRequest
+    {
+        public required string Token { get; set; }
+        public required string NewPassword { get; set; }
+    }
+
+    public class SubmitClaimRequest
+    {
+        public required int FoundReportId { get; set; }
+        public required string ProofDescription { get; set; }
+    }
+
+    public class UpdateProfileRequest
+    {
+        public required string Name { get; set; }
+        public required string Phone { get; set; }
+        public required string Hall { get; set; }
+        public required string PreferredPickupLocation { get; set; }
+    }
+
+    public class NotificationPreferencesRequest
+    {
+        public required bool MatchAlerts { get; set; }
+        public required bool ClaimUpdates { get; set; }
+        public required bool FinderMessages { get; set; }
+        public required bool SmsAlerts { get; set; }
+    }
+
 
     public ApiService(HttpClient httpClient, AuthService authService)
     {
@@ -499,6 +532,261 @@ public class ApiService
         }
     }
 
+
+    public async Task<List<NotificationItem>?> GetNotifications()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}notifications/");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<List<NotificationItem>>();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
+    public async Task<ApiResult<bool>> RequestPasswordReset(string email)
+    {
+        try
+        {
+            var body = new ForgotPasswordRequest { Email = email };
+            using var response = await _httpClient.PostAsJsonAsync($"{baseUrl}auth/forgot-password", body);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(false, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            return new(true, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Something went wrong. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult<bool>> ResetPassword(string token, string newPassword)
+    {
+        try
+        {
+            var body = new ResetPasswordRequest { Token = token, NewPassword = newPassword };
+            using var response = await _httpClient.PostAsJsonAsync($"{baseUrl}auth/reset-password", body);
+
+            if (response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == HttpStatusCode.Gone)
+                return new(false, "This reset link has expired or already been used. Request a new one.");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(false, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            return new(true, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Something went wrong. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult<ClaimItem>> SubmitClaim(int foundReportId, string proofDescription)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(null, "Please log in first.");
+
+        try
+        {
+            var body = new SubmitClaimRequest
+            {
+                FoundReportId = foundReportId,
+                ProofDescription = proofDescription
+            };
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}claims")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return new(null, "Your session has expired. Please log in again.");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(null, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            var claim = await response.Content.ReadFromJsonAsync<ClaimItem>();
+            return claim is null
+                ? new(null, "The server returned an empty response.")
+                : new(claim, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Something went wrong. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult<bool>> MarkAllNotificationsRead()
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(false, "Please log in first.");
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}notifications/mark-all-read");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(false, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            return new(true, null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Couldn't update your notifications. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult<UserModels>> UpdateProfile(
+        string name, string phone, string hall, string preferredPickupLocation)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(null, "Please log in first.");
+
+        try
+        {
+            var body = new UpdateProfileRequest
+            {
+                Name = name,
+                Phone = phone,
+                Hall = hall,
+                PreferredPickupLocation = preferredPickupLocation
+            };
+
+            using var request = new HttpRequestMessage(HttpMethod.Patch, $"{baseUrl}auth/me")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return new(null, "Your session has expired. Please log in again.");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(null, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var node = JsonNode.Parse(json)!.AsObject();
+            node["token"] = user.token;
+
+            var updated = JsonSerializer.Deserialize<UserModels>(node);
+            if (updated is null)
+                return new(null, "The server returned an empty response.");
+
+            await _authService.SetUserAsync(updated);
+            return new(updated, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Something went wrong. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult<bool>> UpdateNotificationPreferences(
+        bool matchAlerts, bool claimUpdates, bool finderMessages, bool smsAlerts)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(false, "Please log in first.");
+
+        try
+        {
+            var body = new NotificationPreferencesRequest
+            {
+                MatchAlerts = matchAlerts,
+                ClaimUpdates = claimUpdates,
+                FinderMessages = finderMessages,
+                SmsAlerts = smsAlerts
+            };
+
+            using var request = new HttpRequestMessage(HttpMethod.Put, $"{baseUrl}auth/me/notification-preferences")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(false, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            return new(true, null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Couldn't save your preferences. Please try again.");
+        }
+    }
 
     public async Task<UserModels?> GetUser()
     {

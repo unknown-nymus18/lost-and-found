@@ -1,0 +1,23 @@
+<div class="auth-panel">
+    <a class="brand" href="/">UG Lost &amp; Found</a>
+
+    <h1 class="headline">@Headline</h1>
+
+    <p class="blurb">@Blurb</p>
+
+    <div class="stats">
+        <div class="stat">
+            <span class="stat-value">1,284</span>
+            <span class="stat-label">Reports</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">356</span>
+            <span class="stat-label">Reunited</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Headline { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Blurb { get; set; } = string.Empty;
+}

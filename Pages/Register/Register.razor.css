@@ -1,0 +1,186 @@
+.register {
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    min-height: 100vh;
+}
+
+.right {
+    display: flex;
+    flex: 58;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 24px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 380px;
+}
+
+.heading {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 24px;
+}
+
+.sso-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    background: white;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.sso-btn:hover {
+    background-color: #F9FAFB;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: #6B7280;
+    font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: #E5E7EB;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.field-row {
+    display: flex;
+    gap: 12px;
+}
+
+.field-row .field {
+    flex: 1;
+    min-width: 0;
+}
+
+.field input,
+.field select {
+    min-height: 46px;
+    padding: 0 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #111827;
+    background-color: white;
+    width: 100%;
+}
+
+.field input::placeholder {
+    color: #9CA3AF;
+}
+
+.field input:focus,
+.field select:focus {
+    outline: none;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.terms {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #374151;
+    margin: 8px 0 20px;
+}
+
+.terms input {
+    width: 18px;
+    height: 18px;
+    accent-color: #2563EB;
+    flex-shrink: 0;
+}
+
+.form-error {
+    color: #DC2626;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.submit-btn {
+    min-height: 48px;
+    border: none;
+    border-radius: 8px;
+    background-color: #2563EB;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+    background-color: #1D4ED8;
+}
+
+.submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.sign-in-nav {
+    text-align: center;
+    font-size: 13px;
+    color: #6B7280;
+    margin-top: 20px;
+}
+
+.sign-in-nav a {
+    color: #2563EB;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+@media (max-width: 900px) {
+    .register {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .field-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}

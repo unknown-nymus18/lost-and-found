@@ -1,0 +1,297 @@
+@page "/profile"
+@using lost_and_found.Models
+@using lost_and_found.Services
+@inject ApiService ApiService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="profile">
+    <h1>My Profile</h1>
+
+    @if (AuthService.CurrentUser is null)
+    {
+        <div class="signed-out">
+            <h2>You're not signed in</h2>
+            <p>Sign in to view your profile, reports and claims.</p>
+            <a class="btn-primary" href="/sign-in">Go to Sign In</a>
+        </div>
+    }
+    else
+    {
+        <div class="layout">
+            <aside class="side-card">
+                <div class="avatar" aria-hidden="true">@Initials</div>
+
+                <strong class="name">@AuthService.CurrentUser.name</strong>
+                <span class="email">@AuthService.CurrentUser.email</span>
+
+                @if (AuthService.CurrentUser.role == "Student")
+                {
+                    <span class="verified">Verified UG Student</span>
+                }
+
+                <button type="button" class="link-btn">Change photo</button>
+
+                <div class="counts">
+                    <div class="count">
+                        <span class="count-value">@reportCount</span>
+                        <span class="count-label">Reports</span>
+                    </div>
+                    <div class="count">
+                        <span class="count-value">@claimCount</span>
+                        <span class="count-label">Claims</span>
+                    </div>
+                    <div class="count">
+                        <span class="count-value">@reunitedCount</span>
+                        <span class="count-label">Reunited</span>
+                    </div>
+                </div>
+
+                <dl class="facts">
+                    <div class="fact">
+                        <dt>Role</dt>
+                        <dd>@AuthService.CurrentUser.role</dd>
+                    </div>
+                    <div class="fact">
+                        <dt>Account ID</dt>
+                        <dd>@AuthService.CurrentUser.userId</dd>
+                    </div>
+                </dl>
+
+                <button type="button" class="sign-out" @onclick="SignOut">Sign Out</button>
+            </aside>
+
+            <div class="panels">
+                <section class="panel">
+                    <h2>Personal Information</h2>
+
+                    <div class="grid">
+                        <label class="field">
+                            <span class="field-label">Full Name</span>
+                            <input type="text" @bind="Name" />
+                        </label>
+
+                        <label class="field">
+                            <span class="field-label">Phone Number</span>
+                            <input type="tel" placeholder="+233 24 123 4567" @bind="Phone" />
+                        </label>
+
+                        <label class="field">
+                            <span class="field-label">Hall of Residence</span>
+                            <select @bind="Hall">
+                                <option value="">Select hall</option>
+                                @foreach (var hall in HallOptions)
+                                {
+                                    <option value="@hall">@hall</option>
+                                }
+                            </select>
+                        </label>
+
+                        <label class="field">
+                            <span class="field-label">Preferred Pickup Location</span>
+                            <select @bind="PickupLocation">
+                                <option value="">Select location</option>
+                                @foreach (var place in PickupOptions)
+                                {
+                                    <option value="@place">@place</option>
+                                }
+                            </select>
+                        </label>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(profileError))
+                    {
+                        <p class="panel-error" role="alert">@profileError</p>
+                    }
+                    else if (profileSaved)
+                    {
+                        <p class="panel-saved" role="status">Your changes have been saved.</p>
+                    }
+
+                    <div class="panel-actions">
+                        <button type="button" class="btn-outline" @onclick="ResetForm" disabled="@isSaving">Cancel</button>
+                        <button type="button" class="btn-primary" @onclick="SaveChanges" disabled="@isSaving">
+                            @(isSaving ? "Saving..." : "Save Changes")
+                        </button>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>Notification Preferences</h2>
+
+                    @if (!string.IsNullOrEmpty(prefsError))
+                    {
+                        <p class="panel-error" role="alert">@prefsError</p>
+                    }
+
+                    <div class="pref">
+                        <div>
+                            <strong>Potential match alerts</strong>
+                            <p>Notify me when a found item matches my lost report</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" @bind="MatchAlerts" @bind:after="SavePreferences" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="pref">
+                        <div>
+                            <strong>Claim status updates</strong>
+                            <p>Approvals, rejections, and pickup reminders</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" @bind="ClaimUpdates" @bind:after="SavePreferences" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="pref">
+                        <div>
+                            <strong>Messages from finders</strong>
+                            <p>When someone replies about an item</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" @bind="FinderMessages" @bind:after="SavePreferences" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="pref">
+                        <div>
+                            <strong>SMS alerts</strong>
+                            <p>Send important updates to my phone number</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" @bind="SmsAlerts" @bind:after="SavePreferences" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="panel row-panel">
+                    <div>
+                        <h2>Password &amp; Security</h2>
+                        <p class="panel-sub">Keep your account secure with a strong password.</p>
+                    </div>
+                    <a class="btn-outline" href="/forgot-password">Change Password</a>
+                </section>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private static readonly string[] HallOptions =
+    {
+        "Commonwealth Hall", "Legon Hall", "Akuafo Hall", "Volta Hall", "Mensah Sarbah Hall",
+        "Hilla Limann Hall", "Alexander Kwapong Hall", "Jean Nelson Aka Hall",
+        "Elizabeth Frances Sey Hall", "International Students Hostel", "Off campus"
+    };
+
+    private static readonly string[] PickupOptions =
+    {
+        "Balme Library Front Desk", "Campus Security Office — Legon", "Student Affairs Office",
+        "JQB Porters' Lodge", "Night Market Security Post"
+    };
+
+    private string Name { get; set; } = string.Empty;
+    private string Phone { get; set; } = string.Empty;
+    private string Hall { get; set; } = string.Empty;
+    private string PickupLocation { get; set; } = string.Empty;
+
+    private bool MatchAlerts { get; set; } = true;
+    private bool ClaimUpdates { get; set; } = true;
+    private bool FinderMessages { get; set; } = true;
+    private bool SmsAlerts { get; set; }
+
+    private int reportCount;
+    private int claimCount;
+    private int reunitedCount;
+
+    private bool isSaving;
+    private bool profileSaved;
+    private string? profileError;
+    private string? prefsError;
+
+    private string Initials
+    {
+        get
+        {
+            var parts = (AuthService.CurrentUser?.name ?? string.Empty)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            return parts.Length switch
+            {
+                0 => "?",
+                1 => parts[0][..1].ToUpper(),
+                _ => $"{parts[0][0]}{parts[^1][0]}".ToUpper(),
+            };
+        }
+    }
+
+    private void ResetForm()
+    {
+        Name = AuthService.CurrentUser?.name ?? string.Empty;
+        profileSaved = false;
+        profileError = null;
+    }
+
+    private async Task SaveChanges()
+    {
+        if (isSaving) return;
+
+        profileSaved = false;
+        profileError = null;
+
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            profileError = "Please enter your full name.";
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            var result = await ApiService.UpdateProfile(Name.Trim(), Phone.Trim(), Hall, PickupLocation);
+
+            if (result.Ok)
+                profileSaved = true;
+            else
+                profileError = result.Error;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task SavePreferences()
+    {
+        var result = await ApiService.UpdateNotificationPreferences(
+            MatchAlerts, ClaimUpdates, FinderMessages, SmsAlerts);
+
+        prefsError = result.Ok ? null : result.Error;
+    }
+
+    private async Task SignOut()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.OnChange += StateHasChanged;
+        ResetForm();
+
+        if (!AuthService.isLoggedIn) return;
+
+        var reports = await ApiService.GetUserReports() ?? new List<ReportItem>();
+        var claims = await ApiService.GetUserClaims() ?? new List<ClaimItem>();
+
+        reportCount = reports.Count;
+        claimCount = claims.Count;
+        reunitedCount = reports.Count(r => r.Status == 2);
+    }
+}

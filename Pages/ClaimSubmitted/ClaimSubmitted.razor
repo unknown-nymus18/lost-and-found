@@ -1,0 +1,131 @@
+@page "/claim-submitted/{Id:int}"
+@using lost_and_found.Models
+@using lost_and_found.Services
+@inject ApiService ApiService
+
+<div class="confirmation">
+    @if (isLoading)
+    {
+        <div class="card"><p class="loading">Loading your claim...</p></div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="icon-circle" aria-hidden="true">✔</div>
+
+            <h1 class="heading">Claim request sent</h1>
+            <p class="subtitle">
+                An admin will review your proof of ownership, usually within 24&ndash;48 hours.
+                We'll notify you as soon as there's a decision.
+            </p>
+
+            <div class="ref-pill">Claim ID: @ClaimId</div>
+
+            @if (claim is not null)
+            {
+                <div class="summary">
+                    <div class="summary-head">
+                        <div class="thumb" style="@ThumbStyle" aria-hidden="true"></div>
+                        <div>
+                            <strong class="summary-title">@claim.foundItemTitle</strong>
+                            <span class="kind-badge">Found</span>
+                        </div>
+                    </div>
+
+                    <dl class="rows">
+                        <div class="row">
+                            <dt>Found at</dt>
+                            <dd>@(string.IsNullOrWhiteSpace(report?.Location) ? "—" : report!.Location)</dd>
+                        </div>
+                        <div class="row">
+                            <dt>Status</dt>
+                            <dd><span class="status-pill @StatusClass">@StatusLabel</span></dd>
+                        </div>
+                    </dl>
+                </div>
+            }
+
+            <h2 class="steps-heading">Claim progress</h2>
+            <ol class="steps">
+                <li class="step done">
+                    <span class="bullet" aria-hidden="true">✔</span>
+                    <div>
+                        <strong>Proof submitted</strong>
+                        <p>Your ownership details were sent@(SubmittedOn).</p>
+                    </div>
+                </li>
+                <li class="step active">
+                    <span class="bullet" aria-hidden="true">2</span>
+                    <div>
+                        <strong>Admin review</strong>
+                        <p>An admin checks your proof against the finder's notes.</p>
+                    </div>
+                </li>
+                <li class="step">
+                    <span class="bullet" aria-hidden="true">3</span>
+                    <div>
+                        <strong>Pickup</strong>
+                        <p>Bring your UG student ID to the holding location to collect it.</p>
+                    </div>
+                </li>
+            </ol>
+
+            <div class="tip">
+                <span aria-hidden="true">💡</span>
+                Tip: keep your student ID ready — you'll need it to collect the item.
+            </div>
+
+            <div class="actions">
+                <a class="btn-primary" href="/claims">Track My Claims</a>
+                <a class="btn-outline" href="/browse">Browse More Items</a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ClaimItem? claim;
+    private ReportItem? report;
+    private bool isLoading = true;
+
+    private string ClaimId => $"CL-{Id:D4}";
+
+    private string ThumbStyle =>
+        string.IsNullOrWhiteSpace(report?.PhotoUrl)
+            ? string.Empty
+            : $"background-image: url('{report!.PhotoUrl}');";
+
+    private string SubmittedOn =>
+        DateTimeOffset.TryParse(claim?.createdAt, out var created)
+            ? $" on {created.ToLocalTime():MMM d, yyyy}"
+            : string.Empty;
+
+    private string StatusLabel => claim?.status switch
+    {
+        1 => "Approved",
+        2 => "Rejected",
+        _ => "Pending Admin Review",
+    };
+
+    private string StatusClass => claim?.status switch
+    {
+        1 => "status-resolved",
+        2 => "status-rejected",
+        _ => "status-active",
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        var claims = await ApiService.GetUserClaims();
+        claim = claims?.FirstOrDefault(c => c.id == Id);
+
+        if (claim is not null)
+            report = await ApiService.GetFoundItemById(claim.foundReportId);
+
+        isLoading = false;
+    }
+}

@@ -175,7 +175,7 @@ selectedPhoto)
 
             if (result.Ok)
             {
-                Navigation.NavigateTo("/");
+                Navigation.NavigateTo($"/report-submitted/{(isLost ? "lost" : "found")}/{result.Data!.Id}");
             }
             else
             {

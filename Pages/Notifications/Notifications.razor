@@ -1,0 +1,158 @@
+@page "/notifications"
+@using lost_and_found.Models
+@using lost_and_found.Services
+@inject ApiService ApiService
+
+<div class="notifications">
+    <div class="header">
+        <div>
+            <h1>Notifications</h1>
+            <p class="sub">
+                @(UnreadCount == 0
+                    ? "You're all caught up."
+                    : $"You have {UnreadCount} unread notification{(UnreadCount == 1 ? "" : "s")}")
+            </p>
+        </div>
+
+        @if (UnreadCount > 0)
+        {
+            <button type="button" class="mark-all" @onclick="MarkAllAsRead">&#10003; Mark all as read</button>
+        }
+    </div>
+
+    <div class="tabs" role="tablist">
+        @foreach (var tab in Tabs)
+        {
+            <button type="button" role="tab" class="tab @(activeTab == tab ? "is-active" : "")"
+                    aria-selected="@(activeTab == tab)" @onclick="() => activeTab = tab">
+                @TabLabel(tab)
+            </button>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="error" role="alert">@errorMessage</p>
+    }
+
+    @if (isLoading)
+    {
+        <div class="empty"><p>Loading notifications...</p></div>
+    }
+    else if (Visible.Count == 0)
+    {
+        <div class="empty">
+            <h2>Nothing here yet</h2>
+            <p>Match alerts, claim updates and messages will show up on this page.</p>
+        </div>
+    }
+    else
+    {
+        <div class="list">
+            @foreach (var n in Visible)
+            {
+                <div class="item @(n.IsRead ? "" : "unread")">
+                    <div class="icon @IconClass(n.Type)" aria-hidden="true">@IconGlyph(n.Type)</div>
+
+                    <div class="body">
+                        <strong class="title">@n.Title</strong>
+                        <p class="text">@n.Body</p>
+                        @if (!string.IsNullOrWhiteSpace(n.ActionLabel) && !string.IsNullOrWhiteSpace(n.ActionUrl))
+                        {
+                            <a class="action" href="@n.ActionUrl">@n.ActionLabel &rarr;</a>
+                        }
+                    </div>
+
+                    <div class="meta">
+                        <span class="time">@FormatTimeAgo(n.CreatedAt)</span>
+                        @if (!n.IsRead)
+                        {
+                            <span class="dot" aria-label="Unread"></span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <p class="footnote">Manage which alerts you receive in Profile &rarr; Notification preferences.</p>
+</div>
+
+@code {
+    private static readonly string[] Tabs = { "all", "unread", "matches", "claims" };
+
+    private List<NotificationItem> items = new();
+    private string activeTab = "all";
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private int UnreadCount => items.Count(n => !n.IsRead);
+
+    private List<NotificationItem> Visible => activeTab switch
+    {
+        "unread" => items.Where(n => !n.IsRead).ToList(),
+        "matches" => items.Where(n => n.Type == "match").ToList(),
+        "claims" => items.Where(n => n.Type == "claim").ToList(),
+        _ => items,
+    };
+
+    private string TabLabel(string tab) => tab switch
+    {
+        "unread" => UnreadCount > 0 ? $"Unread ({UnreadCount})" : "Unread",
+        "matches" => "Matches",
+        "claims" => "Claims",
+        _ => "All",
+    };
+
+    private static string IconGlyph(string type) => type switch
+    {
+        "match" => "⚡",
+        "claim" => "✅",
+        "message" => "💬",
+        "expiry" => "⏳",
+        "reunited" => "🎉",
+        _ => "🔔",
+    };
+
+    private static string IconClass(string type) => type switch
+    {
+        "match" => "icon-match",
+        "claim" => "icon-claim",
+        "message" => "icon-message",
+        "expiry" => "icon-expiry",
+        "reunited" => "icon-reunited",
+        _ => "icon-default",
+    };
+
+    private async Task MarkAllAsRead()
+    {
+        var result = await ApiService.MarkAllNotificationsRead();
+        if (!result.Ok)
+        {
+            errorMessage = result.Error;
+            return;
+        }
+
+        errorMessage = null;
+        foreach (var n in items)
+            n.IsRead = true;
+    }
+
+    private static string FormatTimeAgo(DateTimeOffset date)
+    {
+        var diff = DateTimeOffset.UtcNow - date;
+
+        if (diff.TotalDays >= 7) return $"{Math.Floor(diff.TotalDays / 7)} week{(diff.TotalDays < 14 ? "" : "s")} ago";
+        if (diff.TotalDays >= 2) return $"{Math.Floor(diff.TotalDays)} days ago";
+        if (diff.TotalDays >= 1) return "Yesterday";
+        if (diff.TotalHours >= 1) return $"{Math.Floor(diff.TotalHours)} hours ago";
+        if (diff.TotalMinutes >= 1) return $"{Math.Floor(diff.TotalMinutes)} min ago";
+        return "Just now";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await ApiService.GetNotifications() ?? new List<NotificationItem>();
+        isLoading = false;
+    }
+}

@@ -1,4 +1,5 @@
 @page "/sign-in"
+@using lost_and_found.Components
 @using lost_and_found.Services
 @layout EmptyLayout
 @inject ApiService ApiService
@@ -6,14 +7,8 @@
 @inject NavigationManager NavManager
 
 <div class="sign-in">
-    <div class="left">
-        <a href="/">Go Home</a>
-        <p class="heading">UG Lost & Found</p>
-        <p class="title">Reuniting the campus community, one item at a time.</p>
-        <p class="subtitle">Sign in with your University of Ghana account to report items, track claims, and get
-            notified
-            the moment a match is found.</p>
-        </div>
+    <AuthPanel Headline="Reuniting the campus community, one item at a time."
+               Blurb="Sign in with your University of Ghana account to report items, track claims, and get notified the moment a match is found." />
         <div class="right">
             <fieldset>
                 <legend class="heading">Welcome Back</legend>
@@ -26,9 +21,9 @@
                     Password
                     <input type="password" required @bind="password" />
                 </label>
-                <a href="#" class="forgot-passwd">Forgot password?</a>
+                <a href="/forgot-password" class="forgot-passwd">Forgot password?</a>
                 <button type="submit" @onclick="loginUser">Sign In</button>
-                <span class="nav">Don't have an account? <a href="#">Register</a></span>
+                <span class="nav">Don't have an account? <a href="/register">Register</a></span>
                 <span class="nav">Campus staff? <a href=""> Sign in to admin portal</a></span>
             </fieldset>
         </div>
