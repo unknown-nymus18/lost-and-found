@@ -14,3 +14,28 @@ public class ReportItem
     public string ReportedBy { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
 }
+
+public static class ReportImageUrl
+{
+    private const string BaseUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/";
+
+    public static string Resolve(string? photoUrl)
+    {
+        if (string.IsNullOrWhiteSpace(photoUrl))
+            return string.Empty;
+
+        if (Uri.TryCreate(photoUrl, UriKind.Absolute, out var absoluteUri) &&
+            (absoluteUri.Scheme == Uri.UriSchemeHttp || absoluteUri.Scheme == Uri.UriSchemeHttps))
+        {
+            return absoluteUri.AbsoluteUri;
+        }
+
+        return new Uri(new Uri(BaseUrl), photoUrl.TrimStart('/')).AbsoluteUri;
+    }
+}
+
+
+public class NewReportItem
+{
+
+}

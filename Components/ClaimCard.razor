@@ -1,0 +1,60 @@
+@using lost_and_found.Services
+
+<div class="claim-report-card">
+    <div class="claim-thumbnail" aria-hidden="true"></div>
+
+    <div class="claim-info">
+        <div class="claim-title-row">
+            <strong>@item.foundItemTitle</strong>
+        </div>
+        <span class="claim-subtext">@CreatedAtLabel</span>
+    </div>
+
+    <span class="claim-status @GetStatusClass(item.status)">
+        @GetClaimStatus(item.status)
+    </span>
+    <a href="@($"item-detail/found/{item.foundReportId}")" class="claim-view-details">View Details</a>
+</div>
+
+@code {
+    [Parameter] public required ClaimItem item { get; set; }
+
+    private string CreatedAtLabel =>
+        DateTimeOffset.TryParse(item.createdAt, out var createdAt)
+            ? $"Submitted {createdAt.ToLocalTime():MMM d, yyyy}"
+            : string.IsNullOrWhiteSpace(item.createdAt)
+                ? "Submission date unavailable"
+                : $"Submitted {item.createdAt}";
+
+    public string GetClaimStatus(int statusCode)
+    {
+        return statusCode switch
+        {
+            0 => "Pending",
+            1 => "Approved",
+            2 => "Rejected",
+            _ => "Unknown"
+        };
+    }
+
+    public string GetStatusClass(int statusCode)
+    {
+        return statusCode switch
+        {
+            0 => "status-pending",
+            1 => "status-approved",
+            2 => "status-rejected",
+            _ => "status-unknown"
+        };
+    }
+
+    public string GetTagClass(string itemType)
+    {
+        return itemType?.ToLower() switch
+        {
+            "lost" => "tag-lost",
+            "found" => "tag-found",
+            _ => "tag-lost"
+        };
+    }
+}

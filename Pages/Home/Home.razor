@@ -41,21 +41,25 @@
     </div>
 </div>
 
-<div class="reports">
-    <div class="reports-header">
-        <h3>Recent Reports</h3>
-        <a class="view-all" href="/browse">View All →</a>
-    </div>
+@if (Reports is not null)
+{
+    <div class="reports">
+        <div class="reports-header">
+            <h3>Recent Reports</h3>
+            <a class="view-all" href="/browse">View All →</a>
+        </div>
 
-    <div class="report-items">
-        @foreach (var report in Reports.Take(4))
-        {
-            <ItemCard Title="@report.Title" Category="@GetCategoryName(report.Category)" ImageUrl="@report.PhotoUrl"
-                      Status="@GetStatusName(report.Status)" Location="@report.Location" TimeAgo="@FormatTimeAgo(report.Date)" />
-        }
+        <div class="report-items">
+            @foreach (var report in Reports.Take(4))
+            {
+                <ItemCard Title="@report.Title" Category="@GetCategoryName(report.Category)" ImageUrl="@report.PhotoUrl"
+                          Status="@GetStatusName(report.Status)" Location="@report.Location" TimeAgo="@FormatTimeAgo(report.Date)"
+                          Id="@report.Id" Kind="@report.Kind" />
+            }
         
+        </div>
     </div>
-</div>
+}
 <div class="steps">
     <h3>How it works</h3>
     <p>Three simple steps to get your belongings back where they belong.</p>

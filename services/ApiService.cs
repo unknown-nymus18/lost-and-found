@@ -1,16 +1,27 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using lost_and_found.Models;
 
+
 namespace lost_and_found.Services;
+
+using System.Net;
+using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Components.Forms;
+using lost_and_found.Pages.Report;
+using lost_and_found.Services;
 
 public class ApiService
 {
     private readonly HttpClient _httpClient;
-    private const string ReportsUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/api/reports/";
-    private const string RegisterUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/api/auth/register/";
-    private const string LoginUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/api/auth/login/";
+
+    private readonly AuthService _authService;
+    private const string baseUrl = "https://lost-and-found-b3dyanfccqbdaqak.southafricanorth-01.azurewebsites.net/api/";
+
 
     public class RegisterRequest
     {
@@ -26,16 +37,28 @@ public class ApiService
 
     }
 
-    public ApiService(HttpClient httpClient)
+    public class ReportRequest
+    {
+        public required string Title { get; set; }
+        public required string Description { get; set; }
+        public required int Category { get; set; }
+        public required string Location { get; set; }
+        public required DateTimeOffset Date { get; set; }
+
+    }
+
+
+    public ApiService(HttpClient httpClient, AuthService authService)
     {
         _httpClient = httpClient;
+        _authService = authService;
     }
 
     public async Task<string> GetRawApiDataAsync()
     {
         try
         {
-            var response = await _httpClient.GetAsync(ReportsUrl);
+            var response = await _httpClient.GetAsync($"{baseUrl}reports/");
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -64,7 +87,7 @@ public class ApiService
     {
         try
         {
-            var response = await _httpClient.GetAsync(ReportsUrl);
+            var response = await _httpClient.GetAsync($"{baseUrl}reports/");
             response.EnsureSuccessStatusCode();
 
             var items = await response.Content.ReadFromJsonAsync<List<ReportItem>>();
@@ -92,6 +115,48 @@ public class ApiService
         }
     }
 
+
+    public async Task<ReportItem?> GetLostItemById(int id)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"{baseUrl}reports/lost/{id}");
+            response.EnsureSuccessStatusCode();
+
+            var report = await response.Content.ReadFromJsonAsync<ReportItem>();
+            return report;
+        }
+
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<ReportItem?> GetFoundItemById(int id)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"{baseUrl}reports/found/{id}");
+            response.EnsureSuccessStatusCode();
+
+            var report = await response.Content.ReadFromJsonAsync<ReportItem>();
+            return report;
+        }
+
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return null;
+        }
+    }
+
+
+
+
+
+
     public async Task<UserModels?> RegisterUser(string name, string email, string password)
     {
         var requestBody = new RegisterRequest
@@ -103,11 +168,16 @@ public class ApiService
 
         try
         {
-            var response = await _httpClient.PostAsJsonAsync(RegisterUrl, requestBody);
+            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/auth/register/", requestBody);
             response.EnsureSuccessStatusCode();
 
             var registeredUser = await response.Content.ReadFromJsonAsync<UserModels>();
             Console.WriteLine(registeredUser);
+
+            if (registeredUser is not null)
+            {
+                await _authService.SetUserAsync(registeredUser);
+            }
 
             return registeredUser;
         }
@@ -138,23 +208,28 @@ public class ApiService
         try
         {
             var requestBody = new LoginRequest { Email = email, Password = password };
-            var response = await _httpClient.PostAsJsonAsync(LoginUrl, requestBody);
+            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/auth/login/", requestBody);
             response.EnsureSuccessStatusCode();
 
             var registeredUser = await response.Content.ReadFromJsonAsync<UserModels>();
             Console.WriteLine(registeredUser);
+
+            if (registeredUser is not null)
+            {
+                await _authService.SetUserAsync(registeredUser);
+            }
 
             return registeredUser;
 
         }
         catch (HttpRequestException ex)
         {
-            Console.WriteLine($"Request error while registering user: {ex.Message}");
+            Console.WriteLine($"Request error while Signing in user: {ex.Message}");
             return null;
         }
         catch (TaskCanceledException ex)
         {
-            Console.WriteLine($"Request timed out while registering user: {ex.Message}");
+            Console.WriteLine($"Request timed out while Signing in user: {ex.Message}");
             return null;
         }
         catch (System.Text.Json.JsonException ex)
@@ -164,10 +239,298 @@ public class ApiService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Unexpected error while registering user: {ex.Message}");
+            Console.WriteLine($"Unexpected error while Signing in user: {ex.Message}");
             return null;
         }
 
+    }
+
+    public async Task<List<ClaimItem>?> GetUserClaims()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/claims/mine");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var userClaims = await response.Content.ReadFromJsonAsync<List<ClaimItem>>();
+            return userClaims;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
+    public async Task<ClaimItem?> MakeClaim(string foundReportId, string proofDescription)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+        try
+        {
+            var body = new ClaimItemRequest { foundReportId = foundReportId, proofDescription = proofDescription };
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}claims")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<ClaimItem>();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
+    public async Task<List<ReportItem>?> GetUserReports()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/reports/mine");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var userReports = await response.Content.ReadFromJsonAsync<List<ReportItem>>();
+            return userReports;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
+    public record ApiResult<T>(T? Data, string? Error)
+    {
+        public bool Ok => Error is null;
+    }
+
+    public async Task<ApiResult<ReportItem>> ReportLostItem(
+        int category, string title, string description, DateTimeOffset date, string location)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(null, "Please log in first.");
+
+        var body = new ReportRequest
+        {
+            Category = category,
+            Title = title,
+            Description = description,
+            Location = location,
+            Date = date.ToUniversalTime()
+        };
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}reports/lost")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+            Console.WriteLine(await request.Content!.ReadAsStringAsync());
+
+            using var response = await _httpClient.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return new(null, "Your session has expired. Please log in again.");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(null, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            var item = await response.Content.ReadFromJsonAsync<ReportItem>();
+            return item is null
+                ? new(null, "The server returned an empty response.")
+                : new(item, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Something went wrong. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult<ReportItem>> ReportLostItemWithPhoto(
+        int category, string title, string description, DateTimeOffset date, string location, IBrowserFile? photo)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(null, "Please log in first.");
+
+        const long maxPhotoSize = 10 * 1024 * 1024;
+        if (photo is not null && photo.Size > maxPhotoSize)
+            return new(null, "The photo must be 10 MB or smaller.");
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new StringContent(title), "Title");
+        content.Add(new StringContent(description), "Description");
+        content.Add(new StringContent(category.ToString()), "Category");
+        content.Add(new StringContent(location), "Location");
+        content.Add(new StringContent(date.ToUniversalTime().ToString("O")), "Date");
+
+        try
+        {
+            if (photo is not null)
+            {
+                var streamContent = new StreamContent(photo.OpenReadStream(maxPhotoSize));
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(
+                    string.IsNullOrWhiteSpace(photo.ContentType) ? "application/octet-stream" : photo.ContentType);
+                content.Add(streamContent, "Photo", photo.Name);
+            }
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}reports/lost/with-photo")
+            {
+                Content = content
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return new(null, "Your session has expired. Please log in again.");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(null, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            var item = await response.Content.ReadFromJsonAsync<ReportItem>();
+            return item is null
+                ? new(null, "The server returned an empty response.")
+                : new(item, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Something went wrong. Please try again.");
+        }
+    }
+
+
+    public async Task<ApiResult<ReportItem>> ReportFoundItem(
+        int category, string title, string description, DateTimeOffset date, string location)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(null, "Please log in first.");
+
+        var body = new ReportRequest
+        {
+            Category = category,
+            Title = title,
+            Description = description,
+            Location = location,
+            Date = date.ToUniversalTime()
+        };
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}reports/found")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+            Console.WriteLine(await request.Content!.ReadAsStringAsync());
+
+            using var response = await _httpClient.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return new(null, "Your session has expired. Please log in again.");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(null, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            var item = await response.Content.ReadFromJsonAsync<ReportItem>();
+            return item is null
+                ? new(null, "The server returned an empty response.")
+                : new(item, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(null, "Something went wrong. Please try again.");
+        }
+    }
+
+
+    public async Task<UserModels?> GetUser()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/auth/me");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var node = JsonNode.Parse(json)!.AsObject();
+
+            node["token"] = _authService.CurrentUser.token;
+
+            var user = JsonSerializer.Deserialize<UserModels>(node);
+
+            return user;
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
     }
 
 }

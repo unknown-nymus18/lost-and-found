@@ -97,8 +97,8 @@
                 @foreach (var filter in Filter)
                 {
                     <ItemCard Title="@filter.Title" Category="@GetCategoryName(filter.Category)" ImageUrl="@filter.PhotoUrl"
-                              Status="@GetStatusName(filter.Status)" Location="@filter.Location"
-                              TimeAgo="@FormatTimeAgo(filter.Date)" />
+                              Status="@GetStatusName(filter.Status)" Location="@filter.Location" TimeAgo="@FormatTimeAgo(filter.Date)"
+                              Id="@filter.Id" Kind="@filter.Kind" />
                 }
             }
             else
@@ -135,7 +135,7 @@
     private bool CommonwealthHall;
 
 
-    public IReadOnlyList<LostFoundItem> Items = LostFoundData.Items;
+    @* public IReadOnlyList<LostFoundItem> Items = LostFoundData.Items; *@
 
     private List<ReportItem> Reports { get; set; } = new();
 

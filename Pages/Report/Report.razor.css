@@ -54,11 +54,21 @@
 
 .two-col > div{ flex:1; display:flex; flex-direction:column; }
 
-.upload-area{ border:2px dashed #e5e7eb; border-radius:8px; padding:22px; display:flex; align-items:center; justify-content:center; background:transparent; }
-.upload-inner{ text-align:center; color:#6b7280; }
-.upload-icon{ font-size:22px; margin-bottom:8px; }
-.upload-text{ font-weight:600; color:#374151; }
-.upload-sub{ font-size:12px; color:#9ca3af; margin-top:6px; }
+.upload-area{ position:relative; display:block; min-height:76px; padding:14px 16px; border:1px dashed #aebdce; border-radius:8px; background:#f8fafc; cursor:pointer; transition:background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease; }
+.upload-area:hover{ border-color:#2563eb; background:#f1f6ff; }
+.upload-area:focus-within{ border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.16); }
+.upload-area.is-dragging{ border-color:#2563eb; border-style:solid; background:#eaf2ff; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+.upload-area.has-photo{ border-color:#54a77b; background:#f1faf4; }
+.upload-area.has-photo:hover{ border-color:#278052; background:#eaf7ee; }
+.photo-input{ position:absolute; z-index:1; inset:0; display:block; box-sizing:border-box; width:100%; height:100%; margin:0; padding:0; border:0; opacity:0; cursor:pointer; }
+.upload-inner{ display:flex; min-height:76px; align-items:center; gap:14px; color:#6b7280; pointer-events:none; }
+.upload-icon{ display:grid; width:44px; height:44px; flex:0 0 44px; place-items:center; border-radius:8px; background:#e5edf8; font-size:21px; }
+.has-photo .upload-icon{ background:#d9f0e1; }
+.upload-copy{ flex:1; min-width:0; }
+.upload-text{ overflow-wrap:anywhere; color:#26364a; font-size:14px; font-weight:650; }
+.upload-sub{ margin-top:4px; color:#778397; font-size:12px; }
+.upload-action{ flex:0 0 auto; padding:7px 11px; border:1px solid #d7e1ee; border-radius:6px; background:#fff; color:#2457a7; font-size:12px; font-weight:650; }
+.has-photo .upload-action{ border-color:#bdddc8; color:#247447; }
 
 .form-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
 .btn{ padding:8px 14px; border-radius:8px; border:1px solid transparent; cursor:pointer; }
@@ -68,5 +78,8 @@
 @media (max-width:720px){
     .report-card{ width:100%; padding:18px; }
     .report-form .form-row.two-col{ flex-direction:column; }
+    .upload-area{ padding:12px; }
+    .upload-inner{ gap:10px; }
+    .upload-action{ padding:6px 8px; }
 }
 

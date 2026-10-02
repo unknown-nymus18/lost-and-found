@@ -1,81 +1,195 @@
 @page "/report"
 @using lost_and_found.Models
+@using lost_and_found.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject NavigationManager Navigation
+@inject ApiService ApiService
+@inject IJSRuntime JS
 
 <div class="report-page">
     <div class="report-card">
         <div class="card-header">
             <h2>Report an Item</h2>
-            <p class="subtitle">Fill in as much detail as possible � clear descriptions and photos help our matching
-                system find the right pair faster.</p>
-            </div>
-
-            <div class="report-toggle">
-                <button class="toggle lost active">?? I Lost Something</button>
-                <button class="toggle found">? I Found Something</button>
-            </div>
-
-            <form class="report-form" onsubmit="return false;">
-                <div class="form-row">
-                    <label>Item Title</label>
-                    <input class="input" type="text" placeholder="e.g. Black leather wallet with UG student card" />
-                </div>
-
-                <div class="form-row two-col">
-                    <div>
-                        <label>Category</label>
-                        <select class="input" @bind="selectedCategory">
-                            <option>@CategoryOptions.AllCategories</option>
-                            @foreach (var cat in CategoryOptions.Values)
-                            {
-                                <option>@cat</option>
-                            }
-                        </select>
-                    </div>
-                    <div>
-                        <label>Location</label>
-                        <input class="input" type="text" placeholder="e.g. Balme Library, 2nd floor" />
-                    </div>
-                </div>
-
-                <div class="form-row two-col">
-                    <div>
-                        <label>Date</label>
-                        <input class="input" type="date" />
-                    </div>
-                    <div>
-                        <label>Color</label>
-                        <input class="input" type="text" placeholder="e.g. Black, Blue" />
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <label>Description</label>
-                    <textarea class="textarea"
-                              placeholder="Describe distinguishing features, contents, or marks that would help verify ownership..."></textarea>
-                </div>
-
-                <div class="form-row">
-                    <label>Photo Evidence</label>
-                    <div class="upload-area">
-                        <div class="upload-inner">
-                            <div class="upload-icon">??</div>
-                            <div class="upload-text">Drag & drop a photo, or click to upload</div>
-                            <div class="upload-sub">PNG or JPG, up to 10MB</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn btn-cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Report</button>
-                </div>
-            </form>
+            <p class="subtitle">
+                Fill in as much detail as possible. Clear descriptions and photos help our matching
+                system find the right pair faster.
+            </p>
         </div>
-    </div>
 
+        <div class="report-toggle">
+            <button type="button" class="@($"toggle lost {(isLost ? "active" : "")}")" @onclick="() => isLost = true">
+                I Lost Something
+            </button>
+            <button type="button" class="@($"toggle found {(isLost ? "" : "active")}")" @onclick="() => isLost = false">
+                I Found Something
+            </button>
+        </div>
+
+        <form class="report-form" @onsubmit="Submit" @onsubmit:preventDefault="true">
+            <div class="form-row">
+                <label>Item Title</label>
+                <input class="input" type="text" placeholder="e.g. Black leather wallet with UG student card"
+                       @bind="Title" required />
+            </div>
+
+            <div class="form-row two-col">
+                <div>
+                    <label>Category</label>
+                    <select class="input" @bind="selectedCategory" required>
+                        @for (int i = 0; i < CategoryOptions.Values.Count; i++)
+                        {
+                            <option value="@i">@(CategoryOptions.Values[i])</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Location</label>
+                    <input class="input" type="text" placeholder="e.g. Balme Library, 2nd floor" @bind="Location"
+                           required />
+                </div>
+            </div>
+
+            <div class="form-row two-col">
+                <div>
+                    <label>Date</label>
+                    <input class="input" type="date" @bind="Date" max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                           required />
+                </div>
+                <div>
+                    <label>Color</label>
+                    <input class="input" type="text" placeholder="e.g. Black, Blue" @bind="Color" required />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Description</label>
+                <textarea class="textarea"
+                          placeholder="Describe distinguishing features, contents, or marks that would help verify ownership..."
+                          @bind="Description" required></textarea>
+            </div>
+
+            @if (isLost)
+            {
+                <div class="form-row">
+                    <label for="photo-upload">Photo Evidence</label>
+                    <label id="photo-drop-zone" class="upload-area @(selectedPhoto is null ? "" : "has-photo")"
+                           for="photo-upload">
+                        <InputFile id="photo-upload" class="photo-input" OnChange="HandlePhotoSelected"
+                                   accept="image/png,image/jpeg" disabled="@isSubmitting" />
+                        <div class="upload-inner">
+                            <div class="upload-icon">&#128247;</div>
+                            <div class="upload-copy">
+                                <div class="upload-text">@(selectedPhoto is null ? "Add a photo" : selectedPhoto.Name)</div>
+                                <div class="upload-sub">PNG or JPG, up to 10 MB</div>
+                            </div>
+                            <span class="upload-action">@(selectedPhoto is null ? "Browse files" : "Change")</span>
+                        </div>
+                    </label>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="form-error" role="alert">@errorMessage</p>
+            }
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel" @onclick="Cancel" disabled="@isSubmitting">Cancel</button>
+                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                    @(isSubmitting ? "Submitting..." : "Submit Report")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 @code {
+    private bool isLost = true;
+    private bool isSubmitting;
+    private string? errorMessage;
+    private IBrowserFile? selectedPhoto;
 
-    private string selectedCategory = CategoryOptions.AllCategories;
+    // Index in CategoryOptions.Values. It must match the category value the API
+    // expects (the ItemCategory enum). Map it if the numbering differs.
+    private int selectedCategory = 0;
 
+    private string Title { get; set; } = string.Empty;
+    private string Location { get; set; } = string.Empty;
+    private string Description { get; set; } = string.Empty;
+    private string Color { get; set; } = string.Empty;
+
+    // Plain DateTime bound to <input type="date">: holds only the day the user picked.
+    private DateTime Date { get; set; } = DateTime.Today;
+
+    private void Cancel() => Navigation.NavigateTo("/");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isLost)
+            await JS.InvokeVoidAsync("photoDrop.attach", "photo-drop-zone", "photo-upload");
+    }
+
+    private void HandlePhotoSelected(InputFileChangeEventArgs args)
+    {
+        errorMessage = null;
+        var photo = args.File;
+        if (photo.Size > 10 * 1024 * 1024)
+        {
+            selectedPhoto = null;
+            errorMessage = "The photo must be 10 MB or smaller.";
+            return;
+        }
+
+        if (photo.ContentType is not ("image/png" or "image/jpeg"))
+        {
+            selectedPhoto = null;
+            errorMessage = "Choose a PNG or JPG photo.";
+            return;
+        }
+
+        selectedPhoto = photo;
+    }
+
+    private async Task Submit()
+    {
+        if (isSubmitting) return;
+
+        errorMessage = null;
+        isSubmitting = true;
+
+        try
+        {
+            // Keep the picked calendar day and send it as UTC (offset +00:00).
+            var reportDate = new DateTimeOffset(DateTime.SpecifyKind(Date.Date, DateTimeKind.Utc));
+
+            var fullDescription = $"Color: {Color.Trim()}. {Description.Trim()}";
+
+            Console.WriteLine(
+                $"Submitting: kind={(isLost ? "lost" : "found")}, cat={selectedCategory}, " +
+                $"title='{Title}', date={reportDate:O}, loc='{Location}'");
+
+            var result = isLost
+                ? await ApiService.ReportLostItemWithPhoto(selectedCategory, Title.Trim(), fullDescription, reportDate, Location.Trim(),
+selectedPhoto)
+                : await ApiService.ReportFoundItem(selectedCategory, Title.Trim(), fullDescription, reportDate, Location.Trim());
+
+            if (result.Ok)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Could not submit the report. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            errorMessage = "Something went wrong while submitting. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
 }

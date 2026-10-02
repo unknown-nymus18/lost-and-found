@@ -22,6 +22,8 @@ public static class CategoryOptions
         return category >= 0 && category < Values.Count ? Values[category] : Values[^1];
     }
 
+    // public static int GetCategoryNumber
+
     public static IReadOnlyDictionary<string, int> Lookup { get; } =
         Values.Select((name, index) => new KeyValuePair<string, int>(name, index))
             .ToDictionary(pair => pair.Key, pair => pair.Value);
