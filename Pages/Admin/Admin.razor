@@ -1,0 +1,177 @@
+@page "/admin"
+@layout EmptyLayout
+@using lost_and_found.Components
+@using lost_and_found.Models
+@using lost_and_found.Services
+@inject ApiService ApiService
+
+<div class="admin-layout">
+    <nav class="sidebar" aria-label="Admin navigation">
+        <div class="sidebar-brand">UG Admin</div>
+        <div class="sidebar-nav">
+            @foreach (var section in Sections)
+            {
+                <button class="nav-trigger @(ActiveSection == section.Key ? "active" : "")" type="button" @onclick="() => ActiveSection = section.Key">@section.Value</button>
+            }
+        </div>
+    </nav>
+
+    <div class="main-panel">
+        <header class="topbar">
+            <h1>@SectionTitle</h1>
+            <div class="admin-profile"><span class="avatar">KT</span><span>Admin - Kwabena T.</span></div>
+        </header>
+
+        <main class="admin-content">
+            @if (ActiveSection == "overview")
+            {
+                <section>
+                    <div class="dashboard-stats">
+                        <article class="stat-card stat-card-blue"><strong>@Reports.Count</strong><span>Total Reports</span></article>
+                        <article class="stat-card stat-card-amber"><strong>@ClaimRows.Count(c => c.Status == "Pending")</strong><span>Pending Claims</span></article>
+                        <article class="stat-card stat-card-red"><strong>@ClaimRows.Count(c => c.Status == "Disputed")</strong><span>Flagged Disputes</span></article>
+                        <article class="stat-card stat-card-green"><strong>@ClaimRows.Count(c => c.Status == "Approved")</strong><span>Reunited</span></article>
+                    </div>
+                    <section class="table-panel">
+                        <div class="panel-heading"><h2>Recent Reports for Review</h2><button class="btn-primary" type="button">New Manual Entry</button></div>
+                        <ReportTable Items="Reports.OrderByDescending(r => r.CreatedAt).Take(5)" />
+                    </section>
+                </section>
+            }
+            else if (ActiveSection == "reports")
+            {
+                <section>
+                    <div class="report-toolbar">
+                        <input type="search" @bind="ReportSearch" @bind:event="oninput" placeholder="Search by item, reporter, or location" aria-label="Search reports" />
+                        <select @bind="ReportTypeFilter" aria-label="Filter report type"><option value="all">Type: All</option><option value="lost">Lost</option><option value="found">Found</option></select>
+                        <select @bind="ReportCategoryFilter" aria-label="Filter report category"><option value="all">Category: All</option>@foreach (var category in CategoryOptions.Values) { <option value="@category">@category</option> }</select>
+                        <button class="btn-primary" type="button">New Manual Entry</button>
+                    </div>
+                    <div class="dashboard-stats compact-stats">
+                        <article class="stat-card stat-card-blue"><strong>@Reports.Count</strong><span>Total Reports</span></article>
+                        <article class="stat-card stat-card-red"><strong>@Reports.Count(r => r.Status == 0)</strong><span>Lost</span></article>
+                        <article class="stat-card stat-card-green"><strong>@Reports.Count(r => r.Status == 1)</strong><span>Found</span></article>
+                        <article class="stat-card stat-card-amber"><strong>0</strong><span>Flagged</span></article>
+                    </div>
+                    <section class="table-panel"><ReportTable Items="FilteredReports" /></section>
+                </section>
+            }
+            else if (ActiveSection == "matches")
+            {
+                <section>
+                    <div class="match-summary">
+                        <article class="match-summary-card review"><strong>23</strong><span>Awaiting Review</span></article>
+                        <article class="match-summary-card confirmed"><strong>356</strong><span>Confirmed Matches</span></article>
+                        <article class="match-summary-card dismissed"><strong>41</strong><span>Dismissed</span></article>
+                        <article class="match-summary-card accuracy"><strong>84%</strong><span>Avg. Match Accuracy</span></article>
+                    </div>
+                    <div class="tabs" role="tablist">
+                        @foreach (var status in MatchStatuses) { <button class="@(MatchStatusFilter == status ? "active" : "")" type="button" @onclick="() => MatchStatusFilter = status">@status@(status == "Awaiting Review" ? " (23)" : "")</button> }
+                    </div>
+                    <div class="suggested-match-list">
+                        @foreach (var match in FilteredSuggestedMatches)
+                        {
+                            <article class="suggested-match-card">
+                                <div class="suggested-match-grid">
+                                    <div class="match-item">
+                                        @if (!string.IsNullOrWhiteSpace(match.LostImageUrl)) { <img class="match-item-image" src="@match.LostImageUrl" alt="Reported lost item: @match.LostTitle" /> }
+                                        else { <span class="match-item-image skeleton" role="img" aria-label="No image supplied for this lost report"></span> }
+                                        <div><span class="match-type lost">Lost</span><strong>@match.LostTitle</strong><small>@match.LostDetails</small></div>
+                                    </div>
+                                    <div class="match-confidence @ConfidenceClass(match.Confidence)"><strong>@match.Confidence%</strong><span>match</span></div>
+                                    <div class="match-item">
+                                        @if (!string.IsNullOrWhiteSpace(match.FoundImageUrl)) { <img class="match-item-image" src="@match.FoundImageUrl" alt="Reported found item: @match.FoundTitle" /> }
+                                        else { <span class="match-item-image skeleton" role="img" aria-label="No image supplied for this found report"></span> }
+                                        <div><span class="match-type found">Found</span><strong>@match.FoundTitle</strong><small>@match.FoundDetails</small></div>
+                                    </div>
+                                    <div class="match-actions"><button class="confirm-match" type="button">Confirm Match</button><button class="dismiss-match" type="button">Dismiss</button></div>
+                                </div>
+                                <p>Why suggested: @match.Reason</p>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+            else if (ActiveSection == "claims")
+            {
+                <section>
+                    <div class="dashboard-stats compact-stats">
+                        <article class="stat-card stat-card-amber"><strong>47</strong><span>Pending Review</span></article>
+                        <article class="stat-card stat-card-green"><strong>298</strong><span>Approved</span></article>
+                        <article class="stat-card stat-card-red"><strong>36</strong><span>Rejected</span></article>
+                        <article class="stat-card stat-card-purple"><strong>12</strong><span>Flagged Disputes</span></article>
+                    </div>
+                    <div class="claims-toolbar"><div class="tabs">@foreach (var status in ClaimStatuses) { <button class="@(ClaimStatusFilter == status ? "active" : "")" type="button" @onclick="() => ClaimStatusFilter = status">@status@(status == "Pending" ? " (47)" : "")</button> }</div><input type="search" @bind="ClaimSearch" @bind:event="oninput" placeholder="Search claims" aria-label="Search claims" /></div>
+                    <section class="table-panel claims-panel"><table class="claims-table"><thead><tr><th>Claim</th><th>Item</th><th>Claimant</th><th>Match</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>@foreach (var claim in FilteredClaims) { <tr><td class="report-reference">@claim.Reference</td><td class="item-title">@claim.ItemTitle</td><td><span class="claimant"><span class="claimant-initials">@Initials(claim.Claimant)</span>@claim.Claimant</span></td><td><strong class="@ConfidenceClass(claim.MatchPercent)">@claim.MatchPercent%</strong></td><td>@claim.Submitted.ToString("MMM d, yyyy")</td><td><span class="status-badge @ClaimStatusClass(claim.Status)">@claim.Status</span></td><td class="row-actions"><button type="button">Review</button><button type="button">View</button></td></tr> }</tbody></table></section>
+                    <p class="claim-note">Claims older than 7 days without admin action are escalated automatically.</p>
+                </section>
+            }
+            else if (ActiveSection == "users")
+            {
+                <section>
+                    <div class="dashboard-stats compact-stats"><article class="stat-card stat-card-blue"><strong>4,812</strong><span>Registered Users</span></article><article class="stat-card stat-card-green"><strong>1,093</strong><span>Active This Month</span></article><article class="stat-card stat-card-purple"><strong>8</strong><span>Staff &amp; Admins</span></article><article class="stat-card stat-card-red"><strong>5</strong><span>Suspended</span></article></div>
+                    <div class="users-toolbar"><input type="search" @bind="UserSearch" @bind:event="oninput" placeholder="Search by name, student ID, or email" aria-label="Search users" /><select @bind="UserRoleFilter" aria-label="Filter role"><option value="all">Role: All</option><option>Student</option><option>Admin</option><option>Security Staff</option></select><select @bind="UserStatusFilter" aria-label="Filter status"><option value="all">Status: All</option><option value="active">Active</option><option value="suspended">Suspended</option></select><button class="btn-primary" type="button">+ Invite Staff</button></div>
+                    <section class="table-panel users-panel"><table class="users-table"><thead><tr><th>Name</th><th>Student / Staff ID</th><th>Email</th><th>Role</th><th>Reports</th><th>Status</th><th>Actions</th></tr></thead><tbody>@foreach (var user in FilteredUsers) { <tr><td class="item-title"><span class="user-name"><span class="user-initials">@Initials(user.Name)</span>@user.Name</span></td><td>@user.Identifier</td><td>@user.Email</td><td><span class="role-badge @RoleClass(user.Role)">@user.Role</span></td><td>@user.ReportCount</td><td><span class="status-badge @(user.Suspended ? "status-rejected" : "status-found")">@(user.Suspended ? "Suspended" : "Active")</span></td><td class="row-actions"><button type="button">Edit</button><button class="suspend-action" type="button">@(user.Suspended ? "Restore" : "Suspend")</button></td></tr> }</tbody></table></section>
+                    <div class="users-pagination"><span>Showing 1-7 of 4,812 users</span><div><button type="button">&lt; Previous</button><button type="button">Next &gt;</button></div></div>
+                </section>
+            }
+            else
+            {
+                <section class="settings-panel"><h2>Settings</h2><p>Admin settings will be connected when the backend management endpoints are available.</p></section>
+            }
+        </main>
+    </div>
+</div>
+
+@code {
+    private readonly Dictionary<string, string> Sections = new() { ["overview"] = "Overview", ["reports"] = "All Reports", ["matches"] = "Matches", ["claims"] = "Claims", ["users"] = "Users", ["settings"] = "Settings" };
+    private readonly string[] MatchStatuses = ["Awaiting Review", "Confirmed", "Dismissed"];
+    private readonly string[] ClaimStatuses = ["Pending", "Approved", "Rejected", "Disputed"];
+    private string ActiveSection { get; set; } = "overview";
+    private string MatchStatusFilter { get; set; } = "Awaiting Review";
+    private string ClaimStatusFilter { get; set; } = "Pending";
+    private string ReportSearch { get; set; } = string.Empty;
+    private string ReportTypeFilter { get; set; } = "all";
+    private string ReportCategoryFilter { get; set; } = "all";
+    private string ClaimSearch { get; set; } = string.Empty;
+    private string UserSearch { get; set; } = string.Empty;
+    private string UserRoleFilter { get; set; } = "all";
+    private string UserStatusFilter { get; set; } = "all";
+    private List<ReportItem> Reports { get; set; } = [];
+    private string SectionTitle => ActiveSection switch { "overview" => "Dashboard Overview", "reports" => "All Reports", "matches" => "Suggested Matches", "claims" => "Claims", "users" => "Users", _ => "Settings" };
+    private IEnumerable<ReportItem> FilteredReports => Reports.Where(r => (ReportTypeFilter == "all" || (ReportTypeFilter == "lost" && r.Status == 0) || (ReportTypeFilter == "found" && r.Status == 1)) && (ReportCategoryFilter == "all" || CategoryOptions.GetCategoryName(r.Category) == ReportCategoryFilter) && ($"{r.Title} {r.ReportedBy} {r.Location}".Contains(ReportSearch, StringComparison.OrdinalIgnoreCase)));
+    private IEnumerable<SuggestedMatch> FilteredSuggestedMatches => SuggestedMatches.Where(m => m.Status == MatchStatusFilter);
+    private IEnumerable<AdminClaim> FilteredClaims => ClaimRows.Where(c => c.Status == ClaimStatusFilter && $"{c.Reference} {c.ItemTitle} {c.Claimant}".Contains(ClaimSearch, StringComparison.OrdinalIgnoreCase));
+    private IEnumerable<AdminUser> FilteredUsers => UserRows.Where(u => (UserRoleFilter == "all" || u.Role == UserRoleFilter) && (UserStatusFilter == "all" || (UserStatusFilter == "active" && !u.Suspended) || (UserStatusFilter == "suspended" && u.Suspended)) && $"{u.Name} {u.Identifier} {u.Email}".Contains(UserSearch, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        Reports = await ApiService.GetReportItemsAsync();
+
+        @* Console.WriteLine(Reports.Count()); *@
+        foreach(var report in Reports)
+        {
+            Console.WriteLine($"Processing report: {report.Title}");
+        }
+    }
+    private static string StatusClass(int status) => status == 0 ? "status-lost" : status == 1 ? "status-found" : "status-review";
+    private static string StatusLabel(int status) => status == 0 ? "Lost" : status == 1 ? "Found" : "Review";
+    private static string ConfidenceClass(int score) => score >= 85 ? "match-high" : score >= 70 ? "match-medium" : "match-low";
+    private static string ClaimStatusClass(string status) => status == "Approved" ? "status-found" : status is "Rejected" or "Disputed" ? "status-rejected" : "status-lost";
+    private static string Initials(string name) => string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0])).ToUpperInvariant();
+    private static string RoleClass(string role) => role switch { "Admin" => "role-admin", "Security Staff" => "role-security", _ => "role-student" };
+
+    private readonly List<SuggestedMatch> SuggestedMatches = [
+        new("Blue Steel Bottle", "Kojo Mensah - JQB Complex - Aug 21", "Blue Water Bottle", "Ama K. - JQB Complex - Aug 23", 91, "Colour, category, location match", "Awaiting Review"),
+        new("Black iPhone 13", "Ama Serwaa - Balme Library - Aug 22", "iPhone 13 (Blue case)", "Security Office - Balme - Aug 23", 86, "Model and location match; colour differs", "Awaiting Review"),
+        new("UG Student ID - Y. Boateng", "Yaw Boateng - Commonwealth Hall - Aug 22", "Student ID Card", "Porter - Commonwealth Hall - Aug 22", 78, "Name and card partially visible", "Awaiting Review"),
+        new("Grey Nike Backpack", "Efua Owusu - N-Block - Aug 19", "Grey Backpack", "Kwame A. - JQB Complex - Aug 21", 64, "Category and colour match; different location", "Awaiting Review"),
+        new("Scientific Calculator", "Selorm A. - Volta Hall - Aug 18", "Casio Scientific Calculator", "Security Office - Volta Hall - Aug 18", 93, "Category, brand, and location match", "Confirmed"),
+        new("Silver Car Keys", "Nana Adjei - Main Gate - Aug 16", "Set of Silver Keys", "Security Office - Main Gate - Aug 16", 88, "Colour, location, and description match", "Dismissed")];
+    private readonly List<AdminClaim> ClaimRows = [new("CL-0213", "Blue Water Bottle", "Kojo Mensah", 91, new(2026, 8, 24), "Pending"), new("CL-0212", "Grey Backpack", "Efua Owusu", 64, new(2026, 8, 21), "Pending"), new("CL-0211", "HP Laptop Charger", "Nana Yaw Asare", 72, new(2026, 8, 22), "Pending"), new("CL-0210", "AirPods Pro Case", "Abena Darko", 58, new(2026, 8, 20), "Disputed"), new("CL-0209", "Scientific Calculator", "Selorm Agbeko", 80, new(2026, 8, 19), "Pending"), new("CL-0208", "Student ID Card", "Yaw Boateng", 78, new(2026, 8, 22), "Pending")];
+    private readonly List<AdminUser> UserRows = [new("Kingsley Ofori-Atta", "10976543", "koforiatta@st.ug.edu.gh", "Student", 5, true), new("Kojo Mensah", "10987654", "kmensah@st.ug.edu.gh", "Student", 2, true), new("Ama Serwaa", "10945321", "aserwaa@st.ug.edu.gh", "Student", 3, true), new("Kwabena Tetteh", "STF-0042", "ktetteh@ug.edu.gh", "Admin", 0, true), new("Ama Kyei", "STF-0107", "akyei@ug.edu.gh", "Security Staff", 48, true), new("Abena Darko", "10911256", "adarko@st.ug.edu.gh", "Student", 4, false, true)];
+
+    private sealed record SuggestedMatch(string LostTitle, string LostDetails, string FoundTitle, string FoundDetails, int Confidence, string Reason, string Status, string? LostImageUrl = null, string? FoundImageUrl = null);
+    private sealed record AdminClaim(string Reference, string ItemTitle, string Claimant, int MatchPercent, DateTime Submitted, string Status);
+    private sealed record AdminUser(string Name, string Identifier, string Email, string Role, int ReportCount, bool Active, bool Suspended = false);
+}

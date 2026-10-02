@@ -1,0 +1,5 @@
+.review-table-wrap { overflow-x: auto; }
+table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
+th { padding: 9px 12px; background: #f8fafc; color: #6b7280; font-size: .58rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+td { padding: 11px 12px; border-top: 1px solid #f0f2f5; color: #4b5563; font-size: .68rem; vertical-align: middle; }
+.item-title, .report-reference { color: #1f2937; font-weight: 600; }.table-empty { height: 110px; color: #9ca3af; text-align: center; }.status-badge { display: inline-flex; min-height: 18px; align-items: center; padding: 2px 7px; border-radius: 999px; font-size: .6rem; font-weight: 600; }.status-lost, .status-active { color: #b45309; background: #fef3c7; }.status-found { color: #15803d; background: #dcfce7; }.status-review { color: #475569; background: #e2e8f0; }.row-actions { white-space: nowrap; }.row-actions button { padding: 0; border: 0; background: transparent; color: #2563eb; font-size: .65rem; font-weight: 600; cursor: pointer; }.row-actions button + button { margin-left: 10px; color: #64748b; }

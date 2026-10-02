@@ -1,0 +1,49 @@
+@using lost_and_found.Models
+
+<div class="review-table-wrap">
+    <table>
+        <thead><tr><th>Ref</th><th>Item</th><th>Type</th><th>Category</th><th>Location</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+            @if (!Items.Any())
+            {
+                <tr><td class="table-empty" colspan="8">No reports available for review.</td></tr>
+            }
+            else
+            {
+                @foreach (var report in Items)
+                {
+                    <tr>
+                        <td class="report-reference">LF-@report.Id.ToString("D4")</td>
+                        <td class="item-title">@report.Title</td>
+                        <td><span class="status-badge @StatusClass(report.Status)">@StatusLabel(report.Status)</span></td>
+                        <td>@CategoryOptions.GetCategoryName(report.Category)</td>
+                        <td>@Display(report.Location)</td>
+                        <td>@DisplayDate(report.Date)</td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td class="row-actions"><button type="button">Review</button><button type="button">View</button></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<ReportItem> Items { get; set; } = [];
+    private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "-" : value;
+    private static string DisplayDate(DateTimeOffset value) => value == default ? "-" : value.ToString("MMM d, yyyy");
+    private static string StatusClass(int status) => status == 0 ? "status-lost" : status == 1 ? "status-found" : "status-review";
+    private static string StatusLabel(int status) => status == 0 ? "Lost" : status == 1 ? "Found" : "Review";
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine(Items.Count());
+        if (Items != null)
+        {
+            foreach(var item in Items!)
+            {
+                Console.WriteLine($"Processing item: {item.Title}");
+            }
+        }
+    }
+}
