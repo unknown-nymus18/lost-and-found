@@ -12,15 +12,15 @@
     <h2>My Reports & Claims</h2>
     <div class="stats">
         <div class="action">
-            <p class="reports-stats">@(ReportItems.Count)</p>
+            <p class="reports-stats">@ActiveReportCount</p>
             <p>Active reports</p>
         </div>
         <div class="action">
-            <p class="claim-stats">1</p>
+            <p class="claim-stats">@PendingClaimCount</p>
             <p>Pending Claim</p>
         </div>
         <div class="action">
-            <p class="resolved-stats col-red">@(ClaimItems.Count)</p>
+            <p class="resolved-stats col-red">@ResolvedReportCount</p>
             <p>Resolved</p>
         </div>
 
@@ -63,6 +63,10 @@
 
     public List<ClaimItem> ClaimItems { get; set; } = [];
     public List<ReportItem> ReportItems { get; set; } = [];
+
+    private int ActiveReportCount => ReportItems.Count(report => report.Status is 0 or 1 or 2);
+    private int PendingClaimCount => ClaimItems.Count(claim => claim.status == 0);
+    private int ResolvedReportCount => ReportItems.Count(report => report.Status == 2);
 
     private void triggerSelected()
     {

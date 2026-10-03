@@ -61,19 +61,30 @@
     white-space: nowrap;
 }
 
-.status-active {
+.status-open {
     background-color: #fef3c7;
     color: #b45309;
 }
 
-.status-match {
+.status-matched {
     background-color: #ede9fe;
     color: #6d28d9;
+}
+
+.status-claimed {
+    background-color: #dbeafe;
+    color: #1d4ed8;
 }
 
 .status-resolved {
     background-color: #dcfce7;
     color: #15803d;
+}
+
+.status-closed,
+.status-unknown {
+    background-color: #e5e7eb;
+    color: #4b5563;
 }
 
 .view-details {
@@ -86,4 +97,41 @@
 
 .view-details:hover {
     text-decoration: underline;
+}
+
+@media (max-width: 560px) {
+    .claim-report-card {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        grid-template-areas:
+            "thumbnail info info"
+            "status status link";
+        gap: 12px 10px;
+        padding: 14px 4px;
+    }
+
+    .thumbnail {
+        grid-area: thumbnail;
+    }
+
+    .card-info {
+        grid-area: info;
+    }
+
+    .title-row strong,
+    .subtext {
+        overflow-wrap: anywhere;
+    }
+
+    .report-status {
+        grid-area: status;
+        justify-self: start;
+        white-space: normal;
+        padding: 5px 10px;
+    }
+
+    .view-details {
+        grid-area: link;
+        justify-self: end;
+    }
 }

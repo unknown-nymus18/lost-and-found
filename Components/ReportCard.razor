@@ -1,7 +1,8 @@
 @using lost_and_found.Models
 
 <div class="claim-report-card">
-    <div class="thumbnail" role="img" aria-label="Photo of @Item.Title" style="background-image:url('@ReportImageUrl.Resolve(Item.PhotoUrl)')">
+    <div class="thumbnail" role="img" aria-label="Photo of @Item.Title"
+         style="background-image:url('@ReportImageUrl.Resolve(Item.PhotoUrl)')">
     </div>
 
     <div class="card-info">
@@ -24,20 +25,24 @@
     private string TypeClass =>
         (Item.Kind ?? string.Empty).ToLower().Contains("lost") ? "type-lost" : "type-found";
 
-    // ASSUMPTION: Status is 0 = Active, 1 = MatchFound, 2 = Resolved.
-    // Replace with your real enum/values if these don't match.
     private string ReportStatusClass => Item.Status switch
     {
-        1 => "status-match",
-        2 => "status-resolved",
-        _ => "status-active",
+        0 => "status-open",
+        1 => "status-matched",
+        2 => "status-claimed",
+        3 => "status-resolved",
+        4 => "status-closed",
+        _ => "status-unknown",
     };
 
     private string ReportStatusLabel => Item.Status switch
     {
-        1 => "Match Found \u2014 Claim Pending",
-        2 => "Resolved \u2014 Reunited",
-        _ => "Active \u2014 Awaiting Match",
+        0 => "Open",
+        1 => "Matched",
+        2 => "Claimed",
+        3 => "Resolved",
+        4 => "Closed",
+        _ => "Unknown",
     };
 
     private string TimeAgoLabel

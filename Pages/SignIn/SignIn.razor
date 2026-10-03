@@ -9,30 +9,38 @@
 <div class="sign-in">
     <AuthPanel Headline="Reuniting the campus community, one item at a time."
                Blurb="Sign in with your University of Ghana account to report items, track claims, and get notified the moment a match is found." />
-        <div class="right">
-            <fieldset>
-                <legend class="heading">Welcome Back</legend>
-                <p class="subtitle">Sign in to continue to your dashboard</p>
-                <label>
-                    Email Address
-                    <input type="email" placeholder="you@st.ug.edu.gh" @bind="email" />
-                </label>
-                <label>
-                    Password
-                    <input type="password" required @bind="password" />
-                </label>
-                <a href="/forgot-password" class="forgot-passwd">Forgot password?</a>
-                <button type="submit" @onclick="loginUser">Sign In</button>
-                <span class="nav">Don't have an account? <a href="/register">Register</a></span>
-                <span class="nav">Campus staff? <a href=""> Sign in to admin portal</a></span>
-            </fieldset>
-        </div>
+    <div class="right">
+        <fieldset>
+            <legend class="heading">Welcome Back</legend>
+            <p class="subtitle">Sign in to continue to your dashboard</p>
+            <label>
+                Email Address
+                <input type="email" placeholder="you@st.ug.edu.gh" @bind="email" />
+            </label>
+            <label>
+                Password
+                <input type="password" required @bind="password" />
+            </label>
+            <a href="/forgot-password" class="forgot-passwd">Forgot password?</a>
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="form-error" role="alert">@errorMessage</p>
+            }
+            <button type="button" disabled="@isSubmitting" aria-busy="@isSubmitting" @onclick="loginUser">
+                @(isSubmitting ? "Signing in..." : "Sign In")
+            </button>
+            <span class="nav">Don't have an account? <a href="/register">Register</a></span>
+            <span class="nav">Campus staff? <a href=""> Sign in to admin portal</a></span>
+        </fieldset>
     </div>
+</div>
 
 
 @code {
     private string email = string.Empty;
     private string password = string.Empty;
+    private bool isSubmitting;
+    private string? errorMessage;
 
     protected override void OnInitialized()
     {
@@ -47,18 +55,38 @@
 
     public async Task loginUser()
     {
-        if (email == string.Empty || password == string.Empty)
+        if (isSubmitting) return;
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
+            errorMessage = "Enter your email address and password.";
             return;
         }
-        var res = await ApiService.LoginUser(email, password);
-        if (res is not null)
+
+        errorMessage = null;
+        isSubmitting = true;
+        try
         {
-            if (res.role == "Student")
+            var res = await ApiService.LoginUser(email.Trim(), password);
+            if (res is not null)
             {
-                NavManager.NavigateTo("/");
+                if (res.role == "Admin")
+                {
+                    NavManager.NavigateTo("/admin");
+                }
+                else
+                {
+                    NavManager.NavigateTo("/");
+                }
+            }
+            else
+            {
+                errorMessage = "Sign-in failed. Check your details and try again.";
             }
         }
-        Console.WriteLine(res);
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 }

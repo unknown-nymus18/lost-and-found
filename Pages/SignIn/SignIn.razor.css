@@ -79,9 +79,20 @@ button{
     transition: all 0.2s ease;
 }
 
-button:hover{
+button:hover:not(:disabled){
     background-color: #336dea;
     scale: 1.06;
+}
+
+button:disabled{
+    cursor: wait;
+    opacity: 0.75;
+}
+
+.form-error{
+    color: #b91c1c;
+    font-size: 13px;
+    margin: 0 10px 8px;
 }
 
 .nav{
