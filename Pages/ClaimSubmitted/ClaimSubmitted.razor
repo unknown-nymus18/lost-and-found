@@ -95,7 +95,7 @@
     private string ThumbStyle =>
         string.IsNullOrWhiteSpace(report?.PhotoUrl)
             ? string.Empty
-            : $"background-image: url('{report!.PhotoUrl}');";
+            : $"background-image: url('{ReportImageUrl.Resolve(report!.PhotoUrl)}');";
 
     private string SubmittedOn =>
         DateTimeOffset.TryParse(claim?.createdAt, out var created)

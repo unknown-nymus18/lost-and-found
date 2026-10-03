@@ -94,7 +94,7 @@ else
 
 @code {
     [Parameter] public int Id { get; set; }
-    [Parameter] public string Kind { get; set; }
+    [Parameter] public required string Kind { get; set; }
 
     private ReportItem? item;
     private bool isLoading = true;

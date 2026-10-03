@@ -41,7 +41,7 @@
                 @* <ClaimReportCard item="item"></ClaimReportCard> *@
                 <div>
                     @* <p>@(item.Title)</p> *@
-                    <ReportCard Item="@item"></ReportCard>
+                    <ReportCard Item="@item" OnDeleted="HandleReportDeleted"></ReportCard>
                 </div>
             }
         }
@@ -71,6 +71,11 @@
     private void triggerSelected()
     {
         isReports = !isReports;
+    }
+
+    private void HandleReportDeleted(ReportItem report)
+    {
+        ReportItems.Remove(report);
     }
 
     private async Task GetReportsClaims()

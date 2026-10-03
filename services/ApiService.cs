@@ -359,6 +359,47 @@ public class ApiService
         }
     }
 
+    public async Task<ApiResult<bool>> DeleteReport(ReportItem report)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+            return new(false, "Please log in first.");
+
+        var kind = report.Kind.Trim().ToLowerInvariant();
+        if (kind is not ("lost" or "found"))
+            return new(false, "This report has an unsupported kind.");
+
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Delete, $"{baseUrl}reports/{kind}/{report.Id}");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return new(false, "Your session has expired. Please log in again.");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(false, $"Couldn't delete this report. Server error {(int)response.StatusCode}: {detail}");
+            }
+
+            return new(true, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Something went wrong. Please try again.");
+        }
+    }
+
     public record ApiResult<T>(T? Data, string? Error)
     {
         public bool Ok => Error is null;
