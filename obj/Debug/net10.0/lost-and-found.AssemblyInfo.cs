@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("lost-and-found")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5d1cc85e773b0b814c2a5be82bc9c13ae8a2a7ed")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+442a62ed6d2106c3e4f9bd72ec237fda32a041ce")]
 [assembly: System.Reflection.AssemblyProductAttribute("lost-and-found")]
 [assembly: System.Reflection.AssemblyTitleAttribute("lost-and-found")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
