@@ -1,0 +1,8 @@
+[build]
+  command = "curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0 && export PATH=\"$HOME/.dotnet:$PATH\" && dotnet publish -c Release -o output"
+  publish = "output/wwwroot"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

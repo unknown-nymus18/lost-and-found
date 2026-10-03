@@ -78,3 +78,39 @@
     border:#111827 solid 1px;
     border-radius: 20px;
 }
+
+@media (max-width: 640px) {
+    .claims {
+        padding: 16px 12px;
+    }
+
+    .claims h2 {
+        font-size: 22px;
+    }
+
+    .stats {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .action {
+        flex: 1 1 120px;
+        margin-top: 4px;
+        margin-bottom: 4px;
+    }
+
+    .selection {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .select-item {
+        flex: 1;
+        padding: 10px 8px;
+    }
+
+    .data-container {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+}

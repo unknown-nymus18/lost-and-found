@@ -80,11 +80,19 @@ label::placeholder{
 }
 
 input{
+    box-sizing: border-box;
+    width: 100%;
     padding-left: 10px;
     border-radius: 16px;
     min-height: 46px;
     border: 1px solid #D1D5DB;
-    min-width: 400px;
+}
+
+fieldset {
+    box-sizing: border-box;
+    width: min(100%, 420px);
+    padding: 0;
+    border: 0;
 }
 
 button{
@@ -105,4 +113,49 @@ button:hover{
 .nav{
     display: flex;
     align-self: center;
+}
+
+@media (max-width: 760px) {
+    .sign-in {
+        flex-direction: column;
+    }
+
+    .left {
+        flex: 0 0 auto;
+        padding: 28px 24px;
+    }
+
+    .left .title {
+        font-size: 24px;
+    }
+
+    .right {
+        flex: 1;
+        padding: 32px 24px;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 420px) {
+    .left {
+        padding: 22px 18px;
+    }
+
+    .left .heading {
+        font-size: 20px;
+    }
+
+    .left .title {
+        font-size: 21px;
+    }
+
+    .right {
+        padding: 28px 18px;
+    }
+
+    .nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
 }
