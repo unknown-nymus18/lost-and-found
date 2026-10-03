@@ -55,3 +55,18 @@ Components/   # Reusable UI components (ItemCard, ...)
 Layout/       # MainLayout and NavMenu
 wwwroot/      # Static assets, CSS, index.html
 ```
+## Contributing
+
+1. Pull the latest changes before you start working:
+bash
+   git pull --rebase origin frontend
+
+2. Make your changes and test them with dotnet run.
+3. Commit with a short, clear message:
+bash
+   git add .
+   git commit -m "Describe what you changed"
+
+4. Push to the shared branch:
+bash
+   git push origin frontend

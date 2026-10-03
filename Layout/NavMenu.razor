@@ -23,25 +23,26 @@
         @if (AuthService.CurrentUser is not null)
         {
             <div class="d-flex align-items-center gap-3">
-                <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center"
-                     style="width: 32px; height: 32px; flex-shrink: 0;">
+                <NavLink href="/notifications"
+                         class="bg-white border rounded-circle d-flex align-items-center justify-content-center"
+                         style="width: 32px; height: 32px; flex-shrink: 0;" aria-label="Notifications">
                     <i class="bi bi-bell-fill text-warning"></i>
-                </div>
+                </NavLink>
 
-                <div class="d-flex align-items-center gap-2">
+                <NavLink href="/profile" class="d-flex align-items-center gap-2 text-decoration-none text-reset">
                     <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold"
                          style="width: 32px; height: 32px; flex-shrink: 0;">
                         @(string.IsNullOrEmpty(AuthService.CurrentUser?.name) ? "" :
                             AuthService.CurrentUser.name[0].ToString().ToUpper())
                     </div>
                     <p class="m-0 fs-6">@AuthService.CurrentUser?.name</p>
-                </div>
+                </NavLink>
             </div>
         }
         else
         {
             <div class="auth-nav">
-                <NavLink class="btn">Sign up</NavLink>
+                <NavLink class="btn" href="/register">Sign up</NavLink>
                 <NavLink class="btn btn-primary" href="/sign-in">Sign in</NavLink>
             </div>
         }

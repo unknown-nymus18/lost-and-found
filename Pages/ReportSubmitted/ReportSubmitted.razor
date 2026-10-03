@@ -1,0 +1,140 @@
+@page "/report-submitted/{Kind}/{Id:int}"
+@using lost_and_found.Models
+@using lost_and_found.Services
+@inject ApiService ApiService
+@inject AuthService AuthService
+
+<div class="confirmation">
+    @if (isLoading)
+    {
+        <div class="card"><p class="loading">Loading your report...</p></div>
+    }
+    else if (item is null)
+    {
+        <div class="card">
+            <h1 class="heading">Report submitted</h1>
+            <p class="subtitle">We couldn't load the details just now, but your report was saved.</p>
+            <div class="actions">
+                <a class="btn-primary" href="/claims">View My Reports</a>
+                <a class="btn-text" href="/">Back to Home</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="icon-circle success" aria-hidden="true">✔</div>
+
+            <h1 class="heading">Report submitted!</h1>
+            <p class="subtitle">
+                Thanks@(string.IsNullOrEmpty(FirstName) ? "" : $", {FirstName}"). We're scanning
+                @(IsLost ? "found" : "lost") items for a match right now — you'll be notified the moment we find one.
+            </p>
+
+            <div class="ref-pill">Reference ID: @ReferenceId</div>
+
+            <div class="summary">
+                <div class="summary-head">
+                    <div class="thumb" style="@ThumbStyle" aria-hidden="true"></div>
+                    <div>
+                        <strong class="summary-title">@item.Title</strong>
+                        <span class="kind-badge @(IsLost ? "kind-lost" : "kind-found")">@(IsLost ? "Lost" : "Found")</span>
+                    </div>
+                </div>
+
+                <dl class="rows">
+                    <div class="row">
+                        <dt>Category</dt>
+                        <dd>@CategoryOptions.GetCategoryName(item.Category)</dd>
+                    </div>
+                    <div class="row">
+                        <dt>@(IsLost ? "Last seen" : "Found at")</dt>
+                        <dd>@item.Location</dd>
+                    </div>
+                    <div class="row">
+                        <dt>Date</dt>
+                        <dd>@item.Date.ToLocalTime().ToString("MMM d, yyyy")</dd>
+                    </div>
+                    <div class="row">
+                        <dt>Status</dt>
+                        <dd><span class="status-pill @StatusClass">@StatusLabel</span></dd>
+                    </div>
+                </dl>
+            </div>
+
+            <h2 class="steps-heading">What happens next</h2>
+            <ol class="steps">
+                <li class="step done">
+                    <span class="bullet" aria-hidden="true">✔</span>
+                    <div>
+                        <strong>Report published</strong>
+                        <p>Your report is now visible to finders and campus security.</p>
+                    </div>
+                </li>
+                <li class="step active">
+                    <span class="bullet" aria-hidden="true">2</span>
+                    <div>
+                        <strong>Smart matching</strong>
+                        <p>We compare your report against every @(IsLost ? "found" : "lost") item, daily.</p>
+                    </div>
+                </li>
+                <li class="step">
+                    <span class="bullet" aria-hidden="true">3</span>
+                    <div>
+                        <strong>Get notified</strong>
+                        <p>Email + in-app alert when a likely match (70%+) appears.</p>
+                    </div>
+                </li>
+            </ol>
+
+            <div class="actions">
+                <a class="btn-primary" href="/claims">View My Reports</a>
+                <a class="btn-outline" href="/report">Report Another Item</a>
+                <a class="btn-text" href="/">Back to Home</a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    [Parameter] public string Kind { get; set; } = string.Empty;
+
+    private ReportItem? item;
+    private bool isLoading = true;
+
+    private bool IsLost => Kind.Equals("lost", StringComparison.OrdinalIgnoreCase);
+
+    private string FirstName =>
+        (AuthService.CurrentUser?.name ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault() ?? string.Empty;
+
+    private string ReferenceId =>
+        $"{(IsLost ? "LF" : "FD")}-{(item?.CreatedAt.Year ?? DateTimeOffset.UtcNow.Year)}-{Id:D4}";
+
+    private string ThumbStyle =>
+        string.IsNullOrWhiteSpace(item?.PhotoUrl)
+            ? string.Empty
+            : $"background-image: url('{item!.PhotoUrl}');";
+
+    private string StatusLabel => item?.Status switch
+    {
+        1 => "Match Found — Claim Pending",
+        2 => "Resolved — Reunited",
+        _ => "Active — Awaiting Match",
+    };
+
+    private string StatusClass => item?.Status switch
+    {
+        1 => "status-match",
+        2 => "status-resolved",
+        _ => "status-active",
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        item = IsLost ? await ApiService.GetLostItemById(Id) : await ApiService.GetFoundItemById(Id);
+        isLoading = false;
+    }
+}

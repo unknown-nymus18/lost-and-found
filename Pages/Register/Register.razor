@@ -1,0 +1,140 @@
+@page "/register"
+@using lost_and_found.Components
+@using lost_and_found.Models
+@using lost_and_found.Services
+@layout EmptyLayout
+@inject ApiService ApiService
+@inject NavigationManager NavManager
+
+<div class="register">
+    <AuthPanel Headline="Lost something? Let the campus help you find it."
+               Blurb="Create a free account with your UG email to report lost or found items, get match alerts, and claim items securely." />
+
+    <div class="right">
+        <form class="form" @onsubmit="Submit">
+            <h2 class="heading">Create your account</h2>
+            <p class="subtitle">Join UG Lost &amp; Found to report items and track claims.</p>
+
+            <button type="button" class="sso-btn" @onclick="SignUpWithSso">
+                <span class="sso-icon" aria-hidden="true">🎓</span>
+                Sign up with UG Student SSO
+            </button>
+
+            <div class="divider"><span>or</span></div>
+
+            <label class="field">
+                <span class="field-label">Full Name</span>
+                <input type="text" placeholder="e.g. Kingsley Ofori-Atta" @bind="Name" />
+            </label>
+
+            <div class="field-row">
+                <label class="field">
+                    <span class="field-label">Student ID</span>
+                    <input type="text" placeholder="10976543" @bind="StudentId" />
+                </label>
+
+                <label class="field">
+                    <span class="field-label">Hall of Residence</span>
+                    <select @bind="Hall">
+                        <option value="">Select hall</option>
+                        @foreach (var hall in Halls)
+                        {
+                            <option value="@hall">@hall</option>
+                        }
+                    </select>
+                </label>
+            </div>
+
+            <label class="field">
+                <span class="field-label">UG Email Address</span>
+                <input type="email" placeholder="you@st.ug.edu.gh" @bind="Email" />
+            </label>
+
+            <label class="field">
+                <span class="field-label">Password</span>
+                <input type="password" placeholder="At least 8 characters" @bind="Password" />
+            </label>
+
+            <label class="terms">
+                <input type="checkbox" @bind="AcceptedTerms" />
+                <span>I agree to the Terms of Use and Privacy Policy</span>
+            </label>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="form-error" role="alert">@errorMessage</p>
+            }
+
+            <button type="submit" class="submit-btn" disabled="@isSubmitting">
+                @(isSubmitting ? "Creating account..." : "Create Account")
+            </button>
+
+            <p class="sign-in-nav">
+                Already have an account? <a href="/sign-in">Sign In</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+@code {
+    private static readonly string[] Halls =
+    {
+        "Commonwealth Hall",
+        "Legon Hall",
+        "Akuafo Hall",
+        "Volta Hall",
+        "Mensah Sarbah Hall",
+        "Hilla Limann Hall",
+        "Alexander Kwapong Hall",
+        "Jean Nelson Aka Hall",
+        "Elizabeth Frances Sey Hall",
+        "International Students Hostel",
+        "Off campus"
+    };
+
+    private string Name { get; set; } = string.Empty;
+    private string StudentId { get; set; } = string.Empty;
+    private string Hall { get; set; } = string.Empty;
+    private string Email { get; set; } = string.Empty;
+    private string Password { get; set; } = string.Empty;
+    private bool AcceptedTerms { get; set; }
+
+    private bool isSubmitting;
+    private string? errorMessage;
+
+    private void SignUpWithSso() => errorMessage = "UG Student SSO isn't available yet.";
+
+    private async Task Submit()
+    {
+        if (isSubmitting) return;
+
+        errorMessage = Validate();
+        if (errorMessage is not null) return;
+
+        isSubmitting = true;
+        try
+        {
+            var user = await ApiService.RegisterUser(Name.Trim(), Email.Trim(), Password);
+
+            if (user is not null)
+                NavManager.NavigateTo("/");
+            else
+                errorMessage = "Could not create your account. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string? Validate()
+    {
+        if (string.IsNullOrWhiteSpace(Name)) return "Please enter your full name.";
+        if (string.IsNullOrWhiteSpace(StudentId)) return "Please enter your student ID.";
+        if (string.IsNullOrWhiteSpace(Hall)) return "Please select your hall of residence.";
+        if (string.IsNullOrWhiteSpace(Email)) return "Please enter your UG email address.";
+        if (Password.Length < 8) return "Your password must be at least 8 characters.";
+        if (!AcceptedTerms) return "Please accept the Terms of Use and Privacy Policy.";
+        return null;
+    }
+}
