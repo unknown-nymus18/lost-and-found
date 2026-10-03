@@ -130,3 +130,42 @@
     gap:15px;
     /* background-color: blue; */
 }
+
+@media (max-width: 760px) {
+    .browse[b-jtaomho63z] {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .main[b-jtaomho63z] {
+        flex-direction: column;
+    }
+
+    .filters[b-jtaomho63z] {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0 16px;
+        width: 100%;
+        margin: 0 0 16px;
+    }
+
+    .filters h4[b-jtaomho63z] {
+        grid-column: 1 / -1;
+    }
+
+    .data[b-jtaomho63z] {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 420px) {
+    .browse[b-jtaomho63z] {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .header[b-jtaomho63z] {
+        padding-top: 16px;
+        padding-bottom: 16px;
+    }
+}

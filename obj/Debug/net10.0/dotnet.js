@@ -5,7 +5,7 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
   "mainAssemblyName": "lost-and-found",
   "applicationEnvironment": "Development",
   "resources": {
-    "hash": "sha256-RKYb61t7sdz67fiKxki0UO/POZFmenZ5lgFeNOR+L5o=",
+    "hash": "sha256-gtd6DmQ+xJzMTHyKhc+OAkRNFwfTPB++rNO00dZUGtQ=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.ikrs475e5v.js"
@@ -1248,16 +1248,16 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       },
       {
         "virtualPath": "lost-and-found.wasm",
-        "name": "lost-and-found.htp5hvk3ai.wasm",
-        "hash": "sha256-9Z47jLR6H6peDwuv8nDqjRdTwNJ8dZByjL4F/MKXSL8=",
+        "name": "lost-and-found.ozw9v6h8bb.wasm",
+        "hash": "sha256-vInFxA9nQuGkYuve5piP9zwInY3ZAvkClV4lp48vrbg=",
         "cache": "force-cache"
       }
     ],
     "pdb": [
       {
         "virtualPath": "lost-and-found.pdb",
-        "name": "lost-and-found.300qcvxar1.pdb",
-        "hash": "sha256-fYVh27juPYzuwTXEX24jN4fY2sHKCEOdj7Dn5APqCYs=",
+        "name": "lost-and-found.3nqll1tdno.pdb",
+        "hash": "sha256-4Zym4C73sIaRaRw6rwvxFCwU408IjSGPx0up4/IDnak=",
         "cache": "force-cache"
       }
     ],
