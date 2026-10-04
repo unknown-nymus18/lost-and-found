@@ -17,9 +17,17 @@
 
     <span class="report-status @ReportStatusClass">@ReportStatusLabel</span>
 
-    <a class="view-details" href="/item-detail/@(Item.Kind.ToLower())/@Item.Id">View Details</a>
+    @if (Item.Status == 1)
+    {
+        <a class="view-details" href="/matched-item/@(Item.Kind.ToLowerInvariant())/@Item.Id">View match</a>
+    }
+    else
+    {
+        <a class="view-details" href="/item-detail/@(Item.Kind.ToLowerInvariant())/@Item.Id">View Details</a>
+    }
     <button class="delete-report" type="button" @onclick="OpenDeleteConfirmation" disabled="@isDeleting">
-        Delete
+        <i class="bi bi-trash3" aria-hidden="true"></i>
+        Delete report
     </button>
     @if (!string.IsNullOrEmpty(errorMessage))
     {

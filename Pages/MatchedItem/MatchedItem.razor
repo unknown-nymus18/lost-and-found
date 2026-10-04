@@ -1,0 +1,114 @@
+@page "/matched-item/{Kind}/{Id:int}"
+@using lost_and_found.Models
+@using lost_and_found.Services
+@inject ApiService ApiService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<main class="matched-item-page">
+    <a class="back-link" href="/claims">&larr; Back to My Reports &amp; Claims</a>
+
+    @if (isLoading)
+    {
+        <p class="page-state">Loading matched reports...</p>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="page-state error" role="alert">@errorMessage</p>
+    }
+    else if (match is not null)
+    {
+        <header class="match-header">
+            <div>
+                <span class="eyebrow">Matched item</span>
+                <h1>@SelectedReportTitle</h1>
+                <p>@match.Reason</p>
+            </div>
+            <span class="match-score">Match score @match.Score.ToString("0.#")</span>
+        </header>
+
+        <div class="matched-pair">
+            <article class="report-panel">
+                <div class="report-photo" role="img" aria-label="Photo of @match.Lost.Title"
+                     style="@PhotoStyle(match.Lost)"></div>
+                <div class="report-content">
+                    <span class="report-label">Lost report</span>
+                    <h2>@match.Lost.Title</h2>
+                    <p class="report-description">@match.Lost.Description</p>
+                    <div class="report-meta">
+                        <span>Location: @match.Lost.Location</span>
+                        <span>Date: @match.Lost.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                        <span>Reported by: @match.Lost.ReportedBy</span>
+                    </div>
+                    <a class="report-details-link" href="@($"/item-detail/lost/{match.Lost.Id}")">View report details</a>
+                </div>
+            </article>
+            <div class="pair-connector" aria-hidden="true">↔</div>
+            <article class="report-panel">
+                <div class="report-photo" role="img" aria-label="Photo of @match.Found.Title"
+                     style="@PhotoStyle(match.Found)"></div>
+                <div class="report-content">
+                    <span class="report-label">Found report</span>
+                    <h2>@match.Found.Title</h2>
+                    <p class="report-description">@match.Found.Description</p>
+                    <div class="report-meta">
+                        <span>Location: @match.Found.Location</span>
+                        <span>Date: @match.Found.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                        <span>Reported by: @match.Found.ReportedBy</span>
+                    </div>
+                    <a class="report-details-link" href="@($"/item-detail/found/{match.Found.Id}")">View report details</a>
+                </div>
+            </article>
+        </div>
+
+        <p class="matched-date">Matched @match.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</p>
+    }
+</main>
+
+@code {
+    [Parameter] public string Kind { get; set; } = string.Empty;
+    [Parameter] public int Id { get; set; }
+
+    private MatchItem? match;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private string SelectedReportTitle => Kind.Equals("lost", StringComparison.OrdinalIgnoreCase)
+        ? match?.Lost.Title ?? "Matched report"
+        : match?.Found.Title ?? "Matched report";
+
+    private static string PhotoStyle(ReportItem item) => string.IsNullOrWhiteSpace(item.PhotoUrl)
+        ? string.Empty
+        : $"background-image: url('{ReportImageUrl.Resolve(item.PhotoUrl)}')";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!AuthService.isLoggedIn)
+        {
+            Navigation.NavigateTo("/sign-in");
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        var matches = await ApiService.GetMyMatches();
+        if (matches is null)
+        {
+            errorMessage = "Couldn't load the matched reports. Please try again.";
+        }
+        else if (Kind.Equals("lost", StringComparison.OrdinalIgnoreCase))
+        {
+            match = matches.FirstOrDefault(candidate => candidate.Lost.Id == Id);
+        }
+        else if (Kind.Equals("found", StringComparison.OrdinalIgnoreCase))
+        {
+            match = matches.FirstOrDefault(candidate => candidate.Found.Id == Id);
+        }
+
+        if (string.IsNullOrEmpty(errorMessage) && match is null)
+            errorMessage = "We couldn't find a match for this report.";
+
+        isLoading = false;
+    }
+}

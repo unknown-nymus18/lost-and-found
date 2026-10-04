@@ -303,6 +303,32 @@ public class ApiService
         }
     }
 
+    public async Task<List<MatchItem>?> GetMyMatches()
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrEmpty(user.token))
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}matches/mine");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<List<MatchItem>>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching matches: {ex.Message}");
+            return null;
+        }
+    }
+
     public async Task<ClaimItem?> MakeClaim(string foundReportId, string proofDescription)
     {
         var user = _authService.CurrentUser;
