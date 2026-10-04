@@ -115,7 +115,7 @@
     private string ThumbStyle =>
         string.IsNullOrWhiteSpace(item?.PhotoUrl)
             ? string.Empty
-            : $"background-image: url('{item!.PhotoUrl}');";
+            : $"background-image: url('{ReportImageUrl.Resolve(item!.PhotoUrl)}');";
 
     private string StatusLabel => item?.Status switch
     {

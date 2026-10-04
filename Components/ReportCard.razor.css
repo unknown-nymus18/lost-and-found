@@ -61,19 +61,30 @@
     white-space: nowrap;
 }
 
-.status-active {
+.status-open {
     background-color: #fef3c7;
     color: #b45309;
 }
 
-.status-match {
+.status-matched {
     background-color: #ede9fe;
     color: #6d28d9;
+}
+
+.status-claimed {
+    background-color: #dbeafe;
+    color: #1d4ed8;
 }
 
 .status-resolved {
     background-color: #dcfce7;
     color: #15803d;
+}
+
+.status-closed,
+.status-unknown {
+    background-color: #e5e7eb;
+    color: #4b5563;
 }
 
 .view-details {
@@ -86,4 +97,158 @@
 
 .view-details:hover {
     text-decoration: underline;
+}
+
+.delete-report {
+    border: 0;
+    padding: 0;
+    background: none;
+    color: #b91c1c;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.delete-report:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.delete-error {
+    flex-basis: 100%;
+    color: #b91c1c;
+    font-size: 0.85rem;
+}
+
+.delete-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(24, 24, 27, 0.48);
+}
+
+.delete-modal {
+    width: min(100%, 420px);
+    padding: 24px;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    background: #fff;
+    color: #18181b;
+    box-shadow: 0 18px 48px rgba(24, 24, 27, 0.2);
+}
+
+.delete-modal h2 {
+    margin: 0 0 10px;
+    font-size: 1.2rem;
+}
+
+.delete-modal p {
+    margin: 0;
+    color: #52525b;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.delete-modal .delete-modal-error {
+    margin-top: 12px;
+    color: #b91c1c;
+    font-size: 0.9rem;
+}
+
+.delete-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.delete-cancel,
+.delete-confirm {
+    min-height: 40px;
+    padding: 8px 14px;
+    border: 1px solid #d4d4d8;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.delete-cancel {
+    background: #fff;
+    color: #27272a;
+}
+
+.delete-confirm {
+    border-color: #b91c1c;
+    background: #b91c1c;
+    color: #fff;
+}
+
+.delete-cancel:disabled,
+.delete-confirm:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+@media (max-width: 560px) {
+    .claim-report-card {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        grid-template-areas:
+            "thumbnail info info"
+            "status status link"
+            "delete delete delete"
+            "error error error";
+        gap: 12px 10px;
+        padding: 14px 4px;
+    }
+
+    .thumbnail {
+        grid-area: thumbnail;
+    }
+
+    .card-info {
+        grid-area: info;
+    }
+
+    .title-row strong,
+    .subtext {
+        overflow-wrap: anywhere;
+    }
+
+    .report-status {
+        grid-area: status;
+        justify-self: start;
+        white-space: normal;
+        padding: 5px 10px;
+    }
+
+    .view-details {
+        grid-area: link;
+        justify-self: end;
+    }
+
+    .delete-report {
+        grid-area: delete;
+        justify-self: end;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 8px 12px;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+
+    .delete-error {
+        grid-area: error;
+    }
 }

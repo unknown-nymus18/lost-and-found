@@ -55,11 +55,11 @@ else
         @if (Kind == "found")
         {
             <section class="item-actions">
-                <div class="match-alert">
+                @* <div class="match-alert">
                     <strong>&#9889; 91% Potential Match</strong>
                     <p>This matches a Lost Report: "Blue Steel Bottle" filed 2 days ago near JQB Complex.</p>
                     <button class="dark-button" type="button">View Matching Report</button>
-                </div>
+                </div> *@
 
                 <div class="claim-panel">
                     <h2>Claim This Item</h2>
@@ -94,7 +94,7 @@ else
 
 @code {
     [Parameter] public int Id { get; set; }
-    [Parameter] public string Kind { get; set; }
+    [Parameter] public required string Kind { get; set; }
 
     private ReportItem? item;
     private bool isLoading = true;

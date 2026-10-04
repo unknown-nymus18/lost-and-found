@@ -1,7 +1,10 @@
 @using lost_and_found.Models
+@using lost_and_found.Services
+@inject ApiService ApiService
 
 <div class="claim-report-card">
-    <div class="thumbnail" role="img" aria-label="Photo of @Item.Title" style="background-image:url('@ReportImageUrl.Resolve(Item.PhotoUrl)')">
+    <div class="thumbnail" role="img" aria-label="Photo of @Item.Title"
+         style="background-image:url('@ReportImageUrl.Resolve(Item.PhotoUrl)')">
     </div>
 
     <div class="card-info">
@@ -14,30 +17,114 @@
 
     <span class="report-status @ReportStatusClass">@ReportStatusLabel</span>
 
-    <a class="view-details" href="/item-detail/@(Item.Kind.ToLower())/@Item.Id">View Details</a>
+    @if (Item.Status == 1)
+    {
+        <a class="view-details" href="/matched-item/@(Item.Kind.ToLowerInvariant())/@Item.Id">View match</a>
+    }
+    else
+    {
+        <a class="view-details" href="/item-detail/@(Item.Kind.ToLowerInvariant())/@Item.Id">View Details</a>
+    }
+    <button class="delete-report" type="button" @onclick="OpenDeleteConfirmation" disabled="@isDeleting">
+        <i class="bi bi-trash3" aria-hidden="true"></i>
+        Delete report
+    </button>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <span class="delete-error" role="alert">@errorMessage</span>
+    }
 </div>
+
+@if (isDeleteConfirmationOpen)
+{
+    <div class="delete-modal-backdrop" @onclick="CloseDeleteConfirmation">
+        <section class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title"
+                 @onclick:stopPropagation="true">
+            <h2 id="delete-modal-title">Delete report?</h2>
+            <p><strong>@Item.Title</strong> will be permanently deleted. This action cannot be undone.</p>
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="delete-modal-error" role="alert">@errorMessage</p>
+            }
+            <div class="delete-modal-actions">
+                <button class="delete-cancel" type="button" @onclick="CloseDeleteConfirmation" disabled="@isDeleting">
+                    Cancel
+                </button>
+                <button class="delete-confirm" type="button" @onclick="DeleteReport" disabled="@isDeleting">
+                    @(isDeleting ? "Deleting..." : "Delete report")
+                </button>
+            </div>
+        </section>
+    </div>
+}
 
 @code {
     [Parameter, EditorRequired]
     public ReportItem Item { get; set; } = default!;
+    [Parameter]
+    public EventCallback<ReportItem> OnDeleted { get; set; }
+
+    private bool isDeleting;
+    private bool isDeleteConfirmationOpen;
+    private string? errorMessage;
+
+    private void OpenDeleteConfirmation()
+    {
+        errorMessage = null;
+        isDeleteConfirmationOpen = true;
+    }
+
+    private void CloseDeleteConfirmation()
+    {
+        if (!isDeleting)
+            isDeleteConfirmationOpen = false;
+    }
+
+    private async Task DeleteReport()
+    {
+        if (isDeleting)
+            return;
+
+        isDeleting = true;
+        errorMessage = null;
+        try
+        {
+            var result = await ApiService.DeleteReport(Item);
+            if (result.Ok)
+            {
+                isDeleteConfirmationOpen = false;
+                await OnDeleted.InvokeAsync(Item);
+            }
+            else
+                errorMessage = result.Error;
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
 
     private string TypeClass =>
         (Item.Kind ?? string.Empty).ToLower().Contains("lost") ? "type-lost" : "type-found";
 
-    // ASSUMPTION: Status is 0 = Active, 1 = MatchFound, 2 = Resolved.
-    // Replace with your real enum/values if these don't match.
     private string ReportStatusClass => Item.Status switch
     {
-        1 => "status-match",
-        2 => "status-resolved",
-        _ => "status-active",
+        0 => "status-open",
+        1 => "status-matched",
+        2 => "status-claimed",
+        3 => "status-resolved",
+        4 => "status-closed",
+        _ => "status-unknown",
     };
 
     private string ReportStatusLabel => Item.Status switch
     {
-        1 => "Match Found \u2014 Claim Pending",
-        2 => "Resolved \u2014 Reunited",
-        _ => "Active \u2014 Awaiting Match",
+        0 => "Open",
+        1 => "Matched",
+        2 => "Claimed",
+        3 => "Resolved",
+        4 => "Closed",
+        _ => "Unknown",
     };
 
     private string TimeAgoLabel
