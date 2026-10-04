@@ -1,4 +1,4 @@
-@page "/matched-item/{Kind}/{Id:int}"
+@page "/matched-item/{Kind}/{ReportId:int}"
 @using lost_and_found.Models
 @using lost_and_found.Services
 @inject ApiService ApiService
@@ -16,66 +16,86 @@
     {
         <p class="page-state error" role="alert">@errorMessage</p>
     }
-    else if (match is not null)
+    else if (matches.Count > 0)
     {
         <header class="match-header">
             <div>
                 <span class="eyebrow">Matched item</span>
-                <h1>@SelectedReportTitle</h1>
-                <p>@match.Reason</p>
+                <h1>Matches for @ReportTitle</h1>
+                <p>@matches.Count possible match@(matches.Count == 1 ? "" : "es") found.</p>
             </div>
-            <span class="match-score">Match score @match.Score.ToString("0.#")</span>
         </header>
 
-        <div class="matched-pair">
-            <article class="report-panel">
-                <div class="report-photo" role="img" aria-label="Photo of @match.Lost.Title"
-                     style="@PhotoStyle(match.Lost)"></div>
-                <div class="report-content">
-                    <span class="report-label">Lost report</span>
-                    <h2>@match.Lost.Title</h2>
-                    <p class="report-description">@match.Lost.Description</p>
-                    <div class="report-meta">
-                        <span>Location: @match.Lost.Location</span>
-                        <span>Date: @match.Lost.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
-                        <span>Reported by: @match.Lost.ReportedBy</span>
+        <section class="reported-item-section" aria-labelledby="reported-item-heading">
+            <h2 id="reported-item-heading">Your reported item</h2>
+            @if (ReportedItem is { } reportedItem)
+            {
+                <article class="reported-item-card">
+                    <div class="reported-item-photo" role="img" aria-label="Photo of @reportedItem.Title"
+                         style="@PhotoStyle(reportedItem)"></div>
+                    <div class="reported-item-content">
+                        <span class="report-label">@(IsLostReport ? "Lost report" : "Found report")</span>
+                        <h3>@reportedItem.Title</h3>
+                        <p>@reportedItem.Description</p>
+                        <div class="report-meta">
+                            <span>Location: @reportedItem.Location</span>
+                            <span>Date: @reportedItem.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                        </div>
                     </div>
-                    <a class="report-details-link" href="@($"/item-detail/lost/{match.Lost.Id}")">View report details</a>
-                </div>
-            </article>
-            <div class="pair-connector" aria-hidden="true">↔</div>
-            <article class="report-panel">
-                <div class="report-photo" role="img" aria-label="Photo of @match.Found.Title"
-                     style="@PhotoStyle(match.Found)"></div>
-                <div class="report-content">
-                    <span class="report-label">Found report</span>
-                    <h2>@match.Found.Title</h2>
-                    <p class="report-description">@match.Found.Description</p>
-                    <div class="report-meta">
-                        <span>Location: @match.Found.Location</span>
-                        <span>Date: @match.Found.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
-                        <span>Reported by: @match.Found.ReportedBy</span>
-                    </div>
-                    <a class="report-details-link" href="@($"/item-detail/found/{match.Found.Id}")">View report details</a>
-                </div>
-            </article>
-        </div>
+                </article>
+            }
+        </section>
 
-        <p class="matched-date">Matched @match.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</p>
-    }
-</main>
+        <section class="matches-section" aria-labelledby="matches-heading">
+            <div class="matches-list-heading">
+                <h2 id="matches-heading">Possible matches</h2>
+                <span>@matches.Count</span>
+            </div>
+            <div class="matches-scroll" tabindex="0" aria-label="Scrollable possible matches">
+                @foreach (var match in matches)
+                {
+                    var counterpart = OtherReport(match);
+                    var counterpartKind = IsLostReport ? "found" : "lost";
+                    <article class="match-result">
+                        <div class="counterpart-photo" role="img" aria-label="Photo of @counterpart.Title"
+                             style="@PhotoStyle(counterpart)"></div>
+                        <div class="counterpart-content">
+                            <div class="match-result-heading">
+                                <span class="report-label">@(IsLostReport ? "Found item" : "Lost item")</span>
+                                <span class="match-score">@match.Score.ToString("0.#") score</span>
+                            </div>
+                            <h3>@counterpart.Title</h3>
+                            <p class="counterpart-description">@counterpart.Description</p>
+                            <div class="report-meta">
+                                <span>Location: @counterpart.Location</span>
+                                <span>Date: @counterpart.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                            </div>
+                            <p class="match-reason">@match.Reason</p>
+                            <a class="report-details-link" href="@($"/item-detail/{counterpartKind}/{counterpart.Id}")">View
+                                item details</a>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+    </main>
 
 @code {
     [Parameter] public string Kind { get; set; } = string.Empty;
-    [Parameter] public int Id { get; set; }
+    [Parameter] public int ReportId { get; set; }
 
-    private MatchItem? match;
+    private List<MatchItem> matches = [];
     private bool isLoading = true;
     private string? errorMessage;
 
-    private string SelectedReportTitle => Kind.Equals("lost", StringComparison.OrdinalIgnoreCase)
-        ? match?.Lost.Title ?? "Matched report"
-        : match?.Found.Title ?? "Matched report";
+    private bool IsLostReport => Kind.Equals("lost", StringComparison.OrdinalIgnoreCase);
+    private ReportItem? ReportedItem => matches.Count == 0
+        ? null
+        : IsLostReport ? matches[0].Lost : matches[0].Found;
+    private string ReportTitle => ReportedItem?.Title ?? "this report";
+
+    private ReportItem OtherReport(MatchItem match) => IsLostReport ? match.Found : match.Lost;
 
     private static string PhotoStyle(ReportItem item) => string.IsNullOrWhiteSpace(item.PhotoUrl)
         ? string.Empty
@@ -91,22 +111,35 @@
 
         isLoading = true;
         errorMessage = null;
+        matches = [];
 
-        var matches = await ApiService.GetMyMatches();
-        if (matches is null)
+        var response = await ApiService.GetMyMatches();
+        if (response is null)
         {
             errorMessage = "Couldn't load the matched reports. Please try again.";
         }
         else if (Kind.Equals("lost", StringComparison.OrdinalIgnoreCase))
         {
-            match = matches.FirstOrDefault(candidate => candidate.Lost.Id == Id);
+            matches = response
+                .Where(candidate => candidate.Lost.Id == ReportId)
+                .OrderByDescending(candidate => candidate.Score)
+                .ThenByDescending(candidate => candidate.CreatedAt)
+                .ToList();
         }
         else if (Kind.Equals("found", StringComparison.OrdinalIgnoreCase))
         {
-            match = matches.FirstOrDefault(candidate => candidate.Found.Id == Id);
+            matches = response
+                .Where(candidate => candidate.Found.Id == ReportId)
+                .OrderByDescending(candidate => candidate.Score)
+                .ThenByDescending(candidate => candidate.CreatedAt)
+                .ToList();
+        }
+        else
+        {
+            errorMessage = "This report kind is not supported.";
         }
 
-        if (string.IsNullOrEmpty(errorMessage) && match is null)
+        if (string.IsNullOrEmpty(errorMessage) && matches.Count == 0)
             errorMessage = "We couldn't find a match for this report.";
 
         isLoading = false;

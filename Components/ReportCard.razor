@@ -17,9 +17,11 @@
 
     <span class="report-status @ReportStatusClass">@ReportStatusLabel</span>
 
-    @if (Item.Status == 1)
+    @if (MatchCount > 0)
     {
-        <a class="view-details" href="/matched-item/@(Item.Kind.ToLowerInvariant())/@Item.Id">View match</a>
+        <a class="view-details" href="/matched-item/@(Item.Kind.ToLowerInvariant())/@Item.Id">
+            View @MatchCount match@(MatchCount == 1 ? "" : "es")
+        </a>
     }
     else
     {
@@ -61,6 +63,8 @@
 @code {
     [Parameter, EditorRequired]
     public ReportItem Item { get; set; } = default!;
+    [Parameter]
+    public int MatchCount { get; set; }
     [Parameter]
     public EventCallback<ReportItem> OnDeleted { get; set; }
 
@@ -107,7 +111,7 @@
     private string TypeClass =>
         (Item.Kind ?? string.Empty).ToLower().Contains("lost") ? "type-lost" : "type-found";
 
-    private string ReportStatusClass => Item.Status switch
+    private string ReportStatusClass => MatchCount > 0 ? "status-matched" : Item.Status switch
     {
         0 => "status-open",
         1 => "status-matched",
@@ -117,7 +121,7 @@
         _ => "status-unknown",
     };
 
-    private string ReportStatusLabel => Item.Status switch
+    private string ReportStatusLabel => MatchCount > 0 ? "Matched" : Item.Status switch
     {
         0 => "Open",
         1 => "Matched",
