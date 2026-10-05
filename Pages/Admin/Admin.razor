@@ -14,7 +14,8 @@
         <div class="sidebar-nav">
             @foreach (var section in Sections)
             {
-                <button class="nav-trigger @(ActiveSection == section.Key ? "active" : "")" type="button" @onclick="() => ActiveSection = section.Key">@section.Value</button>
+                <button class="nav-trigger @(ActiveSection == section.Key ? "active" : "")" type="button"
+                        @onclick="() => ActiveSection = section.Key">@section.Value</button>
             }
         </div>
     </nav>
@@ -22,7 +23,8 @@
     <div class="main-panel">
         <header class="topbar">
             <h1>@SectionTitle</h1>
-            <div class="admin-profile"><span class="avatar">@AdminInitials</span><span>Admin - @AdminDisplayName</span></div>
+            <div class="admin-profile"><span class="avatar">@AdminInitials</span><span>Admin - @AdminDisplayName</span>
+            </div>
         </header>
 
         <main class="admin-content">
@@ -38,205 +40,389 @@
             {
                 <section>
                     <div class="dashboard-stats">
-                        <article class="stat-card stat-card-blue"><strong>@Reports.Count</strong><span>Total Reports</span></article>
-                        <article class="stat-card stat-card-amber"><strong>@ClaimRows.Count(c => c.Status == "Pending")</strong><span>Pending Claims</span></article>
-                        <article class="stat-card stat-card-red"><strong>@ClaimRows.Count(c => c.Status == "Disputed")</strong><span>Flagged Disputes</span></article>
-                        <article class="stat-card stat-card-green"><strong>@ClaimRows.Count(c => c.Status == "Approved")</strong><span>Reunited</span></article>
-                    </div>
-                    <section class="table-panel">
-                        <div class="panel-heading"><h2>Recent Reports for Review</h2></div>
-                        <ReportTable Items="Reports.OrderByDescending(r => r.CreatedAt).Take(5)" OnReview="OpenReportReview" OnView="OpenReportDetails" />
-                    </section>
-                </section>
-            }
-            else if (ActiveSection == "reports")
-            {
-                <section>
-                    <div class="report-toolbar">
-                        <input type="search" @bind="ReportSearch" @bind:event="oninput" placeholder="Search by item, reporter, or location" aria-label="Search reports" />
-                        <select @bind="ReportTypeFilter" aria-label="Filter report type"><option value="all">Type: All</option><option value="lost">Lost</option><option value="found">Found</option></select>
-                        <select @bind="ReportCategoryFilter" aria-label="Filter report category"><option value="all">Category: All</option>@foreach (var category in CategoryOptions.Values) { <option value="@category">@category</option> }</select>
-                    </div>
-                    <div class="dashboard-stats compact-stats">
-                        <article class="stat-card stat-card-blue"><strong>@Reports.Count</strong><span>Total Reports</span></article>
-                        <article class="stat-card stat-card-red"><strong>@Reports.Count(r => r.Status == 0)</strong><span>Lost</span></article>
-                        <article class="stat-card stat-card-green"><strong>@Reports.Count(r => r.Status == 1)</strong><span>Found</span></article>
-                        <article class="stat-card stat-card-amber"><strong>0</strong><span>Flagged</span></article>
-                    </div>
-                    <section class="table-panel"><ReportTable Items="FilteredReports" OnReview="OpenReportReview" OnView="OpenReportDetails" /></section>
-                </section>
-            }
-            else if (ActiveSection == "matches")
-            {
-                <section>
-                    <div class="match-summary">
-                        <article class="match-summary-card review"><strong>@SuggestedMatches.Count(m => m.Status == "Awaiting Review")</strong><span>Awaiting Review</span></article>
-                        <article class="match-summary-card confirmed"><strong>@SuggestedMatches.Count(m => m.Status == "Confirmed")</strong><span>Confirmed Matches</span></article>
-                        <article class="match-summary-card dismissed"><strong>@SuggestedMatches.Count(m => m.Status == "Dismissed")</strong><span>Dismissed</span></article>
-                        <article class="match-summary-card accuracy"><strong>@AverageMatchScore%</strong><span>Avg. Match Accuracy</span></article>
-                    </div>
-                    <div class="tabs" role="tablist">
-                        @foreach (var status in MatchStatuses) { <button class="@(MatchStatusFilter == status ? "active" : "")" type="button" @onclick="() => MatchStatusFilter = status">@status@(status == "Awaiting Review" ? $" ({AwaitingMatchCount})" : "")</button> }
-                    </div>
-                    <div class="suggested-match-list">
-                        @foreach (var match in FilteredSuggestedMatches)
-                        {
-                            <article class="suggested-match-card">
-                                <div class="suggested-match-grid">
-                                    <div class="match-item">
-                                        @if (!string.IsNullOrWhiteSpace(match.LostImageUrl)) { <img class="match-item-image" src="@match.LostImageUrl" alt="Reported lost item: @match.LostTitle" /> }
-                                        else { <span class="match-item-image skeleton" role="img" aria-label="No image supplied for this lost report"></span> }
-                                        <div><span class="match-type lost">Lost</span><strong>@match.LostTitle</strong><small>@match.LostDetails</small></div>
-                                    </div>
-                                    <div class="match-confidence @ConfidenceClass(match.Confidence)"><strong>@match.Confidence%</strong><span>match</span></div>
-                                    <div class="match-item">
-                                        @if (!string.IsNullOrWhiteSpace(match.FoundImageUrl)) { <img class="match-item-image" src="@match.FoundImageUrl" alt="Reported found item: @match.FoundTitle" /> }
-                                        else { <span class="match-item-image skeleton" role="img" aria-label="No image supplied for this found report"></span> }
-                                        <div><span class="match-type found">Found</span><strong>@match.FoundTitle</strong><small>@match.FoundDetails</small></div>
-                                    </div>
-                                    <div class="match-actions"><button class="confirm-match" type="button" @onclick="() => OpenMatchDecision(match, true)">Confirm Match</button><button class="dismiss-match" type="button" @onclick="() => OpenMatchDecision(match, false)">Dismiss</button></div>
+                        <article class="stat-card stat-card-blue"><strong>@Reports.Count</strong><span>Total Reports</span>
+                        </article>
+                        <article class="stat-card stat-card-amber"><strong>@ClaimRows.Count(c => c.Status ==
+                                                                           "Pending")</strong><span>Pending Claims</span></article>
+                            <article class="stat-card stat-card-red"><strong>@ClaimRows.Count(c => c.Status ==
+                                                                             "Disputed")</strong><span>Flagged Disputes</span></article>
+                                <article class="stat-card stat-card-green"><strong>@ClaimRows.Count(c => c.Status ==
+                                                                               "Approved")</strong><span>Reunited</span></article>
                                 </div>
-                                <p>Why suggested: @match.Reason</p>
-                            </article>
+                                <section class="table-panel">
+                                    <div class="panel-heading">
+                                        <h2>Recent Reports for Review</h2>
+                                    </div>
+                                    <ReportTable Items="Reports.OrderByDescending(r => r.CreatedAt).Take(5)" OnReview="OpenReportReview"
+                                                 OnView="OpenReportDetails" />
+                                </section>
+                            </section>
                         }
-                    </div>
-                </section>
-            }
+            else if (ActiveSection == "reports")
+                        {
+                            <section>
+                                <div class="report-toolbar">
+                                    <input type="search" @bind="ReportSearch" @bind:event="oninput"
+                                           placeholder="Search by item, reporter, or location" aria-label="Search reports" />
+                                    <select @bind="ReportTypeFilter" aria-label="Filter report type">
+                                        <option value="all">Type: All</option>
+                                        <option value="lost">Lost</option>
+                                        <option value="found">Found</option>
+                                    </select>
+                                    <select @bind="ReportCategoryFilter" aria-label="Filter report category">
+                                        <option value="all">Category: All</option>@foreach (var category in CategoryOptions.Values) {
+                                        <option value="@category">@category</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="dashboard-stats compact-stats">
+                                <article class="stat-card stat-card-blue"><strong>@Reports.Count</strong><span>Total Reports</span>
+                                </article>
+                                <article class="stat-card stat-card-red"><strong>@Reports.Count(r => r.Status ==
+                                                                                                    0)</strong><span>Lost</span></article>
+                                    <article class="stat-card stat-card-green"><strong>@Reports.Count(r => r.Status ==
+                                                                                                            1)</strong><span>Found</span></article>
+                                        <article class="stat-card stat-card-amber"><strong>0</strong><span>Flagged</span></article>
+                                    </div>
+                                    <section class="table-panel">
+                                        <ReportTable Items="FilteredReports" OnReview="OpenReportReview" OnView="OpenReportDetails" />
+                                    </section>
+                                </section>
+                            }
+            else if (ActiveSection == "matches")
+                            {
+                                <section>
+                                    <div class="match-summary">
+                                        <article class="match-summary-card review"><strong>@SuggestedMatches.Count(m => m.Status ==
+                                                                                                                   "Awaiting Review")</strong><span>Awaiting Review</span></article>
+                                            <article class="match-summary-card confirmed"><strong>@SuggestedMatches.Count(m => m.Status ==
+                                                                                                                     "Confirmed")</strong><span>Confirmed Matches</span></article>
+                                                <article class="match-summary-card dismissed"><strong>@SuggestedMatches.Count(m => m.Status ==
+                                                                                                                        "Dismissed")</strong><span>Dismissed</span></article>
+                                                    <article class="match-summary-card accuracy"><strong>@AverageMatchScore%</strong><span>Avg. Match
+                                                        Accuracy</span></article>
+                                                    </div>
+                                                    <div class="tabs" role="tablist">
+                                                        @foreach (var status in MatchStatuses)
+                                                        {
+                                                            <button class="@(MatchStatusFilter == status ? "active" : "")" type="button"
+                                                                    @onclick="() => MatchStatusFilter = status">@status@(status == "Awaiting Review" ? $" ({AwaitingMatchCount})" : "")</button>
+                                                        }
+                                                    </div>
+                                                    <div class="suggested-match-list">
+                                                        @foreach (var match in FilteredSuggestedMatches)
+                                                        {
+                                                            <article class="suggested-match-card">
+                                                                <div class="suggested-match-grid">
+                                                                    <div class="match-item">
+                                                                        @if (!string.IsNullOrWhiteSpace(match.LostImageUrl))
+                                                                        {
+                                                                            <img class="match-item-image"
+                                                                                 src="@match.LostImageUrl" alt="Reported lost item: @match.LostTitle" />
+                                                                        }
+                                                                        else
+                                                                        {
+
+                                                                            <span class="match-item-image skeleton" role="img"
+                                                                                  aria-label="No image supplied for this lost report"></span>
+                                                                        }
+                                                                        <div><span
+                                                                            class="match-type lost">Lost</span><strong>@match.LostTitle</strong><small>@match.LostDetails</small></div>
+                                                                        </div>
+                                                                        <div class="match-confidence @ConfidenceClass(match.Confidence)">
+                                                                            <strong>@match.Confidence%</strong><span>match</span></div>
+                                                                            <div class="match-item">
+                                                                                @if (!string.IsNullOrWhiteSpace(match.FoundImageUrl))
+                                                                                {
+                                                                                    <img class="match-item-image"
+                                                                                         src="@match.FoundImageUrl" alt="Reported found item: @match.FoundTitle" />
+                                                                                }
+                                                                                else
+                                                                                {
+
+                                                                                    <span class="match-item-image skeleton" role="img"
+                                                                                          aria-label="No image supplied for this found report"></span>
+                                                                                }
+                                                                                <div><span
+                                                                                    class="match-type found">Found</span><strong>@match.FoundTitle</strong><small>@match.FoundDetails</small></div>
+                                                                                </div>
+                                                                                <div class="match-actions"><button class="confirm-match" type="button"
+                                                                                                                       @onclick="() => OpenMatchDecision(match, true)">Confirm Match</button><button
+                                                                                    class="dismiss-match" type="button"
+                                                                                    @onclick="() => OpenMatchDecision(match, false)">Dismiss</button></div>
+                                                                                </div>
+                                                                                <p>Why suggested: @match.Reason</p>
+                                                                            </article>
+                                                                        }
+                                                                    </div>
+                                                                </section>
+                                                            }
             else if (ActiveSection == "claims")
-            {
-                <section>
-                    <div class="dashboard-stats compact-stats">
-                        <article class="stat-card stat-card-amber"><strong>@ClaimRows.Count(c => c.Status == "Pending")</strong><span>Pending Review</span></article>
-                        <article class="stat-card stat-card-green"><strong>@ClaimRows.Count(c => c.Status == "Approved")</strong><span>Approved</span></article>
-                        <article class="stat-card stat-card-red"><strong>@ClaimRows.Count(c => c.Status == "Rejected")</strong><span>Rejected</span></article>
-                        <article class="stat-card stat-card-purple"><strong>@ClaimRows.Count(c => c.Status == "Disputed")</strong><span>Flagged Disputes</span></article>
-                    </div>
-                    <div class="claims-toolbar"><div class="tabs">@foreach (var status in ClaimStatuses) { <button class="@(ClaimStatusFilter == status ? "active" : "")" type="button" @onclick="() => ClaimStatusFilter = status">@status@(status == "Pending" ? $" ({PendingClaimCount})" : "")</button> }</div><input type="search" @bind="ClaimSearch" @bind:event="oninput" placeholder="Search claims" aria-label="Search claims" /></div>
-                    <section class="table-panel claims-panel"><table class="claims-table"><thead><tr><th>Claim</th><th>Item</th><th>Claimant</th><th>Match</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>@foreach (var claim in FilteredClaims) { <tr><td class="report-reference">@claim.Reference</td><td class="item-title">@claim.ItemTitle</td><td><span class="claimant"><span class="claimant-initials">@Initials(claim.Claimant)</span>@claim.Claimant</span></td><td><strong class="@ConfidenceClass(claim.MatchPercent)">@(claim.MatchPercent.HasValue ? $"{claim.MatchPercent}%" : "—")</strong></td><td>@claim.Submitted.ToString("MMM d, yyyy")</td><td><span class="status-badge @ClaimStatusClass(claim.Status)">@claim.Status</span></td><td class="row-actions">@if (claim.Status == "Pending") { <button type="button" @onclick="() => OpenClaimDecision(claim, true)">Approve</button><button type="button" @onclick="() => OpenClaimDecision(claim, false)">Reject</button> }</td></tr> }</tbody></table></section>
-                    <p class="claim-note">Claims older than 7 days without admin action are escalated automatically.</p>
-                </section>
-            }
+                                                            {
+                                                                <section>
+                                                                    <div class="dashboard-stats compact-stats">
+                                                                        <article class="stat-card stat-card-amber"><strong>@ClaimRows.Count(c => c.Status ==
+                                                                                                                                                                           "Pending")</strong><span>Pending Review</span></article>
+                                                                            <article class="stat-card stat-card-green"><strong>@ClaimRows.Count(c => c.Status ==
+                                                                                                                                                                             "Approved")</strong><span>Approved</span></article>
+                                                                                <article class="stat-card stat-card-red"><strong>@ClaimRows.Count(c => c.Status ==
+                                                                                                                                                                               "Rejected")</strong><span>Rejected</span></article>
+                                                                                    <article class="stat-card stat-card-purple"><strong>@ClaimRows.Count(c => c.Status ==
+                                                                                                                                                                                 "Disputed")</strong><span>Flagged Disputes</span></article>
+                                                                                    </div>
+                                                                                    <div class="claims-toolbar">
+                                                                                        <div class="tabs">@foreach (var status in ClaimStatuses) {
+                                                                                            <button class="@(ClaimStatusFilter == status ? "active" : "")" type="button"
+                                                                                                    @onclick="() => ClaimStatusFilter = status">@status@(status == "Pending" ? $" ({PendingClaimCount})" : "")</button>
+                                                                                        }
+                                                                                    </div><input type="search" @bind="ClaimSearch" @bind:event="oninput" placeholder="Search claims"
+                                                                                                 aria-label="Search claims" />
+                                                                                </div>
+                                                                                <section class="table-panel claims-panel">
+                                                                                    <table class="claims-table">
+                                                                                        <thead>
+                                                                                            <tr>
+                                                                                                <th>Claim</th>
+                                                                                                <th>Item</th>
+                                                                                                <th>Claimant</th>
+                                                                                                <th>Match</th>
+                                                                                                <th>Submitted</th>
+                                                                                                <th>Status</th>
+                                                                                                <th>Actions</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>@foreach (var claim in FilteredClaims) {
+                                                                                            <tr>
+                                                                                                <td class="report-reference">@claim.Reference</td>
+                                                                                                <td class="item-title">@claim.ItemTitle</td>
+                                                                                                <td><span class="claimant"><span
+                                                                                                    class="claimant-initials">@Initials(claim.Claimant)</span>@claim.Claimant</span>
+                                                                                                </td>
+                                                                                                <td><strong class="@ConfidenceClass(claim.MatchPercent)">@(claim.MatchPercent.HasValue ?
+                                                                                                                                                                                                                                                $"{claim.MatchPercent}%" : "—")</strong></td>
+                                                                                                    <td>@claim.Submitted.ToString("MMM d, yyyy")</td>
+                                                                                                    <td><span class="status-badge @ClaimStatusClass(claim.Status)">@claim.Status</span></td>
+                                                                                                    <td class="row-actions">@if (claim.Status == "Pending") {
+                                                                                                        <button type="button"
+                                                                                                                @onclick="() => OpenClaimDecision(claim, true)">Approve</button><button
+                                                                                                        type="button" @onclick="() => OpenClaimDecision(claim, false)">Reject</button>
+                                                                                                    }
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </section>
+                                                                            <p class="claim-note">Claims older than 7 days without admin action are escalated automatically.</p>
+                                                                        </section>
+                                                                    }
             else if (ActiveSection == "users")
-            {
-                <section>
-                    <div class="dashboard-stats compact-stats"><article class="stat-card stat-card-blue"><strong>4,812</strong><span>Registered Users</span></article><article class="stat-card stat-card-green"><strong>1,093</strong><span>Active This Month</span></article><article class="stat-card stat-card-purple"><strong>8</strong><span>Staff &amp; Admins</span></article><article class="stat-card stat-card-red"><strong>5</strong><span>Suspended</span></article></div>
-                    <div class="users-toolbar"><input type="search" @bind="UserSearch" @bind:event="oninput" placeholder="Search by name, student ID, or email" aria-label="Search users" /><select @bind="UserRoleFilter" aria-label="Filter role"><option value="all">Role: All</option><option>Student</option><option>Admin</option><option>Security Staff</option></select><select @bind="UserStatusFilter" aria-label="Filter status"><option value="all">Status: All</option><option value="active">Active</option><option value="suspended">Suspended</option></select><button class="btn-primary" type="button">+ Add Staff</button></div>
-                    <section class="table-panel users-panel"><table class="users-table"><thead><tr><th>Name</th><th>Student / Staff ID</th><th>Email</th><th>Role</th><th>Reports</th><th>Status</th><th>Actions</th></tr></thead><tbody>@foreach (var user in FilteredUsers) { <tr><td class="item-title"><span class="user-name"><span class="user-initials">@Initials(user.Name)</span>@user.Name</span></td><td>@user.Identifier</td><td>@user.Email</td><td><span class="role-badge @RoleClass(user.Role)">@user.Role</span></td><td>@user.ReportCount</td><td><span class="status-badge @(user.Suspended ? "status-rejected" : "status-found")">@(user.Suspended ? "Suspended" : "Active")</span></td><td class="row-actions"><button type="button">Edit</button><button class="suspend-action" type="button">@(user.Suspended ? "Restore" : "Suspend")</button></td></tr> }</tbody></table></section>
-                    <div class="users-pagination"><span>Showing 1-7 of 4,812 users</span><div><button type="button">&lt; Previous</button><button type="button">Next &gt;</button></div></div>
-                </section>
-            }
+                                                                    {
+                                                                        <section>
+                                                                            <div class="dashboard-stats compact-stats">
+                                                                                <article class="stat-card stat-card-blue"><strong>4,812</strong><span>Registered Users</span>
+                                                                                </article>
+                                                                                <article class="stat-card stat-card-green"><strong>1,093</strong><span>Active This Month</span>
+                                                                                </article>
+                                                                                <article class="stat-card stat-card-purple"><strong>8</strong><span>Staff &amp; Admins</span>
+                                                                                </article>
+                                                                                <article class="stat-card stat-card-red"><strong>5</strong><span>Suspended</span></article>
+                                                                            </div>
+                                                                            <div class="users-toolbar"><input type="search" @bind="UserSearch" @bind:event="oninput"
+                                                                                                                  placeholder="Search by name, student ID, or email" aria-label="Search users" /><select
+                                                                                @bind="UserRoleFilter" aria-label="Filter role">
+                                                                                <option value="all">Role: All</option>
+                                                                                <option>Student</option>
+                                                                                <option>Admin</option>
+                                                                                <option>Security Staff</option>
+                                                                            </select><select @bind="UserStatusFilter" aria-label="Filter status">
+                                                                            <option value="all">Status: All</option>
+                                                                            <option value="active">Active</option>
+                                                                            <option value="suspended">Suspended</option>
+                                                                        </select><button class="btn-primary" type="button">+ Add Staff</button></div>
+                                                                        <section class="table-panel users-panel">
+                                                                            <table class="users-table">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                        <th>Name</th>
+                                                                                        <th>Student / Staff ID</th>
+                                                                                        <th>Email</th>
+                                                                                        <th>Role</th>
+                                                                                        <th>Reports</th>
+                                                                                        <th>Status</th>
+                                                                                        <th>Actions</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody>@foreach (var user in FilteredUsers) {
+                                                                                    <tr>
+                                                                                        <td class="item-title"><span class="user-name"><span
+                                                                                            class="user-initials">@Initials(user.Name)</span>@user.Name</span></td>
+                                                                                            <td>@user.Identifier</td>
+                                                                                            <td>@user.Email</td>
+                                                                                            <td><span class="role-badge @RoleClass(user.Role)">@user.Role</span></td>
+                                                                                            <td>@user.ReportCount</td>
+                                                                                            <td><span
+                                                                                                class="status-badge @(user.Suspended ? "status-rejected" : "status-found")">@(user.Suspended
+                                                                                                    ? "Suspended" : "Active")</span></td>
+                                                                                                <td class="row-actions"><button type="button">Edit</button><button
+                                                                                                    class="suspend-action" type="button">@(user.Suspended ? "Restore" :
+                                                                                                    "Suspend")</button></td>
+                                                                                                </tr>
+                                                                                            }
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </section>
+                                                                                <div class="users-pagination"><span>Showing 1-7 of 4,812 users</span>
+                                                                                    <div><button type="button">&lt; Previous</button><button type="button">Next &gt;</button></div>
+                                                                                </div>
+                                                                            </section>
+                                                                        }
             else
-            {
-                <section class="settings-panel"><h2>Settings</h2><p>Admin settings will be connected when the backend management endpoints are available.</p></section>
-            }
-        </main>
-    </div>
-</div>
+                                                                        {
+                                                                            <section class="settings-panel">
+                                                                                <h2>Settings</h2>
+                                                                                <p>Admin settings will be connected when the backend management endpoints are available.</p>
+                                                                            </section>
+                                                                        }
+                                                                    </main>
+                                                                </div>
+                                                            </div>
 
-@if (SelectedClaim is not null)
-{
-    <div class="decision-backdrop" role="presentation" @onclick="CloseClaimDecision">
-        <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="decision-title" @onclick:stopPropagation>
-            <button class="decision-close" type="button" aria-label="Close" @onclick="CloseClaimDecision">&times;</button>
-            <span class="decision-kicker">@SelectedClaim.Reference</span>
-            <h2 id="decision-title">@(ApproveDecision ? "Approve this claim?" : "Reject this claim?")</h2>
-            <p class="decision-summary"><strong>@SelectedClaim.Claimant</strong> is claiming <strong>@SelectedClaim.ItemTitle</strong>.</p>
-            @if (ApproveDecision && (!SelectedClaim.MatchPercent.HasValue || SelectedClaim.MatchPercent < 70))
-            {
-                <p class="decision-warning" role="alert">@(SelectedClaim.MatchPercent.HasValue ? $"This claim has a low match score ({SelectedClaim.MatchPercent}%)." : "No match score is available for this claim.") Verify the claimant's proof and item details before approving.</p>
-            }
-            <label for="decision-note">@(ApproveDecision ? "Admin note / pickup instructions" : "Reason for rejection")</label>
-            <textarea id="decision-note" @bind="DecisionNote" placeholder="@(ApproveDecision ? "Where, when and who to meet for collection" : "Please explain why this claim is being rejected")"></textarea>
-            @if (string.IsNullOrWhiteSpace(DecisionNote))
-            {
-                <p class="decision-hint">@(ApproveDecision ? "A note is required. It will be shown to both the claimant and the finder." : "A rejection reason is required. It will be saved with the claim and sent to the claimant.")</p>
-            }
-            <div class="decision-actions">
-                <button class="decision-cancel" type="button" @onclick="CloseClaimDecision" disabled="@IsDeciding">Cancel</button>
-                <button class="@(ApproveDecision ? "decision-approve" : "decision-reject")" type="button" @onclick="ConfirmClaimDecision" disabled="@(IsDeciding || string.IsNullOrWhiteSpace(DecisionNote))">@(IsDeciding ? "Saving..." : ApproveDecision ? "Approve claim" : "Reject claim")</button>
-            </div>
-        </section>
-    </div>
-}
+                                                            @if (SelectedClaim is not null)
+                                                            {
+                                                                <div class="decision-backdrop" role="presentation" @onclick="CloseClaimDecision">
+                                                                    <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="decision-title"
+                                                                             @onclick:stopPropagation>
+                                                                        <button class="decision-close" type="button" aria-label="Close" @onclick="CloseClaimDecision">&times;</button>
+                                                                        <span class="decision-kicker">@SelectedClaim.Reference</span>
+                                                                        <h2 id="decision-title">@(ApproveDecision ? "Approve this claim?" : "Reject this claim?")</h2>
+                                                                        <p class="decision-summary"><strong>@SelectedClaim.Claimant</strong> is claiming
+                                                                            <strong>@SelectedClaim.ItemTitle</strong>.</p>
+                                                                            @if (ApproveDecision && (!SelectedClaim.MatchPercent.HasValue || SelectedClaim.MatchPercent < 70))
+                                                                            {
+                                                                                <p class="decision-warning" role="alert">@(SelectedClaim.MatchPercent.HasValue ? $"This claim has a low match score ({SelectedClaim.MatchPercent}%)." : "No match score is available for this claim.") Verify the
+                                                                                    claimant's proof and item details before approving.</p>
+                                                                                }
+                                                                                <label for="decision-note">@(ApproveDecision ? "Admin note / pickup instructions" : "Reason for rejection")</label>
+                                                                                <textarea id="decision-note" @bind="DecisionNote"
+                                                                                          placeholder="@(ApproveDecision ? "Where, when and who to meet for collection" : "Please explain why this claim is being rejected")"></textarea>
+                                                                                @if (string.IsNullOrWhiteSpace(DecisionNote))
+                                                                                {
+                                                                                    <p class="decision-hint">@(ApproveDecision ? "A note is required. It will be shown to both the claimant and the finder." : "A rejection reason is required. It will be saved with the claim and sent to the claimant.")</p>
+                                                                                }
+                                                                                <div class="decision-actions">
+                                                                                    <button class="decision-cancel" type="button" @onclick="CloseClaimDecision"
+                                                                                            disabled="@IsDeciding">Cancel</button>
+                                                                                    <button class="@(ApproveDecision ? "decision-approve" : "decision-reject")" type="button"
+                                                                                            @onclick="ConfirmClaimDecision"
+                                                                                            disabled="@(IsDeciding || string.IsNullOrWhiteSpace(DecisionNote))">@(IsDeciding ? "Saving..." :
+                                                                                            ApproveDecision ? "Approve claim" : "Reject claim")</button>
+                                                                                    </div>
+                                                                                </section>
+                                                                            </div>
+                                                                        }
 
-@if (SelectedMatch is not null)
-{
-    <div class="decision-backdrop" role="presentation" @onclick="CloseMatchDecision">
-        <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="match-decision-title" @onclick:stopPropagation>
-            <button class="decision-close" type="button" aria-label="Close" @onclick="CloseMatchDecision">&times;</button>
-            <span class="decision-kicker">Match review</span>
-            <h2 id="match-decision-title">@(ConfirmMatchDecision ? "Confirm this match?" : "Dismiss this match?")</h2>
-            <p class="decision-summary"><strong>@SelectedMatch.LostTitle</strong> is matched with <strong>@SelectedMatch.FoundTitle</strong> at <strong>@SelectedMatch.Confidence%</strong>.</p>
-            @if (ConfirmMatchDecision && SelectedMatch.Confidence < 70)
-            {
-                <p class="decision-warning" role="alert">This is a low-confidence match. Confirm only after verifying the item details, location, date, and available evidence.</p>
-            }
-            <label for="match-decision-note">@(ConfirmMatchDecision ? "Admin note" : "Reason for dismissal")</label>
-            <textarea id="match-decision-note" @bind="MatchDecisionNote" placeholder="@(ConfirmMatchDecision ? "Optional note about why this match was confirmed" : "Explain why these reports are not the same item")"></textarea>
-            @if (!ConfirmMatchDecision && string.IsNullOrWhiteSpace(MatchDecisionNote))
-            {
-                <p class="decision-hint">A dismissal reason is required and will be saved for audit history.</p>
-            }
-            <div class="decision-actions">
-                <button class="decision-cancel" type="button" @onclick="CloseMatchDecision" disabled="@IsMatchDeciding">Cancel</button>
-                <button class="@(ConfirmMatchDecision ? "decision-approve" : "decision-reject")" type="button" @onclick="SubmitMatchDecision" disabled="@(IsMatchDeciding || (!ConfirmMatchDecision && string.IsNullOrWhiteSpace(MatchDecisionNote)))">@(IsMatchDeciding ? "Saving..." : ConfirmMatchDecision ? "Confirm match" : "Dismiss match")</button>
-            </div>
-        </section>
-    </div>
-}
+                                                                        @if (SelectedMatch is not null)
+                                                                        {
+                                                                            <div class="decision-backdrop" role="presentation" @onclick="CloseMatchDecision">
+                                                                                <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="match-decision-title"
+                                                                                         @onclick:stopPropagation>
+                                                                                    <button class="decision-close" type="button" aria-label="Close" @onclick="CloseMatchDecision">&times;</button>
+                                                                                    <span class="decision-kicker">Match review</span>
+                                                                                    <h2 id="match-decision-title">@(ConfirmMatchDecision ? "Confirm this match?" : "Dismiss this match?")</h2>
+                                                                                    <p class="decision-summary"><strong>@SelectedMatch.LostTitle</strong> is matched with
+                                                                                        <strong>@SelectedMatch.FoundTitle</strong> at <strong>@SelectedMatch.Confidence%</strong>.</p>
+                                                                                        @if (ConfirmMatchDecision && SelectedMatch.Confidence < 70)
+                                                                                        {
+                                                                                            <p class="decision-warning" role="alert">This is a low-confidence match. Confirm only after verifying the item
+                                                                                                details, location, date, and available evidence.</p>
+                                                                                            }
+                                                                                            <label for="match-decision-note">@(ConfirmMatchDecision ? "Admin note" : "Reason for dismissal")</label>
+                                                                                            <textarea id="match-decision-note" @bind="MatchDecisionNote"
+                                                                                                      placeholder="@(ConfirmMatchDecision ? "Optional note about why this match was confirmed" : "Explain why these reports are not the same item")"></textarea>
+                                                                                            @if (!ConfirmMatchDecision && string.IsNullOrWhiteSpace(MatchDecisionNote))
+                                                                                            {
+                                                                                                <p class="decision-hint">A dismissal reason is required and will be saved for audit history.</p>
+                                                                                            }
+                                                                                            <div class="decision-actions">
+                                                                                                <button class="decision-cancel" type="button" @onclick="CloseMatchDecision"
+                                                                                                        disabled="@IsMatchDeciding">Cancel</button>
+                                                                                                <button class="@(ConfirmMatchDecision ? "decision-approve" : "decision-reject")" type="button"
+                                                                                                        @onclick="SubmitMatchDecision"
+                                                                                                        disabled="@(IsMatchDeciding || (!ConfirmMatchDecision && string.IsNullOrWhiteSpace(MatchDecisionNote)))">@(IsMatchDeciding
+                                                                                                        ? "Saving..." : ConfirmMatchDecision ? "Confirm match" : "Dismiss match")</button>
+                                                                                                </div>
+                                                                                            </section>
+                                                                                        </div>
+                                                                                    }
 
-@if (SelectedReportDetails is not null)
-{
-    <div class="decision-backdrop" role="presentation" @onclick="CloseReportDetails">
-        <section class="decision-dialog report-details-dialog" role="dialog" aria-modal="true" aria-labelledby="report-details-title" @onclick:stopPropagation>
-            <button class="decision-close" type="button" aria-label="Close" @onclick="CloseReportDetails">&times;</button>
-            <span class="decision-kicker">LF-@SelectedReportDetails.Id.ToString("D4")</span>
-            <h2 id="report-details-title">@SelectedReportDetails.Title</h2>
-            @if (!string.IsNullOrWhiteSpace(SelectedReportDetails.PhotoUrl))
-            {
-                <img class="report-details-image" src="@ReportImageUrl.Resolve(SelectedReportDetails.PhotoUrl)" alt="Photo of @SelectedReportDetails.Title" />
-            }
-            <div class="report-details-grid">
-                <span><strong>Type</strong>@(SelectedReportDetails.Kind.Equals("found", StringComparison.OrdinalIgnoreCase) ? "Found" : "Lost")</span>
-                <span><strong>Category</strong>@CategoryOptions.GetCategoryName(SelectedReportDetails.Category)</span>
-                <span><strong>Location</strong>@SelectedReportDetails.Location</span>
-                <span><strong>Date</strong>@SelectedReportDetails.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
-                <span><strong>Reported by</strong>@SelectedReportDetails.ReportedBy</span>
-                <span><strong>Submitted</strong>@SelectedReportDetails.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</span>
-            </div>
-            <div class="report-details-description">
-                <strong>Description</strong>
-                <p>@SelectedReportDetails.Description</p>
-            </div>
-            <div class="decision-actions">
-                <button class="decision-cancel" type="button" @onclick="CloseReportDetails">Close</button>
-            </div>
-        </section>
-    </div>
-}
+                                                                                    @if (SelectedReportDetails is not null)
+                                                                                    {
+                                                                                        <div class="decision-backdrop" role="presentation" @onclick="CloseReportDetails">
+                                                                                            <section class="decision-dialog report-details-dialog" role="dialog" aria-modal="true"
+                                                                                                     aria-labelledby="report-details-title" @onclick:stopPropagation>
+                                                                                                <button class="decision-close" type="button" aria-label="Close" @onclick="CloseReportDetails">&times;</button>
+                                                                                                <span class="decision-kicker">LF-@SelectedReportDetails.Id.ToString("D4")</span>
+                                                                                                <h2 id="report-details-title">@SelectedReportDetails.Title</h2>
+                                                                                                @if (!string.IsNullOrWhiteSpace(SelectedReportDetails.PhotoUrl))
+                                                                                                {
+                                                                                                    <img class="report-details-image" src="@ReportImageUrl.Resolve(SelectedReportDetails.PhotoUrl)"
+                                                                                                         alt="Photo of @SelectedReportDetails.Title" />
+                                                                                                }
+                                                                                                <div class="report-details-grid">
+                                                                                                    <span><strong>Type</strong>@(SelectedReportDetails.Kind.Equals("found", StringComparison.OrdinalIgnoreCase)
+                                                                                                                                                                                                                                ? "Found" : "Lost")</span>
+                                                                                                        <span><strong>Category</strong>@CategoryOptions.GetCategoryName(SelectedReportDetails.Category)</span>
+                                                                                                        <span><strong>Location</strong>@SelectedReportDetails.Location</span>
+                                                                                                        <span><strong>Date</strong>@SelectedReportDetails.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                                                                                                        <span><strong>Reported by</strong>@SelectedReportDetails.ReportedBy</span>
+                                                                                                        <span><strong>Submitted</strong>@SelectedReportDetails.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</span>
+                                                                                                    </div>
+                                                                                                    <div class="report-details-description">
+                                                                                                        <strong>Description</strong>
+                                                                                                        <p>@SelectedReportDetails.Description</p>
+                                                                                                    </div>
+                                                                                                    <div class="decision-actions">
+                                                                                                        <button class="decision-cancel" type="button" @onclick="CloseReportDetails">Close</button>
+                                                                                                    </div>
+                                                                                                </section>
+                                                                                            </div>
+                                                                                        }
 
-@if (SelectedReportForReview is not null)
-{
-    <div class="decision-backdrop" role="presentation" @onclick="CloseReportReview">
-        <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="report-review-title" @onclick:stopPropagation>
-            <button class="decision-close" type="button" aria-label="Close" @onclick="CloseReportReview">&times;</button>
-            <span class="decision-kicker">LF-@SelectedReportForReview.Id.ToString("D4")</span>
-            <h2 id="report-review-title">Review report?</h2>
-            <p class="decision-summary"><strong>@SelectedReportForReview.Title</strong> will be permanently deleted if you continue.</p>
-            @if (!string.IsNullOrWhiteSpace(ReportActionError))
-            {
-                <p class="decision-warning" role="alert">@ReportActionError</p>
-            }
-            <div class="decision-actions">
-                <button class="decision-cancel" type="button" @onclick="CloseReportReview" disabled="@IsDeletingReport">Cancel</button>
-                <button class="decision-reject" type="button" @onclick="DeleteReviewedReport" disabled="@IsDeletingReport">@(IsDeletingReport ? "Deleting..." : "Delete item")</button>
-            </div>
-        </section>
-    </div>
-}
+                                                                                        @if (SelectedReportForReview is not null)
+                                                                                        {
+                                                                                            <div class="decision-backdrop" role="presentation" @onclick="CloseReportReview">
+                                                                                                <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="report-review-title"
+                                                                                                         @onclick:stopPropagation>
+                                                                                                    <button class="decision-close" type="button" aria-label="Close" @onclick="CloseReportReview">&times;</button>
+                                                                                                    <span class="decision-kicker">LF-@SelectedReportForReview.Id.ToString("D4")</span>
+                                                                                                    <h2 id="report-review-title">Review report?</h2>
+                                                                                                    <p class="decision-summary"><strong>@SelectedReportForReview.Title</strong> will be permanently deleted if you
+                                                                                                        continue.</p>
+                                                                                                        @if (!string.IsNullOrWhiteSpace(ReportActionError))
+                                                                                                        {
+                                                                                                            <p class="decision-warning" role="alert">@ReportActionError</p>
+                                                                                                        }
+                                                                                                        <div class="decision-actions">
+                                                                                                            <button class="decision-cancel" type="button" @onclick="CloseReportReview"
+                                                                                                                    disabled="@IsDeletingReport">Cancel</button>
+                                                                                                            <button class="decision-reject" type="button" @onclick="DeleteReviewedReport"
+                                                                                                                    disabled="@IsDeletingReport">@(IsDeletingReport ? "Deleting..." : "Delete item")</button>
+                                                                                                        </div>
+                                                                                                    </section>
+                                                                                                </div>
+                                                                                            }
 
 @code {
-    private readonly Dictionary<string, string> Sections = new() { ["overview"] = "Overview", ["reports"] = "All Reports", ["matches"] = "Matches", ["claims"] = "Claims", ["users"] = "Users", ["settings"] = "Settings" };
+    private readonly Dictionary<string, string> Sections = new()
+    {
+        ["overview"] = "Overview",
+        ["reports"] = "All Reports",
+        ["matches"] = "Matches",
+        ["claims"] = "Claims",
+        ["users"] = "Users",
+        ["settings"] = "Settings"
+    };
     private readonly string[] MatchStatuses = ["Awaiting Review", "Confirmed", "Dismissed"];
     private readonly string[] ClaimStatuses = ["Pending", "Approved", "Rejected", "Disputed"];
     private int PendingClaimCount => ClaimRows.Count(c => c.Status == "Pending");
@@ -262,13 +448,28 @@
         ? AuthService.CurrentUser?.email ?? "Admin"
         : AuthService.CurrentUser.name;
     private string AdminInitials => Initials(AdminDisplayName);
-    private string SectionTitle => ActiveSection switch { "overview" => "Dashboard Overview", "reports" => "All Reports", "matches" => "Suggested Matches", "claims" => "Claims", "users" => "Users", _ => "Settings" };
-    private IEnumerable<ReportItem> FilteredReports => Reports.Where(r => (ReportTypeFilter == "all" || (ReportTypeFilter == "lost" && r.Status == 0) || (ReportTypeFilter == "found" && r.Status == 1)) && (ReportCategoryFilter == "all" || CategoryOptions.GetCategoryName(r.Category) == ReportCategoryFilter) && ($"{r.Title} {r.ReportedBy} {r.Location}".Contains(ReportSearch, StringComparison.OrdinalIgnoreCase)));
-    private IEnumerable<SuggestedMatch> FilteredSuggestedMatches => SuggestedMatches.Where(m => m.Status == MatchStatusFilter);
+    private string SectionTitle => ActiveSection switch
+    {
+        "overview" => "Dashboard Overview",
+        "reports" => "All Reports",
+        "matches" => "Suggested Matches",
+        "claims" => "Claims",
+        "users" => "Users",
+        _ => "Settings"
+    };
+    private IEnumerable<ReportItem> FilteredReports => Reports.Where(r => (ReportTypeFilter == "all" || (ReportTypeFilter ==
+"lost" && r.Status == 0) || (ReportTypeFilter == "found" && r.Status == 1)) && (ReportCategoryFilter == "all" ||
+CategoryOptions.GetCategoryName(r.Category) == ReportCategoryFilter) && ($"{r.Title} {r.ReportedBy} {r.Location}".Contains(ReportSearch, StringComparison.OrdinalIgnoreCase)));
+    private IEnumerable<SuggestedMatch> FilteredSuggestedMatches => SuggestedMatches.Where(m => m.Status ==
+MatchStatusFilter);
     private IEnumerable<AdminClaim> FilteredClaims => ClaimRows.Where(c => c.Status == ClaimStatusFilter && $"{c.Reference} {c.ItemTitle} {c.Claimant}".Contains(ClaimSearch, StringComparison.OrdinalIgnoreCase));
-    private IEnumerable<AdminUser> FilteredUsers => UserRows.Where(u => (UserRoleFilter == "all" || u.Role == UserRoleFilter) && (UserStatusFilter == "all" || (UserStatusFilter == "active" && !u.Suspended) || (UserStatusFilter == "suspended" && u.Suspended)) && $"{u.Name} {u.Identifier} {u.Email}".Contains(UserSearch, StringComparison.OrdinalIgnoreCase));
+    private IEnumerable<AdminUser> FilteredUsers => UserRows.Where(u => (UserRoleFilter == "all" || u.Role ==
+UserRoleFilter) && (UserStatusFilter == "all" || (UserStatusFilter == "active" && !u.Suspended) || (UserStatusFilter ==
+"suspended" && u.Suspended)) && $"{u.Name} {u.Identifier} {u.Email}".Contains(UserSearch,
+StringComparison.OrdinalIgnoreCase));
 
-    private int AverageMatchScore => SuggestedMatches.Count == 0 ? 0 : (int)Math.Round(SuggestedMatches.Average(m => m.Confidence));
+    private int AverageMatchScore => SuggestedMatches.Count == 0 ? 0 : (int)Math.Round(SuggestedMatches.Average(m =>
+m.Confidence));
 
     protected override async Task OnInitializedAsync()
     {
@@ -402,8 +603,8 @@
 
     private async Task ConfirmClaimDecision()
     {
-       if (SelectedClaim is null || string.IsNullOrWhiteSpace(DecisionNote))
-    return;
+        if (SelectedClaim is null || string.IsNullOrWhiteSpace(DecisionNote))
+            return;
 
         var claim = SelectedClaim;
         IsDeciding = true;
@@ -456,12 +657,22 @@
         3 => "Disputed",
         _ => "Pending"
     };
-    private static string StatusClass(int status) => status == 0 ? "status-lost" : status == 1 ? "status-found" : "status-review";
+    private static string StatusClass(int status) => status == 0 ? "status-lost" : status == 1 ? "status-found" :
+"status-review";
     private static string StatusLabel(int status) => status == 0 ? "Lost" : status == 1 ? "Found" : "Review";
-    private static string ConfidenceClass(int? score) => score >= 85 ? "match-high" : score >= 70 ? "match-medium" : "match-low";
-    private static string ClaimStatusClass(string status) => status == "Approved" ? "status-found" : status is "Rejected" or "Disputed" ? "status-rejected" : "status-lost";
-    private static string Initials(string name) => string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0])).ToUpperInvariant();
-    private static string RoleClass(string role) => role switch { "Admin" => "role-admin", "Security Staff" => "role-security", _ => "role-student" };
+    private static string ConfidenceClass(int? score) => score >= 85 ? "match-high" : score >= 70 ? "match-medium" :
+"match-low";
+    private static string ClaimStatusClass(string status) => status == "Approved" ? "status-found" : status is "Rejected" or
+"Disputed" ? "status-rejected" : "status-lost";
+    private static string Initials(string name) => string.Concat(name.Split(' ',
+StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0])).ToUpperInvariant();
+    private static string RoleClass(string role) => role switch
+    {
+        "Admin" => "role-admin",
+        "Security Staff" =>
+"role-security",
+        _ => "role-student"
+    };
 
     private List<SuggestedMatch> SuggestedMatches { get; set; } = [];
     private List<AdminClaim> ClaimRows { get; set; } = [];
@@ -473,9 +684,14 @@
     private bool ConfirmMatchDecision { get; set; }
     private bool IsMatchDeciding { get; set; }
     private string MatchDecisionNote { get; set; } = string.Empty;
-    private readonly List<AdminUser> UserRows = [new("Kingsley Ofori-Atta", "10976543", "koforiatta@st.ug.edu.gh", "Student", 5, true), new("Kojo Mensah", "10987654", "kmensah@st.ug.edu.gh", "Student", 2, true), new("Ama Serwaa", "10945321", "aserwaa@st.ug.edu.gh", "Student", 3, true), new("Kwabena Tetteh", "STF-0042", "ktetteh@ug.edu.gh", "Admin", 0, true), new("Ama Kyei", "STF-0107", "akyei@ug.edu.gh", "Security Staff", 48, true), new("Abena Darko", "10911256", "adarko@st.ug.edu.gh", "Student", 4, false, true)];
+    private readonly List<AdminUser> UserRows = [new("Kingsley Ofori-Atta", "10976543", "koforiatta@st.ug.edu.gh",
+"Student", 5, true), new("Kojo Mensah", "10987654", "kmensah@st.ug.edu.gh", "Student", 2, true), new("Ama Serwaa",
+"10945321", "aserwaa@st.ug.edu.gh", "Student", 3, true), new("Kwabena Tetteh", "STF-0042", "ktetteh@ug.edu.gh", "Admin",
+0, true), new("Ama Kyei", "STF-0107", "akyei@ug.edu.gh", "Security Staff", 48, true), new("Abena Darko", "10911256",
+"adarko@st.ug.edu.gh", "Student", 4, false, true)];
 
-    private sealed class SuggestedMatch(int id, string lostTitle, string lostDetails, string foundTitle, string foundDetails, int confidence, string reason, string status, string? lostImageUrl = null, string? foundImageUrl = null)
+    private sealed class SuggestedMatch(int id, string lostTitle, string lostDetails, string foundTitle, string
+foundDetails, int confidence, string reason, string status, string? lostImageUrl = null, string? foundImageUrl = null)
     {
         public int Id { get; } = id;
         public string LostTitle { get; } = lostTitle;
@@ -488,7 +704,8 @@
         public string? LostImageUrl { get; } = lostImageUrl;
         public string? FoundImageUrl { get; } = foundImageUrl;
     }
-    private sealed class AdminClaim(int id, string reference, string itemTitle, string claimant, int? matchPercent, DateTimeOffset submitted, string status)
+    private sealed class AdminClaim(int id, string reference, string itemTitle, string claimant, int? matchPercent,
+DateTimeOffset submitted, string status)
     {
         public int Id { get; } = id;
         public string Reference { get; } = reference;
@@ -498,5 +715,6 @@
         public DateTimeOffset Submitted { get; } = submitted;
         public string Status { get; set; } = status;
     }
-    private sealed record AdminUser(string Name, string Identifier, string Email, string Role, int ReportCount, bool Active, bool Suspended = false);
+    private sealed record AdminUser(string Name, string Identifier, string Email, string Role, int ReportCount, bool Active,
+bool Suspended = false);
 }

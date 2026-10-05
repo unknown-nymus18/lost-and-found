@@ -7,7 +7,9 @@
 <div class="confirmation">
     @if (isLoading)
     {
-        <div class="card"><p class="loading">Loading your report...</p></div>
+        <div class="card">
+            <p class="loading">Loading your report...</p>
+        </div>
     }
     else if (item is null)
     {
@@ -59,6 +61,27 @@
                         <dt>Status</dt>
                         <dd><span class="status-pill @StatusClass">@StatusLabel</span></dd>
                     </div>
+                    @if (item.Handover is not null)
+                    {
+                        <div class="row">
+                            <dt>Handover method</dt>
+                            <dd>@HandoverMethodOptions.GetLabel(item.Handover.Method)</dd>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(item.Handover.DropOffLocation))
+                        {
+                            <div class="row">
+                                <dt>Drop-off</dt>
+                                <dd>@item.Handover.DropOffLocation</dd>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(item.Handover.ContactPhone))
+                        {
+                            <div class="row">
+                                <dt>Contact phone</dt>
+                                <dd>@item.Handover.ContactPhone</dd>
+                            </div>
+                        }
+                    }
                 </dl>
             </div>
 

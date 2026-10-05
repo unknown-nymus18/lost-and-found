@@ -116,6 +116,43 @@
     overflow-wrap: anywhere;
 }
 
+.handover-details {
+    margin-top: 24px;
+}
+
+.handover-details h2 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    font-weight: 750;
+}
+
+.handover-details dl {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.handover-details dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.handover-details dt {
+    color: #6b7686;
+}
+
+.handover-details dd {
+    margin: 0;
+    color: #182230;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.handover-details a {
+    color: inherit;
+}
+
 .reporter {
     display: flex;
     align-items: center;

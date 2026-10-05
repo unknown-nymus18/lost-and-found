@@ -40,6 +40,18 @@
                         <div class="report-meta">
                             <span>Location: @reportedItem.Location</span>
                             <span>Date: @reportedItem.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                            @if (reportedItem.Handover is not null)
+                            {
+                                <span>Handover method: @HandoverMethodOptions.GetLabel(reportedItem.Handover.Method)</span>
+                                @if (!string.IsNullOrWhiteSpace(reportedItem.Handover.DropOffLocation))
+                                {
+                                    <span>Drop-off: @reportedItem.Handover.DropOffLocation</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(reportedItem.Handover.ContactPhone))
+                                {
+                                    <span>Contact: @reportedItem.Handover.ContactPhone</span>
+                                }
+                            }
                         </div>
                     </div>
                 </article>
@@ -69,6 +81,18 @@
                             <div class="report-meta">
                                 <span>Location: @counterpart.Location</span>
                                 <span>Date: @counterpart.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                                @if (counterpart.Handover is not null)
+                                {
+                                    <span>Handover method: @HandoverMethodOptions.GetLabel(counterpart.Handover.Method)</span>
+                                    @if (!string.IsNullOrWhiteSpace(counterpart.Handover.DropOffLocation))
+                                    {
+                                        <span>Drop-off: @counterpart.Handover.DropOffLocation</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(counterpart.Handover.ContactPhone))
+                                    {
+                                        <span>Contact: @counterpart.Handover.ContactPhone</span>
+                                    }
+                                }
                             </div>
                             <p class="match-reason">@match.Reason</p>
                             <a class="report-details-link" href="@($"/item-detail/{counterpartKind}/{counterpart.Id}")">View

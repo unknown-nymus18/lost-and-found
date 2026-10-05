@@ -62,6 +62,25 @@
             </div>
 
             <div class="form-row">
+                <label for="handover-method">Handover method</label>
+                <select id="handover-method" class="input" @bind="HandoverMethod" required>
+                    <option value="0">DropOff</option>
+                    <option value="1">ContactFinder</option>
+                </select>
+            </div>
+
+            <div class="form-row two-col">
+                <div>
+                    <label for="drop-off-location">Drop-off location</label>
+                    <input id="drop-off-location" class="input" type="text" @bind="DropOffLocation" required />
+                </div>
+                <div>
+                    <label for="contact-phone">Contact phone</label>
+                    <input id="contact-phone" class="input" type="tel" @bind="ContactPhone" required />
+                </div>
+            </div>
+
+            <div class="form-row">
                 <label>Description</label>
                 <textarea class="textarea"
                           placeholder="Describe distinguishing features, contents, or marks that would help verify ownership..."
@@ -114,6 +133,9 @@
     private string Location { get; set; } = string.Empty;
     private string Description { get; set; } = string.Empty;
     private string Color { get; set; } = string.Empty;
+    private int HandoverMethod { get; set; }
+    private string DropOffLocation { get; set; } = string.Empty;
+    private string ContactPhone { get; set; } = string.Empty;
 
     // Plain DateTime bound to <input type="date">: holds only the day the user picked.
     private DateTime Date { get; set; } = DateTime.Today;
@@ -164,12 +186,23 @@
                 $"Submitting: kind={(isLost ? "lost" : "found")}, cat={selectedCategory}, " +
                 $"title='{Title}', date={reportDate:O}, loc='{Location}'");
 
-            var result = isLost
-                ? await ApiService.ReportLostItemWithPhoto(selectedCategory, Title.Trim(), fullDescription, reportDate, Location.Trim(),
-selectedPhoto)
-                : await ApiService.ReportFoundItemWithPhoto(selectedCategory, Title.Trim(), fullDescription, reportDate,
-Location.Trim(),
-selectedPhoto);
+            ApiService.ApiResult<ReportItem> result;
+            if (selectedPhoto is null)
+            {
+                result = isLost
+                    ? await ApiService.ReportLostItem(selectedCategory, Title.Trim(), fullDescription, reportDate,
+                        Location.Trim(), HandoverMethod, DropOffLocation.Trim(), ContactPhone.Trim())
+                    : await ApiService.ReportFoundItem(selectedCategory, Title.Trim(), fullDescription, reportDate,
+                        Location.Trim(), HandoverMethod, DropOffLocation.Trim(), ContactPhone.Trim());
+            }
+            else
+            {
+                result = isLost
+                    ? await ApiService.ReportLostItemWithPhoto(selectedCategory, Title.Trim(), fullDescription, reportDate,
+                        Location.Trim(), selectedPhoto, HandoverMethod, DropOffLocation.Trim(), ContactPhone.Trim())
+                    : await ApiService.ReportFoundItemWithPhoto(selectedCategory, Title.Trim(), fullDescription, reportDate,
+                        Location.Trim(), selectedPhoto, HandoverMethod, DropOffLocation.Trim(), ContactPhone.Trim());
+            }
 
             if (result.Ok)
             {

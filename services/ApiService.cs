@@ -44,6 +44,9 @@ public class ApiService
         public required int Category { get; set; }
         public required string Location { get; set; }
         public required DateTimeOffset Date { get; set; }
+        public required int HandoverMethod { get; set; }
+        public required string DropOffLocation { get; set; }
+        public required string ContactPhone { get; set; }
 
     }
 
@@ -432,7 +435,8 @@ public class ApiService
     }
 
     public async Task<ApiResult<ReportItem>> ReportLostItem(
-        int category, string title, string description, DateTimeOffset date, string location)
+        int category, string title, string description, DateTimeOffset date, string location,
+        int handoverMethod = 0, string dropOffLocation = "", string contactPhone = "")
     {
         var user = _authService.CurrentUser;
         if (user is null || string.IsNullOrEmpty(user.token))
@@ -444,7 +448,10 @@ public class ApiService
             Title = title,
             Description = description,
             Location = location,
-            Date = date.ToUniversalTime()
+            Date = date.ToUniversalTime(),
+            HandoverMethod = handoverMethod,
+            DropOffLocation = dropOffLocation,
+            ContactPhone = contactPhone
         };
 
         try
@@ -485,7 +492,8 @@ public class ApiService
     }
 
     public async Task<ApiResult<ReportItem>> ReportLostItemWithPhoto(
-        int category, string title, string description, DateTimeOffset date, string location, IBrowserFile? photo)
+        int category, string title, string description, DateTimeOffset date, string location, IBrowserFile? photo,
+        int handoverMethod = 0, string dropOffLocation = "", string contactPhone = "")
     {
         var user = _authService.CurrentUser;
         if (user is null || string.IsNullOrEmpty(user.token))
@@ -501,6 +509,9 @@ public class ApiService
         content.Add(new StringContent(category.ToString()), "Category");
         content.Add(new StringContent(location), "Location");
         content.Add(new StringContent(date.ToUniversalTime().ToString("O")), "Date");
+        content.Add(new StringContent(handoverMethod.ToString()), "HandoverMethod");
+        content.Add(new StringContent(dropOffLocation), "DropOffLocation");
+        content.Add(new StringContent(contactPhone), "ContactPhone");
 
         try
         {
@@ -547,7 +558,8 @@ public class ApiService
 
 
     public async Task<ApiResult<ReportItem>> ReportFoundItem(
-        int category, string title, string description, DateTimeOffset date, string location)
+        int category, string title, string description, DateTimeOffset date, string location,
+        int handoverMethod = 0, string dropOffLocation = "", string contactPhone = "")
     {
         var user = _authService.CurrentUser;
         if (user is null || string.IsNullOrEmpty(user.token))
@@ -559,7 +571,10 @@ public class ApiService
             Title = title,
             Description = description,
             Location = location,
-            Date = date.ToUniversalTime()
+            Date = date.ToUniversalTime(),
+            HandoverMethod = handoverMethod,
+            DropOffLocation = dropOffLocation,
+            ContactPhone = contactPhone
         };
 
         try
@@ -600,7 +615,8 @@ public class ApiService
     }
 
     public async Task<ApiResult<ReportItem>> ReportFoundItemWithPhoto(
-        int category, string title, string description, DateTimeOffset date, string location, IBrowserFile? photo)
+        int category, string title, string description, DateTimeOffset date, string location, IBrowserFile? photo,
+        int handoverMethod = 0, string dropOffLocation = "", string contactPhone = "")
     {
         var user = _authService.CurrentUser;
         if (user is null || string.IsNullOrEmpty(user.token))
@@ -616,6 +632,9 @@ public class ApiService
         content.Add(new StringContent(category.ToString()), "Category");
         content.Add(new StringContent(location), "Location");
         content.Add(new StringContent(date.ToUniversalTime().ToString("O")), "Date");
+        content.Add(new StringContent(handoverMethod.ToString()), "HandoverMethod");
+        content.Add(new StringContent(dropOffLocation), "DropOffLocation");
+        content.Add(new StringContent(contactPhone), "ContactPhone");
 
         try
         {

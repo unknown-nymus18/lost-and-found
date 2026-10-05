@@ -13,6 +13,25 @@ public class ReportItem
     public int Status { get; set; }
     public string ReportedBy { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
+    public ReportHandover? Handover { get; set; }
+}
+
+public class ReportHandover
+{
+    public int Method { get; set; }
+    public string? DropOffLocation { get; set; }
+    public string? FinderName { get; set; }
+    public string? ContactPhone { get; set; }
+}
+
+public static class HandoverMethodOptions
+{
+    public static string GetLabel(int method) => method switch
+    {
+        0 => "DropOff",
+        1 => "ContactFinder",
+        _ => "Unknown"
+    };
 }
 
 public static class ReportImageUrl

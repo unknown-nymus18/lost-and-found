@@ -44,6 +44,40 @@ else
                 <p>@item.Description</p>
             </section>
 
+            @if (item.Handover is not null)
+            {
+                <section class="handover-details">
+                    <h2>Handover details</h2>
+                    <dl>
+                        <div>
+                            <dt>Method</dt>
+                            <dd>@HandoverMethodOptions.GetLabel(item.Handover.Method)</dd>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(item.Handover.DropOffLocation))
+                        {
+                            <div>
+                                <dt>Drop-off location</dt>
+                                <dd>@item.Handover.DropOffLocation</dd>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(item.Handover.FinderName))
+                        {
+                            <div>
+                                <dt>Finder</dt>
+                                <dd>@item.Handover.FinderName</dd>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(item.Handover.ContactPhone))
+                        {
+                            <div>
+                                <dt>Contact phone</dt>
+                                <dd><a href="tel:@item.Handover.ContactPhone">@item.Handover.ContactPhone</a></dd>
+                            </div>
+                        }
+                    </dl>
+                </section>
+            }
+
             <div class="reporter">
                 <div class="avatar" aria-hidden="true"></div>
                 <div>
