@@ -188,6 +188,32 @@ public class ApiService
         }
     }
 
+    public async Task<ReportItem?> GetFoundItemAuthenticated(int id)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrWhiteSpace(user.token))
+        {
+            Console.WriteLine("Log in first");
+            return null;
+        }
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}reports/found/{id}");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<ReportItem>();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
+
 
 
 

@@ -2,6 +2,7 @@
 @implements IDisposable
 @using lost_and_found.Models
 @using lost_and_found.Services
+@using lost_and_found.Components
 @inject ApiService ApiService
 
 <div class="notifications">
@@ -53,7 +54,7 @@
             @foreach (var n in Visible)
             {
                 <div class="item @(n.IsRead ? "" : "unread clickable")" @onclick="() => MarkOneAsRead(n)">
-                    <div class="icon @IconClass(n.Type)" aria-hidden="true">@(n.Title == "Claim rejected" ? "❌" : IconGlyph(n.Type))</div>
+                    <div class="icon @(IsRejected(n) ? "icon-rejected" : IconClass(n.Type))" aria-hidden="true">@(IsRejected(n) ? "❌" : IconGlyph(n.Type))</div>
 
                     <div class="body">
                         <strong class="title">@n.Title</strong>
@@ -62,7 +63,7 @@
                         @if (!string.IsNullOrWhiteSpace(n.AdminNote))
                         {
                             <div class="note">
-                                <span class="note-label">@(n.Title == "Claim rejected" ? "Reason" : "Admin note")</span>
+                                <span class="note-label">@(IsRejected(n) ? "Reason" : "Admin note")</span>
                                 <p class="note-text">@n.AdminNote</p>
                             </div>
                         }
@@ -71,17 +72,6 @@
                         {
                             <a class="action" href="@n.ActionUrl">@n.ActionLabel &rarr;</a>
                         }
-
-                        <div class="notification-actions">
-                            <button type="button" class="notification-action-view"
-                                    @onclick="() => ViewNotificationDetails(n)" @onclick:stopPropagation="true">
-                                View details
-                            </button>
-                            <button type="button" class="notification-action-delete"
-                                    @onclick="IgnoreNotificationAction" @onclick:stopPropagation="true">
-                                Delete
-                            </button>
-                        </div>
                     </div>
 
                     <div class="meta">
@@ -91,6 +81,16 @@
                             <span class="dot" aria-label="Unread"></span>
                         }
                     </div>
+
+                    @if (IsApproval(n) || IsMatch(n))
+                    {
+                        <div class="actions">
+                            <button type="button" class="btn-details"
+                                    @onclick="() => OpenDetails(n)" @onclick:stopPropagation="true">
+                                View details
+                            </button>
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -99,51 +99,110 @@
     <p class="footnote">Manage which alerts you receive in Profile &rarr; Notification preferences.</p>
 </div>
 
-@if (IsMatchDetailsOpen)
+@if (selected is not null)
 {
-    <div class="notification-modal-backdrop" role="presentation" @onclick="CloseMatchDetails">
-        <section class="notification-modal" role="dialog" aria-modal="true" aria-labelledby="match-details-title" @onclick:stopPropagation>
-            <button type="button" class="notification-modal-close" aria-label="Close" @onclick="CloseMatchDetails">&times;</button>
-            <h2 id="match-details-title">Matched item details</h2>
+    <div class="dlg-backdrop" role="presentation" @onclick="CloseDetails">
+        <section class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-title" @onclick:stopPropagation="true">
+            <button type="button" class="dlg-close" aria-label="Close" @onclick="CloseDetails">&times;</button>
 
-            @if (IsLoadingMatchDetails)
+            <h2 id="dlg-title" class="dlg-title">@(detailClaim?.foundItemTitle ?? selected.Title)</h2>
+            <p class="dlg-muted">@selected.Body</p>
+
+            @if (!string.IsNullOrWhiteSpace(selected.AdminNote))
             {
-                <p class="match-details-status">Loading matched item details...</p>
-            }
-            else if (!string.IsNullOrWhiteSpace(MatchDetailsError))
-            {
-                <p class="match-details-error" role="alert">@MatchDetailsError</p>
-            }
-            else if (SelectedMatchNotification is not null)
-            {
-                <p class="match-details-score">Possible match: <strong>@SelectedMatchNotification.Score%</strong></p>
-                <div class="matched-reports">
-                    <article class="matched-report">
-                        <span class="matched-report-kind">Lost item</span>
-                        <h3>@SelectedMatchNotification.Lost.Title</h3>
-                        @if (!string.IsNullOrWhiteSpace(SelectedMatchNotification.Lost.PhotoUrl))
-                        {
-                            <img src="@ReportImageUrl.Resolve(SelectedMatchNotification.Lost.PhotoUrl)" alt="Photo of @SelectedMatchNotification.Lost.Title" />
-                        }
-                        <p>@SelectedMatchNotification.Lost.Description</p>
-                        <small>@SelectedMatchNotification.Lost.Location · @SelectedMatchNotification.Lost.Date.ToLocalTime().ToString("MMM d, yyyy")</small>
-                    </article>
-                    <article class="matched-report">
-                        <span class="matched-report-kind">Found item</span>
-                        <h3>@SelectedMatchNotification.Found.Title</h3>
-                        @if (!string.IsNullOrWhiteSpace(SelectedMatchNotification.Found.PhotoUrl))
-                        {
-                            <img src="@ReportImageUrl.Resolve(SelectedMatchNotification.Found.PhotoUrl)" alt="Photo of @SelectedMatchNotification.Found.Title" />
-                        }
-                        <p>@SelectedMatchNotification.Found.Description</p>
-                        <small>@SelectedMatchNotification.Found.Location · @SelectedMatchNotification.Found.Date.ToLocalTime().ToString("MMM d, yyyy")</small>
-                    </article>
+                <div class="note">
+                    <span class="note-label">Admin note</span>
+                    <p class="note-text">@selected.AdminNote</p>
                 </div>
             }
 
-            <div class="notification-modal-actions">
-                <button type="button" class="notification-modal-cancel" @onclick="CloseMatchDetails">Close</button>
-            </div>
+            @if (detailLoading)
+            {
+                <p class="dlg-muted">Loading details...</p>
+            }
+            else if (!string.IsNullOrEmpty(detailError))
+            {
+                <p class="error" role="alert">@detailError</p>
+            }
+            else if (detailMatch is not null)
+            {
+                <div class="dlg-section">
+                    <span class="dlg-label">Matched reports (@detailMatch.Score%)</span>
+                    <div class="match-notification-details">
+                        <div>
+                            <strong>Lost item: @detailMatch.Lost.Title</strong>
+                            @if (!string.IsNullOrWhiteSpace(detailMatch.Lost.PhotoUrl))
+                            {
+                                <img class="dlg-photo" src="@ReportImageUrl.Resolve(detailMatch.Lost.PhotoUrl)" alt="Photo of @detailMatch.Lost.Title" />
+                            }
+                            <p>@detailMatch.Lost.Description</p>
+                            <small>@detailMatch.Lost.Location · @detailMatch.Lost.Date.ToString("MMM d, yyyy")</small>
+                        </div>
+                        <div>
+                            <strong>Found item: @detailMatch.Found.Title</strong>
+                            @if (!string.IsNullOrWhiteSpace(detailMatch.Found.PhotoUrl))
+                            {
+                                <img class="dlg-photo" src="@ReportImageUrl.Resolve(detailMatch.Found.PhotoUrl)" alt="Photo of @detailMatch.Found.Title" />
+                            }
+                            <p>@detailMatch.Found.Description</p>
+                            <small>@detailMatch.Found.Location · @detailMatch.Found.Date.ToString("MMM d, yyyy")</small>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (detailClaim is null)
+            {
+                <p class="dlg-muted">The claimant will collect this item using the handover details you provided.</p>
+            }
+            else if (detailReport is null)
+            {
+                <p class="error" role="alert">Couldn't load the item details. Please try again.</p>
+            }
+            else
+            {
+                <div class="dlg-section">
+                    <span class="dlg-label">Item</span>
+                    @if (!string.IsNullOrWhiteSpace(detailReport.PhotoUrl))
+                    {
+                        <img class="dlg-photo" src="@ReportImageUrl.Resolve(detailReport.PhotoUrl)" alt="Photo of @detailReport.Title" />
+                    }
+                    <dl class="dlg-grid">
+                        <dt>Item</dt><dd>@detailReport.Title</dd>
+                        <dt>Found at</dt><dd>@detailReport.Location</dd>
+                        <dt>Date</dt><dd>@detailReport.Date.ToString("MMM d, yyyy")</dd>
+                    </dl>
+                </div>
+
+                <div class="dlg-section">
+                    <span class="dlg-label">Handover details</span>
+                    @if (detailReport.Handover is { } h)
+                    {
+                        <dl class="dlg-grid">
+                            @if (!string.IsNullOrWhiteSpace(h.FinderName))
+                            {
+                                <dt>Finder</dt><dd>@h.FinderName</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(h.DropOffLocation))
+                            {
+                                <dt>Drop-off location</dt><dd>@h.DropOffLocation</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(h.ContactPhone))
+                            {
+                                <dt>Phone</dt><dd><a href="tel:@h.ContactPhone">@h.ContactPhone</a></dd>
+                            }
+                        </dl>
+                    }
+                    else
+                    {
+                        <p class="dlg-muted">Handover details aren't available yet. Follow the admin's note above.</p>
+                    }
+                </div>
+
+                <div class="dlg-actions">
+                    <button type="button" class="dlg-success" disabled title="Coming soon">Successful</button>
+                    <button type="button" class="dlg-issue" disabled title="Coming soon">Report issue</button>
+                </div>
+            }
         </section>
     </div>
 }
@@ -156,10 +215,14 @@
     private bool isLoading = true;
     private string? errorMessage;
     private System.Threading.Timer? refreshTimer;
-    private bool IsMatchDetailsOpen;
-    private bool IsLoadingMatchDetails;
-    private MatchItem? SelectedMatchNotification;
-    private string? MatchDetailsError;
+
+    // View details popup state
+    private NotificationItem? selected;
+    private ClaimItem? detailClaim;
+    private ReportItem? detailReport;
+    private MatchItem? detailMatch;
+    private bool detailLoading;
+    private string? detailError;
 
     private int UnreadCount => items.Count(n => !n.IsRead);
 
@@ -178,6 +241,10 @@
         "claims" => "Claims",
         _ => "All",
     };
+
+    private static bool IsApproval(NotificationItem n) => n.Type == "claim" && n.Title == "Claim approved";
+    private static bool IsMatch(NotificationItem n) => string.Equals(n.Type, "match", StringComparison.OrdinalIgnoreCase);
+    private static bool IsRejected(NotificationItem n) => n.Type == "claim" && n.Title == "Claim rejected";
 
     private static string IconGlyph(string type) => type switch
     {
@@ -226,6 +293,62 @@
         items = result;
     }
 
+    private async Task OpenDetails(NotificationItem n)
+    {
+        selected = n;
+        detailClaim = null;
+        detailReport = null;
+        detailMatch = null;
+        detailError = null;
+        detailLoading = true;
+
+        await MarkOneAsRead(n);
+
+        if (IsMatch(n))
+        {
+            if (!n.ReferenceId.HasValue)
+            {
+                detailError = "No matched report reference is available for this notification.";
+            }
+            else
+            {
+                var matches = await ApiService.GetMyMatches();
+                detailMatch = matches?.FirstOrDefault(match => match.Id == n.ReferenceId.Value);
+                if (detailMatch is null)
+                    detailError = "Couldn't load the matched report details. Please try again.";
+            }
+
+            detailLoading = false;
+            return;
+        }
+
+        // /claims/mine only contains claims this user made, so a match means they are the claimant.
+        // No match means they are the finder, who just sees the message and note.
+        var claims = await ApiService.GetUserClaims();
+        if (claims is null)
+        {
+            detailError = "Couldn't load the claim details. Please try again.";
+            detailLoading = false;
+            return;
+        }
+
+        detailClaim = claims.FirstOrDefault(c => c.id == n.ReferenceId);
+        if (detailClaim is not null)
+            detailReport = await ApiService.GetFoundItemAuthenticated(detailClaim.foundReportId);
+
+        detailLoading = false;
+    }
+
+    private void CloseDetails()
+    {
+        selected = null;
+        detailClaim = null;
+        detailReport = null;
+        detailMatch = null;
+        detailError = null;
+        detailLoading = false;
+    }
+
     private async Task MarkOneAsRead(NotificationItem n)
     {
         if (n.IsRead)
@@ -254,42 +377,6 @@
         errorMessage = null;
         foreach (var n in items)
             n.IsRead = true;
-    }
-
-    private async Task ViewNotificationDetails(NotificationItem notification)
-    {
-        if (!string.Equals(notification.Type, "match", StringComparison.OrdinalIgnoreCase))
-            return;
-
-        IsMatchDetailsOpen = true;
-        IsLoadingMatchDetails = true;
-        SelectedMatchNotification = null;
-        MatchDetailsError = null;
-
-        if (!notification.ReferenceId.HasValue)
-        {
-            MatchDetailsError = "No matched item reference is available for this notification.";
-            IsLoadingMatchDetails = false;
-            return;
-        }
-
-        var matches = await ApiService.GetMyMatches();
-        SelectedMatchNotification = matches?.FirstOrDefault(match => match.Id == notification.ReferenceId.Value);
-        if (SelectedMatchNotification is null)
-            MatchDetailsError = "The matched item details could not be found.";
-
-        IsLoadingMatchDetails = false;
-    }
-
-    private void IgnoreNotificationAction()
-    {
-        // Delete remains intentionally non-functional for now.
-    }
-
-    private void CloseMatchDetails()
-    {
-        if (!IsLoadingMatchDetails)
-            IsMatchDetailsOpen = false;
     }
 
     private static string FormatTimeAgo(DateTimeOffset date)
