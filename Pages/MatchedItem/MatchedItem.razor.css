@@ -46,6 +46,131 @@
     line-height: 1.5;
 }
 
+.reported-item-section,
+.matches-section {
+    margin-top: 20px;
+}
+
+.reported-item-section > h2,
+.matches-list-heading h2 {
+    margin: 0;
+    color: #182230;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.reported-item-card {
+    display: grid;
+    grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+    gap: 20px;
+    margin-top: 12px;
+    padding: 16px;
+    border: 1px solid #e2e7ed;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.reported-item-photo {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 6px;
+    background-color: #eef1f4;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.reported-item-content h3,
+.counterpart-content h3 {
+    margin: 5px 0 8px;
+    color: #182230;
+    font-size: 20px;
+    overflow-wrap: anywhere;
+}
+
+.reported-item-content > p,
+.counterpart-description {
+    margin: 0 0 14px;
+    color: #526174;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.matches-list-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.matches-list-heading > span {
+    display: inline-grid;
+    min-width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e8f0f8;
+    color: #344b63;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.matches-scroll {
+    display: grid;
+    max-height: min(62vh, 680px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #e2e7ed;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.matches-scroll:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.match-result {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 16px;
+    min-width: 0;
+    padding: 16px;
+    border-bottom: 1px solid #e2e7ed;
+}
+
+.match-result:last-child {
+    border-bottom: 0;
+}
+
+.counterpart-photo {
+    width: 120px;
+    aspect-ratio: 4 / 3;
+    border-radius: 6px;
+    background-color: #eef1f4;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.counterpart-content {
+    min-width: 0;
+}
+
+.match-result-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.match-result-heading .report-label {
+    color: #526174;
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .match-score {
     flex-shrink: 0;
     padding: 8px 12px;
@@ -56,52 +181,10 @@
     font-weight: 700;
 }
 
-.matched-pair {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
-    gap: 18px;
-}
-
-.report-panel {
-    min-width: 0;
-    overflow: hidden;
-    border: 1px solid #e2e7ed;
-    border-radius: 8px;
-    background: #fff;
-}
-
-.report-photo {
-    width: 100%;
-    aspect-ratio: 16 / 10;
-    background: #eef1f4;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-}
-
-.report-content {
-    padding: 18px;
-}
-
 .report-label {
     color: #526174;
     font-size: 13px;
     font-weight: 700;
-}
-
-.report-content h2 {
-    margin: 6px 0 12px;
-    color: #182230;
-    font-size: 20px;
-    overflow-wrap: anywhere;
-}
-
-.report-description {
-    margin: 0 0 16px;
-    color: #526174;
-    line-height: 1.55;
-    overflow-wrap: anywhere;
 }
 
 .report-meta {
@@ -122,11 +205,6 @@
 
 .report-details-link:hover {
     text-decoration: underline;
-}
-
-.pair-connector {
-    color: #788697;
-    font-size: 24px;
 }
 
 .matched-date {
@@ -161,13 +239,28 @@
         font-size: 25px;
     }
 
-    .matched-pair {
+    .reported-item-card {
         grid-template-columns: minmax(0, 1fr);
         gap: 12px;
     }
 
-    .pair-connector {
-        justify-self: center;
-        transform: rotate(90deg);
+    .reported-item-photo {
+        max-height: 240px;
+    }
+
+    .match-result {
+        grid-template-columns: 84px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .counterpart-photo {
+        width: 84px;
+    }
+
+    .match-result-heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
 }

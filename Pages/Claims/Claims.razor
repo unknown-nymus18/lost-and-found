@@ -36,12 +36,16 @@
     <div class="data-container">
         @if (isReports)
         {
+            @if (!string.IsNullOrEmpty(matchesError))
+            {
+                <p class="matches-error" role="alert">@matchesError</p>
+            }
             @foreach (var item in ReportItems!)
             {
                 @* <ClaimReportCard item="item"></ClaimReportCard> *@
                 <div>
                     @* <p>@(item.Title)</p> *@
-                    <ReportCard Item="@item" OnDeleted="HandleReportDeleted"></ReportCard>
+                    <ReportCard Item="@item" MatchCount="@GetMatchCount(item)" OnDeleted="HandleReportDeleted"></ReportCard>
                 </div>
             }
         }
@@ -58,11 +62,13 @@
 
 @code {
     private bool isReports = true;
-    private string errorMessage;
+    private string? errorMessage;
+    private string? matchesError;
     private bool isLoading;
 
     public List<ClaimItem> ClaimItems { get; set; } = [];
     public List<ReportItem> ReportItems { get; set; } = [];
+    private List<MatchItem> matches = [];
 
     private int ActiveReportCount => ReportItems.Count(report => report.Status is 0 or 1 or 2);
     private int PendingClaimCount => ClaimItems.Count(claim => claim.status == 0);
@@ -76,6 +82,17 @@
     private void HandleReportDeleted(ReportItem report)
     {
         ReportItems.Remove(report);
+    }
+
+    private int GetMatchCount(ReportItem report)
+    {
+        if (report.Kind.Equals("lost", StringComparison.OrdinalIgnoreCase))
+            return matches.Count(match => match.Lost.Id == report.Id);
+
+        if (report.Kind.Equals("found", StringComparison.OrdinalIgnoreCase))
+            return matches.Count(match => match.Found.Id == report.Id);
+
+        return 0;
     }
 
     private async Task GetReportsClaims()
@@ -99,11 +116,16 @@
         {
             var reportsTask = ApiService.GetUserReports();
             var claimsTask = ApiService.GetUserClaims();
+            var matchesTask = ApiService.GetMyMatches();
 
-            await Task.WhenAll(reportsTask, claimsTask);
+            await Task.WhenAll(reportsTask, claimsTask, matchesTask);
 
             ReportItems = reportsTask.Result ?? [];
             ClaimItems = claimsTask.Result ?? [];
+            if (matchesTask.Result is null)
+                matchesError = "Couldn't load match details. Please try again.";
+            else
+                matches = matchesTask.Result;
         }
         catch (HttpRequestException ex)
         {

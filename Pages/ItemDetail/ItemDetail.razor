@@ -1,7 +1,8 @@
 @page "/item-detail/{Kind}/{Id:int}"
 @using lost_and_found.Models
 @using lost_and_found.Services
-
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
 @inject ApiService ApiService
 
 @if (isLoading)
@@ -23,7 +24,7 @@ else
 {
     <div class="item-detail">
         <section class="item-main">
-            <a class="back-link" href="/browse">&#8592; Back to results</a>
+            <a class="back-link" href="/browse" @onclick="goBack">&#8592; Go Back </a>
 
             <div class="item-img" role="img" aria-label="Photo of @item.Title" style="@ImageStyle"></div>
 
@@ -140,6 +141,11 @@ else
             item = null;
         }
         isLoading = false;
+    }
+
+    public void goBack()
+    {
+        JS.InvokeVoidAsync("history.back");
     }
 
 
