@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<FoundReport> FoundReports => Set<FoundReport>();
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<Claim> Claims => Set<Claim>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -24,8 +25,16 @@ public class AppDbContext : DbContext
         b.Entity<LostReport>().Property(r => r.Category).HasConversion<string>();
         b.Entity<LostReport>().Property(r => r.Status).HasConversion<string>();
         b.Entity<FoundReport>().Property(r => r.Category).HasConversion<string>();
+        b.Entity<FoundReport>().Property(r => r.HandoverMethod).HasConversion<string>();
         b.Entity<FoundReport>().Property(r => r.Status).HasConversion<string>();
         b.Entity<Claim>().Property(c => c.Status).HasConversion<string>();
+
+        b.Entity<Notification>().HasIndex(n => new { n.UserId, n.CreatedAt });
+        b.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany()
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // A match points at one lost and one found report; deleting a report
         // removes its matches but never cascades into the other side's data.

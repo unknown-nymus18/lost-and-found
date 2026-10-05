@@ -50,7 +50,9 @@ public static class DbSeeder
             Category = ItemCategory.Electronics,
             Location = "Balme Library",
             DateFound = now.AddDays(-2),
-            Status = ReportStatus.Open
+            Status = ReportStatus.Open,
+            HandoverMethod = HandoverMethod.DropOff,
+            DropOffLocation = "Balme Library front desk"
         };
 
         // Some unrelated reports so browsing/filters have variety.
@@ -73,7 +75,9 @@ public static class DbSeeder
             Category = ItemCategory.Keys,
             Location = "Sports Stadium",
             DateFound = now.AddDays(-4),
-            Status = ReportStatus.Open
+            Status = ReportStatus.Open,
+            HandoverMethod = HandoverMethod.ContactFinder,
+            ContactPhone = "+233 20 000 0000"
         };
 
         var foundWallet = new FoundReport
@@ -84,7 +88,9 @@ public static class DbSeeder
             Category = ItemCategory.Wallet,
             Location = "Central Cafeteria",
             DateFound = now.AddDays(-5),
-            Status = ReportStatus.Open
+            Status = ReportStatus.Open,
+            HandoverMethod = HandoverMethod.DropOff,
+            DropOffLocation = "Campus Security Office"
         };
 
         db.LostReports.AddRange(lostPhone, lostId);

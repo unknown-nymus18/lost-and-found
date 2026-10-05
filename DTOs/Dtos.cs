@@ -20,7 +20,11 @@ public record CreateReportRequest(
     [Required, MaxLength(2000)] string Description,
     [EnumDataType(typeof(ItemCategory))] ItemCategory Category,
     [Required, MaxLength(160)] string Location,
-    DateTime Date) : IValidatableObject
+    DateTime Date,
+    // Handover details apply to found reports only; lost reports ignore them.
+    [EnumDataType(typeof(HandoverMethod))] HandoverMethod? HandoverMethod = null,
+    [MaxLength(160)] string? DropOffLocation = null,
+    [MaxLength(30)] string? ContactPhone = null) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -47,6 +51,15 @@ public sealed class CreateReportWithPhotoRequest : IValidatableObject
 
     public IFormFile? Photo { get; init; }
 
+    [EnumDataType(typeof(HandoverMethod))]
+    public HandoverMethod? HandoverMethod { get; init; }
+
+    [MaxLength(160)]
+    public string? DropOffLocation { get; init; }
+
+    [MaxLength(30)]
+    public string? ContactPhone { get; init; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (Date == default)
@@ -54,8 +67,18 @@ public sealed class CreateReportWithPhotoRequest : IValidatableObject
     }
 
     public CreateReportRequest ToReportRequest() =>
-        new(Title, Description, Category, Location, Date);
+        new(Title, Description, Category, Location, Date, HandoverMethod, DropOffLocation, ContactPhone);
 }
+
+/// <summary>
+/// Private handover details of a found report. Only the finder, admins, and
+/// the approved claimant receive it; everyone else sees <c>null</c>.
+/// </summary>
+public record HandoverDto(
+    HandoverMethod Method,
+    string? DropOffLocation,
+    string? FinderName,
+    string? ContactPhone);
 
 public record ReportDto(
     int Id,
@@ -68,7 +91,8 @@ public record ReportDto(
     string? PhotoUrl,
     ReportStatus Status,
     string ReportedBy,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    HandoverDto? Handover = null);
 
 // ---------- Matches ----------
 public record MatchDto(
@@ -83,7 +107,7 @@ public record MatchDto(
 public record CreateClaimRequest(
     [Range(1, int.MaxValue)] int FoundReportId,
     [Required] string ProofDescription);
-public record DecideClaimRequest(bool Approve, string? Note);
+public record DecideClaimRequest([Required] bool? Approve, string? Note);
 
 public record ClaimDto(
     int Id,
@@ -94,7 +118,8 @@ public record ClaimDto(
     ClaimStatus Status,
     string? ReviewNote,
     DateTime CreatedAt,
-    DateTime? DecidedAt);
+    DateTime? DecidedAt,
+    HandoverDto? Handover = null);
 
 // ---------- Real-time payload ----------
 public record MatchAlert(int MatchId, int Score, string Message);

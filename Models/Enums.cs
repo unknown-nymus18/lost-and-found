@@ -32,6 +32,13 @@ public enum ClaimStatus
     Rejected
 }
 
+/// <summary>How a finder hands a found item back to its approved claimant.</summary>
+public enum HandoverMethod
+{
+    DropOff,        // left at a named campus location
+    ContactFinder   // the approved claimant receives the finder's phone number
+}
+
 public static class Roles
 {
     public const string Student = "Student";

@@ -39,6 +39,13 @@ if (Encoding.UTF8.GetByteCount(jwt.Key) < 32)
         "Jwt:Key must be configured with a secret containing at least 32 bytes.");
 }
 
+if (!builder.Environment.IsDevelopment() &&
+    string.IsNullOrWhiteSpace(builder.Configuration["BlobStorage:ConnectionString"]))
+{
+    throw new InvalidOperationException(
+        "Blob storage is not configured. Set BlobStorage__ConnectionString in the app settings.");
+}
+
 builder.Services.AddSingleton(jwt);
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddSingleton<FileStorage>();
@@ -215,10 +222,25 @@ app.MapGet("/", () => Results.Ok(new
     name = "Campus Lost & Found API",
     version = "v1",
     documentation = "/swagger",
+    agents = "/api/agents/context",
     health = "/health"
 }));
 
 app.MapHealthChecks("/health");
+
+var agentsContext = ReadAgentsContext();
+app.MapGet("/api/agents/context", () => agentsContext is null
+        ? Results.NotFound()
+        : Results.Text(agentsContext, "text/markdown; charset=utf-8"))
+    .AllowAnonymous();
+
+app.MapGet("/uploads/{name}", async (string name, FileStorage files) =>
+{
+    var content = await files.ReadAsync(name);
+    return content is null
+        ? Results.NotFound()
+        : Results.File(content, FileStorage.ContentType(name));
+});
 
 app.MapControllers();
 
@@ -227,3 +249,11 @@ app.MapHub<NotificationHub>("/hubs/notifications");
 await DbSeeder.SeedAsync(app.Services);
 
 app.Run();
+
+static string? ReadAgentsContext()
+{
+    using var stream = typeof(Program).Assembly.GetManifestResourceStream("AGENTS.md");
+    if (stream is null) return null;
+    using var reader = new StreamReader(stream);
+    return reader.ReadToEnd();
+}

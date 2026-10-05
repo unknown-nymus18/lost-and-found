@@ -27,6 +27,16 @@ public class FoundReport
 
     public ReportStatus Status { get; set; } = ReportStatus.Open;
 
+    public HandoverMethod HandoverMethod { get; set; } = HandoverMethod.DropOff;
+
+    /// <summary>Where the item was left, for <see cref="HandoverMethod.DropOff"/>.</summary>
+    [MaxLength(160)]
+    public string? DropOffLocation { get; set; }
+
+    /// <summary>Finder's phone, shared only with the approved claimant and admins.</summary>
+    [MaxLength(30)]
+    public string? ContactPhone { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<Match> Matches { get; set; } = new();

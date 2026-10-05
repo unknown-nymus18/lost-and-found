@@ -41,8 +41,8 @@ public class ClaimsController : ApiControllerBase
     [Authorize(Roles = Roles.Admin, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<ActionResult<ClaimDto>> Decide(int id, DecideClaimRequest req)
     {
-        var result = await _claims.DecideAsync(id, req.Approve, req.Note);
+        var result = await _claims.DecideAsync(id, req.Approve!.Value, req.Note);
         if (!result.Succeeded) return Problem(statusCode: result.StatusCode, detail: result.Error);
-        return Ok(ClaimService.Map(result.Claim!));
+        return Ok(ClaimService.MapWithHandover(result.Claim!));
     }
 }

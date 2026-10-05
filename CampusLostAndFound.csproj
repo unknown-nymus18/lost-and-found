@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Database -->
+    <!-- Database and photo storage -->
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.29.2" />
     <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
       <PrivateAssets>all</PrivateAssets>
@@ -22,6 +23,11 @@
     <!-- REST API docs / test surface -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Public agent documentation served at /api/agents/context -->
+    <EmbeddedResource Include="AGENTS.md" LogicalName="AGENTS.md" />
   </ItemGroup>
 
 </Project>
