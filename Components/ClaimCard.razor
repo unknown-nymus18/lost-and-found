@@ -19,12 +19,9 @@
 @code {
     [Parameter] public required ClaimItem item { get; set; }
 
-    private string CreatedAtLabel =>
-        DateTimeOffset.TryParse(item.createdAt, out var createdAt)
-            ? $"Submitted {createdAt.ToLocalTime():MMM d, yyyy}"
-            : string.IsNullOrWhiteSpace(item.createdAt)
-                ? "Submission date unavailable"
-                : $"Submitted {item.createdAt}";
+    private string CreatedAtLabel => item.createdAt == default
+        ? "Submission date unavailable"
+        : $"Submitted {item.createdAt.ToLocalTime():MMM d, yyyy}";
 
     public string GetClaimStatus(int statusCode)
     {

@@ -660,10 +660,113 @@ public class ApiService
         }
     }
 
+    public Task<ApiResult<List<ClaimItem>>> GetAdminClaimsAsync() =>
+        GetAdminDataAsync<List<ClaimItem>>("claims");
+
+    public Task<ApiResult<List<MatchItem>>> GetAdminMatchesAsync() =>
+        GetAdminDataAsync<List<MatchItem>>("matches");
+
+    public async Task<ApiResult<ClaimItem>> DecideClaimAsync(int claimId, bool approve, string? note = null)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrWhiteSpace(user.token))
+            return new(null, "Please log in first.");
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}claims/{claimId}/decide")
+            {
+                Content = JsonContent.Create(new { approve, note })
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                return new(null, await ReadApiErrorAsync(response));
+
+            var claim = await response.Content.ReadFromJsonAsync<ClaimItem>();
+            return claim is null
+                ? new(null, "The server returned an empty claim.")
+                : new(claim, null);
+        }
+        catch (HttpRequestException)
+        {
+            return new(null, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception)
+        {
+            return new(null, "Something went wrong while deciding the claim.");
+        }
+    }
+
+    private async Task<ApiResult<T>> GetAdminDataAsync<T>(string path)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrWhiteSpace(user.token))
+            return new(default, "Please log in first.");
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}{path}");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                return new(default, await ReadApiErrorAsync(response));
+
+            var data = await response.Content.ReadFromJsonAsync<T>();
+            return data is null
+                ? new(default, "The server returned an empty response.")
+                : new(data, null);
+        }
+        catch (HttpRequestException)
+        {
+            return new(default, "Couldn't reach the server. Check your connection and try again.");
+        }
+        catch (Exception)
+        {
+            return new(default, "Something went wrong while loading dashboard data.");
+        }
+    }
+
+    private static async Task<string> ReadApiErrorAsync(HttpResponseMessage response)
+    {
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+            return "Your session has expired. Please log in again.";
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+            return "This account does not have permission to view this admin data.";
+
+        var detail = await response.Content.ReadAsStringAsync();
+        return string.IsNullOrWhiteSpace(detail)
+            ? $"Server error {(int)response.StatusCode}."
+            : $"Server error {(int)response.StatusCode}: {detail}";
+    }
+
+
+    // ================================================================
+    // NOTIFICATIONS  (changed section)
+    // ================================================================
+
+    // Matches what GET /api/notifications really returns
+    private sealed class NotificationDto
+    {
+        public int Id { get; set; }
+        public string? Type { get; set; }
+        public int ReferenceId { get; set; }
+        public string? Message { get; set; }
+        public int? Score { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset? ReadAt { get; set; }
+    }
+
+    // Markers the backend puts before the admin's note in the message.
+    // Agree one with the backend dev; the others are accepted as fallbacks.
+    private static readonly string[] NoteMarkers = ["Admin note:", "Note from admin:", "Reason:"];
 
     public async Task<List<NotificationItem>?> GetNotifications()
     {
-        if (_authService.CurrentUser is null)
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrWhiteSpace(user.token))
         {
             Console.WriteLine("Log in first");
             return null;
@@ -671,13 +774,17 @@ public class ApiService
 
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}notifications/");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authService.CurrentUser.token);
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}notifications");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
 
-            var response = await _httpClient.SendAsync(request);
+            using var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<List<NotificationItem>>();
+            var dtos = await response.Content.ReadFromJsonAsync<List<NotificationDto>>() ?? [];
+            return dtos
+                .OrderByDescending(d => d.CreatedAt)
+                .Select(ToNotificationItem)
+                .ToList();
         }
         catch (Exception e)
         {
@@ -685,6 +792,97 @@ public class ApiService
             return null;
         }
     }
+
+    private static NotificationItem ToNotificationItem(NotificationDto d)
+    {
+        var apiType = d.Type ?? string.Empty;
+        var (body, note) = SplitAdminNote(d.Message ?? string.Empty);
+
+        string type, title;
+        if (apiType.StartsWith("Claim", StringComparison.OrdinalIgnoreCase))
+        {
+            type = "claim";
+            title = apiType.Contains("Reject", StringComparison.OrdinalIgnoreCase) ? "Claim rejected"
+                  : apiType.Contains("Approv", StringComparison.OrdinalIgnoreCase) ? "Claim approved"
+                  : "Claim update";
+        }
+        else if (apiType.Equals("Match", StringComparison.OrdinalIgnoreCase))
+        {
+            type = "match";
+            title = d.Score is int s ? $"Possible match ({s}%)" : "Possible match";
+        }
+        else
+        {
+            type = apiType.ToLowerInvariant(); // message | expiry | reunited | ...
+            title = "Notification";
+        }
+
+        return new NotificationItem
+        {
+            Id = d.Id,
+            Type = type,
+            Title = title,
+            Body = body,
+            AdminNote = note,
+            ReferenceId = d.ReferenceId,
+            IsRead = d.ReadAt is not null,
+            CreatedAt = d.CreatedAt
+        };
+    }
+
+    private static (string Body, string? Note) SplitAdminNote(string message)
+    {
+        foreach (var marker in NoteMarkers)
+        {
+            var i = message.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            if (i < 0) continue;
+
+            var body = message[..i].Trim();
+            var note = message[(i + marker.Length)..].Trim();
+            return (body, string.IsNullOrWhiteSpace(note) ? null : note);
+        }
+        return (message.Trim(), null);
+    }
+
+    // PATCH /api/notifications/{id}/read
+    public async Task<ApiResult<bool>> MarkNotificationRead(int id)
+    {
+        var user = _authService.CurrentUser;
+        if (user is null || string.IsNullOrWhiteSpace(user.token))
+            return new(false, "Please log in first.");
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Patch, $"{baseUrl}notifications/{id}/read");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
+
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                return new(false, $"Server error {(int)response.StatusCode}: {detail}");
+            }
+            return new(true, null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return new(false, "Couldn't update your notifications. Please try again.");
+        }
+    }
+
+    // The API has no bulk endpoint, so mark each unread notification individually.
+    public async Task<ApiResult<bool>> MarkAllNotificationsRead(IEnumerable<int> ids)
+    {
+        var results = await Task.WhenAll(ids.Select(MarkNotificationRead));
+        var failed = results.FirstOrDefault(r => !r.Ok);
+        return failed ?? new ApiResult<bool>(true, null);
+    }
+
+    // ================================================================
+    // END NOTIFICATIONS
+    // ================================================================
+
 
     public async Task<ApiResult<bool>> RequestPasswordReset(string email)
     {
@@ -788,34 +986,6 @@ public class ApiService
         {
             Console.WriteLine(ex);
             return new(null, "Something went wrong. Please try again.");
-        }
-    }
-
-    public async Task<ApiResult<bool>> MarkAllNotificationsRead()
-    {
-        var user = _authService.CurrentUser;
-        if (user is null || string.IsNullOrEmpty(user.token))
-            return new(false, "Please log in first.");
-
-        try
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}notifications/mark-all-read");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.token);
-
-            using var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var detail = await response.Content.ReadAsStringAsync();
-                return new(false, $"Server error {(int)response.StatusCode}: {detail}");
-            }
-
-            return new(true, null);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-            return new(false, "Couldn't update your notifications. Please try again.");
         }
     }
 

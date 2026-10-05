@@ -1,4 +1,5 @@
 @page "/notifications"
+@implements IDisposable
 @using lost_and_found.Models
 @using lost_and_found.Services
 @inject ApiService ApiService
@@ -51,12 +52,21 @@
         <div class="list">
             @foreach (var n in Visible)
             {
-                <div class="item @(n.IsRead ? "" : "unread")">
-                    <div class="icon @IconClass(n.Type)" aria-hidden="true">@IconGlyph(n.Type)</div>
+                <div class="item @(n.IsRead ? "" : "unread clickable")" @onclick="() => MarkOneAsRead(n)">
+                    <div class="icon @IconClass(n.Type)" aria-hidden="true">@(n.Title == "Claim rejected" ? "❌" : IconGlyph(n.Type))</div>
 
                     <div class="body">
                         <strong class="title">@n.Title</strong>
                         <p class="text">@n.Body</p>
+
+                        @if (!string.IsNullOrWhiteSpace(n.AdminNote))
+                        {
+                            <div class="note">
+                                <span class="note-label">@(n.Title == "Claim rejected" ? "Reason" : "Admin note")</span>
+                                <p class="note-text">@n.AdminNote</p>
+                            </div>
+                        }
+
                         @if (!string.IsNullOrWhiteSpace(n.ActionLabel) && !string.IsNullOrWhiteSpace(n.ActionUrl))
                         {
                             <a class="action" href="@n.ActionUrl">@n.ActionLabel &rarr;</a>
@@ -85,6 +95,7 @@
     private string activeTab = "all";
     private bool isLoading = true;
     private string? errorMessage;
+    private System.Threading.Timer? refreshTimer;
 
     private int UnreadCount => items.Count(n => !n.IsRead);
 
@@ -124,12 +135,55 @@
         _ => "icon-default",
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync(showError: true);
+        isLoading = false;
+
+        // The API has no push channel, so poll for new notifications every 30 seconds.
+        refreshTimer = new System.Threading.Timer(async _ =>
+        {
+            await LoadAsync(showError: false);
+            await InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+    }
+
+    private async Task LoadAsync(bool showError)
+    {
+        var result = await ApiService.GetNotifications();
+        if (result is null)
+        {
+            if (showError)
+                errorMessage = "Couldn't load your notifications. Please log in and try again.";
+            return;
+        }
+
+        errorMessage = null;
+        items = result;
+    }
+
+    private async Task MarkOneAsRead(NotificationItem n)
+    {
+        if (n.IsRead)
+            return;
+
+        n.IsRead = true; // optimistic update
+        var result = await ApiService.MarkNotificationRead(n.Id);
+        if (!result.Ok)
+        {
+            n.IsRead = false;
+            errorMessage = result.Error;
+        }
+    }
+
     private async Task MarkAllAsRead()
     {
-        var result = await ApiService.MarkAllNotificationsRead();
+        var unreadIds = items.Where(n => !n.IsRead).Select(n => n.Id).ToList();
+        var result = await ApiService.MarkAllNotificationsRead(unreadIds);
         if (!result.Ok)
         {
             errorMessage = result.Error;
+            await LoadAsync(showError: false); // resync with what the server actually saved
             return;
         }
 
@@ -150,9 +204,5 @@
         return "Just now";
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        items = await ApiService.GetNotifications() ?? new List<NotificationItem>();
-        isLoading = false;
-    }
+    public void Dispose() => refreshTimer?.Dispose();
 }

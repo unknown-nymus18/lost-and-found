@@ -234,3 +234,39 @@
         gap: 8px;
     }
 }
+
+
+.item.clickable {
+    cursor: pointer;
+}
+
+.item.clickable:hover {
+    background-color: #EEF4FF;
+}
+
+/* Admin note / pickup instructions */
+
+.note {
+    margin: 4px 0 8px;
+    padding: 10px 12px;
+    background-color: #FFFBEB;
+    border-left: 3px solid #F59E0B;
+    border-radius: 6px;
+}
+
+.note-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #B45309;
+    margin-bottom: 2px;
+}
+
+.note-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #374151;
+    margin: 0;
+}

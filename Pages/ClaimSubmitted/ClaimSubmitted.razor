@@ -98,9 +98,9 @@
             : $"background-image: url('{ReportImageUrl.Resolve(report!.PhotoUrl)}');";
 
     private string SubmittedOn =>
-        DateTimeOffset.TryParse(claim?.createdAt, out var created)
-            ? $" on {created.ToLocalTime():MMM d, yyyy}"
-            : string.Empty;
+        claim is null
+            ? string.Empty
+            : $" on {claim.createdAt.ToLocalTime():MMM d, yyyy}";
 
     private string StatusLabel => claim?.status switch
     {

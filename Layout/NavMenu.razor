@@ -1,6 +1,7 @@
 ﻿@using lost_and_found.Models
 @using lost_and_found.Services
 @inject AuthService AuthService
+@inject ApiService ApiService
 @implements IDisposable
 
 <nav id="nav-main" class="nav-menu">
@@ -27,7 +28,15 @@
                 <NavLink href="/notifications"
                          class="bg-white border rounded-circle d-flex align-items-center justify-content-center"
                          style="width: 32px; height: 32px; flex-shrink: 0;" aria-label="Notifications">
-                    <i class="bi bi-bell-fill text-warning"></i>
+                    <span class="notification-icon-wrap" style="position: relative; display: inline-flex;">
+                        <i class="bi bi-bell-fill text-warning"></i>
+                        @if (UnreadNotificationCount > 0)
+                        {
+                            <span class="notification-badge" aria-label="@UnreadNotificationCount unread notifications">
+                                @(UnreadNotificationCount > 99 ? "99+" : UnreadNotificationCount)
+                            </span>
+                        }
+                    </span>
                 </NavLink>
 
                 <NavLink href="/profile" class="d-flex align-items-center gap-2 text-decoration-none text-reset">
@@ -52,17 +61,49 @@
 
 @code {
     private bool menuOpen;
+    private int UnreadNotificationCount;
+    private System.Threading.Timer? notificationRefreshTimer;
 
     protected override void OnInitialized()
     {
         AuthService.OnChange += HandleAuthStateChanged;
     }
 
-    private void HandleAuthStateChanged() => _ = InvokeAsync(StateHasChanged);
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshUnreadNotificationCount();
+        notificationRefreshTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await RefreshUnreadNotificationCount();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+    }
+
+    private void HandleAuthStateChanged() => _ = InvokeAsync(async () =>
+    {
+        await RefreshUnreadNotificationCount();
+        StateHasChanged();
+    });
+
+    private async Task RefreshUnreadNotificationCount()
+    {
+        if (AuthService.CurrentUser is null)
+        {
+            UnreadNotificationCount = 0;
+            return;
+        }
+
+        var notifications = await ApiService.GetNotifications();
+        UnreadNotificationCount = notifications?.Count(notification => !notification.IsRead) ?? 0;
+    }
 
     public void Dispose()
     {
         AuthService.OnChange -= HandleAuthStateChanged;
+        notificationRefreshTimer?.Dispose();
     }
 
     private void ToggleMenu() => menuOpen = !menuOpen;

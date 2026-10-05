@@ -4,6 +4,7 @@
 @using lost_and_found.Models
 @using lost_and_found.Services
 @inject ApiService ApiService
+@inject AdminService AdminService
 
 <div class="admin-layout">
     <nav class="sidebar" aria-label="Admin navigation">
@@ -23,6 +24,14 @@
         </header>
 
         <main class="admin-content">
+            @if (IsLoading)
+            {
+                <p role="status">Loading live admin data...</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <p role="alert">@ErrorMessage</p>
+            }
             @if (ActiveSection == "overview")
             {
                 <section>
@@ -60,13 +69,13 @@
             {
                 <section>
                     <div class="match-summary">
-                        <article class="match-summary-card review"><strong>23</strong><span>Awaiting Review</span></article>
-                        <article class="match-summary-card confirmed"><strong>356</strong><span>Confirmed Matches</span></article>
-                        <article class="match-summary-card dismissed"><strong>41</strong><span>Dismissed</span></article>
-                        <article class="match-summary-card accuracy"><strong>84%</strong><span>Avg. Match Accuracy</span></article>
+                        <article class="match-summary-card review"><strong>@SuggestedMatches.Count(m => m.Status == "Awaiting Review")</strong><span>Awaiting Review</span></article>
+                        <article class="match-summary-card confirmed"><strong>@SuggestedMatches.Count(m => m.Status == "Confirmed")</strong><span>Confirmed Matches</span></article>
+                        <article class="match-summary-card dismissed"><strong>@SuggestedMatches.Count(m => m.Status == "Dismissed")</strong><span>Dismissed</span></article>
+                        <article class="match-summary-card accuracy"><strong>@AverageMatchScore%</strong><span>Avg. Match Accuracy</span></article>
                     </div>
                     <div class="tabs" role="tablist">
-                        @foreach (var status in MatchStatuses) { <button class="@(MatchStatusFilter == status ? "active" : "")" type="button" @onclick="() => MatchStatusFilter = status">@status@(status == "Awaiting Review" ? " (23)" : "")</button> }
+                        @foreach (var status in MatchStatuses) { <button class="@(MatchStatusFilter == status ? "active" : "")" type="button" @onclick="() => MatchStatusFilter = status">@status@(status == "Awaiting Review" ? $" ({AwaitingMatchCount})" : "")</button> }
                     </div>
                     <div class="suggested-match-list">
                         @foreach (var match in FilteredSuggestedMatches)
@@ -84,7 +93,7 @@
                                         else { <span class="match-item-image skeleton" role="img" aria-label="No image supplied for this found report"></span> }
                                         <div><span class="match-type found">Found</span><strong>@match.FoundTitle</strong><small>@match.FoundDetails</small></div>
                                     </div>
-                                    <div class="match-actions"><button class="confirm-match" type="button">Confirm Match</button><button class="dismiss-match" type="button">Dismiss</button></div>
+                                    <div class="match-actions"><button class="confirm-match" type="button" @onclick="() => OpenMatchDecision(match, true)">Confirm Match</button><button class="dismiss-match" type="button" @onclick="() => OpenMatchDecision(match, false)">Dismiss</button></div>
                                 </div>
                                 <p>Why suggested: @match.Reason</p>
                             </article>
@@ -96,13 +105,13 @@
             {
                 <section>
                     <div class="dashboard-stats compact-stats">
-                        <article class="stat-card stat-card-amber"><strong>47</strong><span>Pending Review</span></article>
-                        <article class="stat-card stat-card-green"><strong>298</strong><span>Approved</span></article>
-                        <article class="stat-card stat-card-red"><strong>36</strong><span>Rejected</span></article>
-                        <article class="stat-card stat-card-purple"><strong>12</strong><span>Flagged Disputes</span></article>
+                        <article class="stat-card stat-card-amber"><strong>@ClaimRows.Count(c => c.Status == "Pending")</strong><span>Pending Review</span></article>
+                        <article class="stat-card stat-card-green"><strong>@ClaimRows.Count(c => c.Status == "Approved")</strong><span>Approved</span></article>
+                        <article class="stat-card stat-card-red"><strong>@ClaimRows.Count(c => c.Status == "Rejected")</strong><span>Rejected</span></article>
+                        <article class="stat-card stat-card-purple"><strong>@ClaimRows.Count(c => c.Status == "Disputed")</strong><span>Flagged Disputes</span></article>
                     </div>
-                    <div class="claims-toolbar"><div class="tabs">@foreach (var status in ClaimStatuses) { <button class="@(ClaimStatusFilter == status ? "active" : "")" type="button" @onclick="() => ClaimStatusFilter = status">@status@(status == "Pending" ? " (47)" : "")</button> }</div><input type="search" @bind="ClaimSearch" @bind:event="oninput" placeholder="Search claims" aria-label="Search claims" /></div>
-                    <section class="table-panel claims-panel"><table class="claims-table"><thead><tr><th>Claim</th><th>Item</th><th>Claimant</th><th>Match</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>@foreach (var claim in FilteredClaims) { <tr><td class="report-reference">@claim.Reference</td><td class="item-title">@claim.ItemTitle</td><td><span class="claimant"><span class="claimant-initials">@Initials(claim.Claimant)</span>@claim.Claimant</span></td><td><strong class="@ConfidenceClass(claim.MatchPercent)">@claim.MatchPercent%</strong></td><td>@claim.Submitted.ToString("MMM d, yyyy")</td><td><span class="status-badge @ClaimStatusClass(claim.Status)">@claim.Status</span></td><td class="row-actions"><button type="button">Review</button><button type="button">View</button></td></tr> }</tbody></table></section>
+                    <div class="claims-toolbar"><div class="tabs">@foreach (var status in ClaimStatuses) { <button class="@(ClaimStatusFilter == status ? "active" : "")" type="button" @onclick="() => ClaimStatusFilter = status">@status@(status == "Pending" ? $" ({PendingClaimCount})" : "")</button> }</div><input type="search" @bind="ClaimSearch" @bind:event="oninput" placeholder="Search claims" aria-label="Search claims" /></div>
+                    <section class="table-panel claims-panel"><table class="claims-table"><thead><tr><th>Claim</th><th>Item</th><th>Claimant</th><th>Match</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>@foreach (var claim in FilteredClaims) { <tr><td class="report-reference">@claim.Reference</td><td class="item-title">@claim.ItemTitle</td><td><span class="claimant"><span class="claimant-initials">@Initials(claim.Claimant)</span>@claim.Claimant</span></td><td><strong class="@ConfidenceClass(claim.MatchPercent)">@(claim.MatchPercent.HasValue ? $"{claim.MatchPercent}%" : "—")</strong></td><td>@claim.Submitted.ToString("MMM d, yyyy")</td><td><span class="status-badge @ClaimStatusClass(claim.Status)">@claim.Status</span></td><td class="row-actions">@if (claim.Status == "Pending") { <button type="button" @onclick="() => OpenClaimDecision(claim, true)">Approve</button><button type="button" @onclick="() => OpenClaimDecision(claim, false)">Reject</button> }</td></tr> }</tbody></table></section>
                     <p class="claim-note">Claims older than 7 days without admin action are escalated automatically.</p>
                 </section>
             }
@@ -123,10 +132,64 @@
     </div>
 </div>
 
+@if (SelectedClaim is not null)
+{
+    <div class="decision-backdrop" role="presentation" @onclick="CloseClaimDecision">
+        <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="decision-title" @onclick:stopPropagation>
+            <button class="decision-close" type="button" aria-label="Close" @onclick="CloseClaimDecision">&times;</button>
+            <span class="decision-kicker">@SelectedClaim.Reference</span>
+            <h2 id="decision-title">@(ApproveDecision ? "Approve this claim?" : "Reject this claim?")</h2>
+            <p class="decision-summary"><strong>@SelectedClaim.Claimant</strong> is claiming <strong>@SelectedClaim.ItemTitle</strong>.</p>
+            @if (ApproveDecision && (!SelectedClaim.MatchPercent.HasValue || SelectedClaim.MatchPercent < 70))
+            {
+                <p class="decision-warning" role="alert">@(SelectedClaim.MatchPercent.HasValue ? $"This claim has a low match score ({SelectedClaim.MatchPercent}%)." : "No match score is available for this claim.") Verify the claimant's proof and item details before approving.</p>
+            }
+            <label for="decision-note">@(ApproveDecision ? "Admin note / pickup instructions" : "Reason for rejection")</label>
+            <textarea id="decision-note" @bind="DecisionNote" placeholder="@(ApproveDecision ? "Where, when and who to meet for collection" : "Please explain why this claim is being rejected")"></textarea>
+            @if (string.IsNullOrWhiteSpace(DecisionNote))
+            {
+                <p class="decision-hint">@(ApproveDecision ? "A note is required. It will be shown to both the claimant and the finder." : "A rejection reason is required. It will be saved with the claim and sent to the claimant.")</p>
+            }
+            <div class="decision-actions">
+                <button class="decision-cancel" type="button" @onclick="CloseClaimDecision" disabled="@IsDeciding">Cancel</button>
+                <button class="@(ApproveDecision ? "decision-approve" : "decision-reject")" type="button" @onclick="ConfirmClaimDecision" disabled="@(IsDeciding || string.IsNullOrWhiteSpace(DecisionNote))">@(IsDeciding ? "Saving..." : ApproveDecision ? "Approve claim" : "Reject claim")</button>
+            </div>
+        </section>
+    </div>
+}
+
+@if (SelectedMatch is not null)
+{
+    <div class="decision-backdrop" role="presentation" @onclick="CloseMatchDecision">
+        <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="match-decision-title" @onclick:stopPropagation>
+            <button class="decision-close" type="button" aria-label="Close" @onclick="CloseMatchDecision">&times;</button>
+            <span class="decision-kicker">Match review</span>
+            <h2 id="match-decision-title">@(ConfirmMatchDecision ? "Confirm this match?" : "Dismiss this match?")</h2>
+            <p class="decision-summary"><strong>@SelectedMatch.LostTitle</strong> is matched with <strong>@SelectedMatch.FoundTitle</strong> at <strong>@SelectedMatch.Confidence%</strong>.</p>
+            @if (ConfirmMatchDecision && SelectedMatch.Confidence < 70)
+            {
+                <p class="decision-warning" role="alert">This is a low-confidence match. Confirm only after verifying the item details, location, date, and available evidence.</p>
+            }
+            <label for="match-decision-note">@(ConfirmMatchDecision ? "Admin note" : "Reason for dismissal")</label>
+            <textarea id="match-decision-note" @bind="MatchDecisionNote" placeholder="@(ConfirmMatchDecision ? "Optional note about why this match was confirmed" : "Explain why these reports are not the same item")"></textarea>
+            @if (!ConfirmMatchDecision && string.IsNullOrWhiteSpace(MatchDecisionNote))
+            {
+                <p class="decision-hint">A dismissal reason is required and will be saved for audit history.</p>
+            }
+            <div class="decision-actions">
+                <button class="decision-cancel" type="button" @onclick="CloseMatchDecision" disabled="@IsMatchDeciding">Cancel</button>
+                <button class="@(ConfirmMatchDecision ? "decision-approve" : "decision-reject")" type="button" @onclick="SubmitMatchDecision" disabled="@(IsMatchDeciding || (!ConfirmMatchDecision && string.IsNullOrWhiteSpace(MatchDecisionNote)))">@(IsMatchDeciding ? "Saving..." : ConfirmMatchDecision ? "Confirm match" : "Dismiss match")</button>
+            </div>
+        </section>
+    </div>
+}
+
 @code {
     private readonly Dictionary<string, string> Sections = new() { ["overview"] = "Overview", ["reports"] = "All Reports", ["matches"] = "Matches", ["claims"] = "Claims", ["users"] = "Users", ["settings"] = "Settings" };
     private readonly string[] MatchStatuses = ["Awaiting Review", "Confirmed", "Dismissed"];
     private readonly string[] ClaimStatuses = ["Pending", "Approved", "Rejected", "Disputed"];
+    private int PendingClaimCount => ClaimRows.Count(c => c.Status == "Pending");
+    private int AwaitingMatchCount => SuggestedMatches.Count(m => m.Status == "Awaiting Review");
     private string ActiveSection { get; set; } = "overview";
     private string MatchStatusFilter { get; set; } = "Awaiting Review";
     private string ClaimStatusFilter { get; set; } = "Pending";
@@ -138,40 +201,198 @@
     private string UserRoleFilter { get; set; } = "all";
     private string UserStatusFilter { get; set; } = "all";
     private List<ReportItem> Reports { get; set; } = [];
+    private string? ErrorMessage { get; set; }
+    private bool IsLoading { get; set; }
     private string SectionTitle => ActiveSection switch { "overview" => "Dashboard Overview", "reports" => "All Reports", "matches" => "Suggested Matches", "claims" => "Claims", "users" => "Users", _ => "Settings" };
     private IEnumerable<ReportItem> FilteredReports => Reports.Where(r => (ReportTypeFilter == "all" || (ReportTypeFilter == "lost" && r.Status == 0) || (ReportTypeFilter == "found" && r.Status == 1)) && (ReportCategoryFilter == "all" || CategoryOptions.GetCategoryName(r.Category) == ReportCategoryFilter) && ($"{r.Title} {r.ReportedBy} {r.Location}".Contains(ReportSearch, StringComparison.OrdinalIgnoreCase)));
     private IEnumerable<SuggestedMatch> FilteredSuggestedMatches => SuggestedMatches.Where(m => m.Status == MatchStatusFilter);
     private IEnumerable<AdminClaim> FilteredClaims => ClaimRows.Where(c => c.Status == ClaimStatusFilter && $"{c.Reference} {c.ItemTitle} {c.Claimant}".Contains(ClaimSearch, StringComparison.OrdinalIgnoreCase));
     private IEnumerable<AdminUser> FilteredUsers => UserRows.Where(u => (UserRoleFilter == "all" || u.Role == UserRoleFilter) && (UserStatusFilter == "all" || (UserStatusFilter == "active" && !u.Suspended) || (UserStatusFilter == "suspended" && u.Suspended)) && $"{u.Name} {u.Identifier} {u.Email}".Contains(UserSearch, StringComparison.OrdinalIgnoreCase));
 
+    private int AverageMatchScore => SuggestedMatches.Count == 0 ? 0 : (int)Math.Round(SuggestedMatches.Average(m => m.Confidence));
+
     protected override async Task OnInitializedAsync()
     {
-        Reports = await ApiService.GetReportItemsAsync();
-
-        @* Console.WriteLine(Reports.Count()); *@
-        foreach(var report in Reports)
+        IsLoading = true;
+        try
         {
-            Console.WriteLine($"Processing report: {report.Title}");
+            var reportsTask = ApiService.GetReportItemsAsync();
+            var matchesTask = AdminService.GetMatchesAsync();
+            var claimsTask = AdminService.GetClaimsAsync();
+            await Task.WhenAll(reportsTask, matchesTask, claimsTask);
+
+            Reports = reportsTask.Result;
+            var matches = matchesTask.Result;
+            var claims = claimsTask.Result;
+
+            if (!matches.Ok || !claims.Ok)
+            {
+                ErrorMessage = matches.Error ?? claims.Error;
+                return;
+            }
+
+            SuggestedMatches = matches.Data?.Select(ToSuggestedMatch).ToList() ?? [];
+            var matchScores = matches.Data?.Where(m => m.Found is not null)
+                .GroupBy(m => m.Found.Id)
+                .ToDictionary(group => group.Key, group => (int)Math.Round(group.Max(m => m.Score))) ?? [];
+            ClaimRows = claims.Data?.Select(claim => ToAdminClaim(claim, matchScores)).ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
+
+    private void OpenMatchDecision(SuggestedMatch match, bool confirm)
+    {
+        SelectedMatch = match;
+        ConfirmMatchDecision = confirm;
+        MatchDecisionNote = string.Empty;
+        ErrorMessage = null;
+    }
+
+    private void CloseMatchDecision()
+    {
+        if (!IsMatchDeciding)
+            SelectedMatch = null;
+    }
+
+    private async Task SubmitMatchDecision()
+    {
+        if (SelectedMatch is null)
+            return;
+
+        var match = SelectedMatch;
+        IsMatchDeciding = true;
+        var result = await AdminService.DecideMatchAsync(match.Id, ConfirmMatchDecision, MatchDecisionNote.Trim());
+        if (!result.Ok)
+        {
+            ErrorMessage = result.Error;
+            IsMatchDeciding = false;
+            return;
+        }
+
+        match.Status = ConfirmMatchDecision ? "Confirmed" : "Dismissed";
+        SelectedMatch = null;
+        MatchDecisionNote = string.Empty;
+        IsMatchDeciding = false;
+    }
+
+    private void OpenClaimDecision(AdminClaim claim, bool approve)
+    {
+        SelectedClaim = claim;
+        ApproveDecision = approve;
+        DecisionNote = string.Empty;
+        ErrorMessage = null;
+    }
+
+    private void CloseClaimDecision()
+    {
+        if (!IsDeciding)
+            SelectedClaim = null;
+    }
+
+    private async Task ConfirmClaimDecision()
+    {
+       if (SelectedClaim is null || string.IsNullOrWhiteSpace(DecisionNote))
+    return;
+
+        var claim = SelectedClaim;
+        IsDeciding = true;
+        var result = await AdminService.DecideClaimAsync(claim.Id, ApproveDecision, DecisionNote.Trim());
+        if (!result.Ok)
+        {
+            ErrorMessage = result.Error;
+            IsDeciding = false;
+            return;
+        }
+
+        claim.Status = ApproveDecision ? "Approved" : "Rejected";
+        SelectedClaim = null;
+        DecisionNote = string.Empty;
+        IsDeciding = false;
+    }
+
+    private static SuggestedMatch ToSuggestedMatch(MatchItem match) => new(
+        match.Id,
+        match.Lost.Title,
+        $"{match.Lost.ReportedBy} - {match.Lost.Location} - {match.Lost.Date:MMM d}",
+        match.Found.Title,
+        $"{match.Found.ReportedBy} - {match.Found.Location} - {match.Found.Date:MMM d}",
+        (int)Math.Round(match.Score),
+        string.IsNullOrWhiteSpace(match.Reason) ? "Suggested by the matching service" : match.Reason,
+        string.IsNullOrWhiteSpace(match.Status) ? "Awaiting Review" : NormalizeMatchStatus(match.Status),
+        ReportImageUrl.Resolve(match.Lost.PhotoUrl),
+        ReportImageUrl.Resolve(match.Found.PhotoUrl));
+
+    private static AdminClaim ToAdminClaim(ClaimItem claim, IReadOnlyDictionary<int, int> matchScores) => new(
+        claim.id,
+        $"CL-{claim.id:0000}",
+        claim.foundItemTitle,
+        claim.claimerName,
+        matchScores.TryGetValue(claim.foundReportId, out var score) ? score : null,
+        claim.createdAt,
+        NormalizeClaimStatus(claim.status));
+
+    private static string NormalizeMatchStatus(string status) => status.ToLowerInvariant() switch
+    {
+        "approved" or "confirmed" => "Confirmed",
+        "rejected" or "dismissed" => "Dismissed",
+        _ => "Awaiting Review"
+    };
+
+    private static string NormalizeClaimStatus(int status) => status switch
+    {
+        1 => "Approved",
+        2 => "Rejected",
+        3 => "Disputed",
+        _ => "Pending"
+    };
     private static string StatusClass(int status) => status == 0 ? "status-lost" : status == 1 ? "status-found" : "status-review";
     private static string StatusLabel(int status) => status == 0 ? "Lost" : status == 1 ? "Found" : "Review";
-    private static string ConfidenceClass(int score) => score >= 85 ? "match-high" : score >= 70 ? "match-medium" : "match-low";
+    private static string ConfidenceClass(int? score) => score >= 85 ? "match-high" : score >= 70 ? "match-medium" : "match-low";
     private static string ClaimStatusClass(string status) => status == "Approved" ? "status-found" : status is "Rejected" or "Disputed" ? "status-rejected" : "status-lost";
     private static string Initials(string name) => string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0])).ToUpperInvariant();
     private static string RoleClass(string role) => role switch { "Admin" => "role-admin", "Security Staff" => "role-security", _ => "role-student" };
 
-    private readonly List<SuggestedMatch> SuggestedMatches = [
-        new("Blue Steel Bottle", "Kojo Mensah - JQB Complex - Aug 21", "Blue Water Bottle", "Ama K. - JQB Complex - Aug 23", 91, "Colour, category, location match", "Awaiting Review"),
-        new("Black iPhone 13", "Ama Serwaa - Balme Library - Aug 22", "iPhone 13 (Blue case)", "Security Office - Balme - Aug 23", 86, "Model and location match; colour differs", "Awaiting Review"),
-        new("UG Student ID - Y. Boateng", "Yaw Boateng - Commonwealth Hall - Aug 22", "Student ID Card", "Porter - Commonwealth Hall - Aug 22", 78, "Name and card partially visible", "Awaiting Review"),
-        new("Grey Nike Backpack", "Efua Owusu - N-Block - Aug 19", "Grey Backpack", "Kwame A. - JQB Complex - Aug 21", 64, "Category and colour match; different location", "Awaiting Review"),
-        new("Scientific Calculator", "Selorm A. - Volta Hall - Aug 18", "Casio Scientific Calculator", "Security Office - Volta Hall - Aug 18", 93, "Category, brand, and location match", "Confirmed"),
-        new("Silver Car Keys", "Nana Adjei - Main Gate - Aug 16", "Set of Silver Keys", "Security Office - Main Gate - Aug 16", 88, "Colour, location, and description match", "Dismissed")];
-    private readonly List<AdminClaim> ClaimRows = [new("CL-0213", "Blue Water Bottle", "Kojo Mensah", 91, new(2026, 8, 24), "Pending"), new("CL-0212", "Grey Backpack", "Efua Owusu", 64, new(2026, 8, 21), "Pending"), new("CL-0211", "HP Laptop Charger", "Nana Yaw Asare", 72, new(2026, 8, 22), "Pending"), new("CL-0210", "AirPods Pro Case", "Abena Darko", 58, new(2026, 8, 20), "Disputed"), new("CL-0209", "Scientific Calculator", "Selorm Agbeko", 80, new(2026, 8, 19), "Pending"), new("CL-0208", "Student ID Card", "Yaw Boateng", 78, new(2026, 8, 22), "Pending")];
+    private List<SuggestedMatch> SuggestedMatches { get; set; } = [];
+    private List<AdminClaim> ClaimRows { get; set; } = [];
+    private AdminClaim? SelectedClaim { get; set; }
+    private bool ApproveDecision { get; set; }
+    private bool IsDeciding { get; set; }
+    private string DecisionNote { get; set; } = string.Empty;
+    private SuggestedMatch? SelectedMatch { get; set; }
+    private bool ConfirmMatchDecision { get; set; }
+    private bool IsMatchDeciding { get; set; }
+    private string MatchDecisionNote { get; set; } = string.Empty;
     private readonly List<AdminUser> UserRows = [new("Kingsley Ofori-Atta", "10976543", "koforiatta@st.ug.edu.gh", "Student", 5, true), new("Kojo Mensah", "10987654", "kmensah@st.ug.edu.gh", "Student", 2, true), new("Ama Serwaa", "10945321", "aserwaa@st.ug.edu.gh", "Student", 3, true), new("Kwabena Tetteh", "STF-0042", "ktetteh@ug.edu.gh", "Admin", 0, true), new("Ama Kyei", "STF-0107", "akyei@ug.edu.gh", "Security Staff", 48, true), new("Abena Darko", "10911256", "adarko@st.ug.edu.gh", "Student", 4, false, true)];
 
-    private sealed record SuggestedMatch(string LostTitle, string LostDetails, string FoundTitle, string FoundDetails, int Confidence, string Reason, string Status, string? LostImageUrl = null, string? FoundImageUrl = null);
-    private sealed record AdminClaim(string Reference, string ItemTitle, string Claimant, int MatchPercent, DateTime Submitted, string Status);
+    private sealed class SuggestedMatch(int id, string lostTitle, string lostDetails, string foundTitle, string foundDetails, int confidence, string reason, string status, string? lostImageUrl = null, string? foundImageUrl = null)
+    {
+        public int Id { get; } = id;
+        public string LostTitle { get; } = lostTitle;
+        public string LostDetails { get; } = lostDetails;
+        public string FoundTitle { get; } = foundTitle;
+        public string FoundDetails { get; } = foundDetails;
+        public int Confidence { get; } = confidence;
+        public string Reason { get; } = reason;
+        public string Status { get; set; } = status;
+        public string? LostImageUrl { get; } = lostImageUrl;
+        public string? FoundImageUrl { get; } = foundImageUrl;
+    }
+    private sealed class AdminClaim(int id, string reference, string itemTitle, string claimant, int? matchPercent, DateTimeOffset submitted, string status)
+    {
+        public int Id { get; } = id;
+        public string Reference { get; } = reference;
+        public string ItemTitle { get; } = itemTitle;
+        public string Claimant { get; } = claimant;
+        public int? MatchPercent { get; } = matchPercent;
+        public DateTimeOffset Submitted { get; } = submitted;
+        public string Status { get; set; } = status;
+    }
     private sealed record AdminUser(string Name, string Identifier, string Email, string Role, int ReportCount, bool Active, bool Suspended = false);
 }
