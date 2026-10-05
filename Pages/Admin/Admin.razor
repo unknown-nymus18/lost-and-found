@@ -42,8 +42,8 @@
                         <article class="stat-card stat-card-green"><strong>@ClaimRows.Count(c => c.Status == "Approved")</strong><span>Reunited</span></article>
                     </div>
                     <section class="table-panel">
-                        <div class="panel-heading"><h2>Recent Reports for Review</h2><button class="btn-primary" type="button">New Manual Entry</button></div>
-                        <ReportTable Items="Reports.OrderByDescending(r => r.CreatedAt).Take(5)" />
+                        <div class="panel-heading"><h2>Recent Reports for Review</h2></div>
+                        <ReportTable Items="Reports.OrderByDescending(r => r.CreatedAt).Take(5)" OnReview="OpenReportReview" OnView="OpenReportDetails" />
                     </section>
                 </section>
             }
@@ -54,7 +54,6 @@
                         <input type="search" @bind="ReportSearch" @bind:event="oninput" placeholder="Search by item, reporter, or location" aria-label="Search reports" />
                         <select @bind="ReportTypeFilter" aria-label="Filter report type"><option value="all">Type: All</option><option value="lost">Lost</option><option value="found">Found</option></select>
                         <select @bind="ReportCategoryFilter" aria-label="Filter report category"><option value="all">Category: All</option>@foreach (var category in CategoryOptions.Values) { <option value="@category">@category</option> }</select>
-                        <button class="btn-primary" type="button">New Manual Entry</button>
                     </div>
                     <div class="dashboard-stats compact-stats">
                         <article class="stat-card stat-card-blue"><strong>@Reports.Count</strong><span>Total Reports</span></article>
@@ -62,7 +61,7 @@
                         <article class="stat-card stat-card-green"><strong>@Reports.Count(r => r.Status == 1)</strong><span>Found</span></article>
                         <article class="stat-card stat-card-amber"><strong>0</strong><span>Flagged</span></article>
                     </div>
-                    <section class="table-panel"><ReportTable Items="FilteredReports" /></section>
+                    <section class="table-panel"><ReportTable Items="FilteredReports" OnReview="OpenReportReview" OnView="OpenReportDetails" /></section>
                 </section>
             }
             else if (ActiveSection == "matches")
@@ -119,7 +118,7 @@
             {
                 <section>
                     <div class="dashboard-stats compact-stats"><article class="stat-card stat-card-blue"><strong>4,812</strong><span>Registered Users</span></article><article class="stat-card stat-card-green"><strong>1,093</strong><span>Active This Month</span></article><article class="stat-card stat-card-purple"><strong>8</strong><span>Staff &amp; Admins</span></article><article class="stat-card stat-card-red"><strong>5</strong><span>Suspended</span></article></div>
-                    <div class="users-toolbar"><input type="search" @bind="UserSearch" @bind:event="oninput" placeholder="Search by name, student ID, or email" aria-label="Search users" /><select @bind="UserRoleFilter" aria-label="Filter role"><option value="all">Role: All</option><option>Student</option><option>Admin</option><option>Security Staff</option></select><select @bind="UserStatusFilter" aria-label="Filter status"><option value="all">Status: All</option><option value="active">Active</option><option value="suspended">Suspended</option></select><button class="btn-primary" type="button">+ Invite Staff</button></div>
+                    <div class="users-toolbar"><input type="search" @bind="UserSearch" @bind:event="oninput" placeholder="Search by name, student ID, or email" aria-label="Search users" /><select @bind="UserRoleFilter" aria-label="Filter role"><option value="all">Role: All</option><option>Student</option><option>Admin</option><option>Security Staff</option></select><select @bind="UserStatusFilter" aria-label="Filter status"><option value="all">Status: All</option><option value="active">Active</option><option value="suspended">Suspended</option></select><button class="btn-primary" type="button">+ Add Staff</button></div>
                     <section class="table-panel users-panel"><table class="users-table"><thead><tr><th>Name</th><th>Student / Staff ID</th><th>Email</th><th>Role</th><th>Reports</th><th>Status</th><th>Actions</th></tr></thead><tbody>@foreach (var user in FilteredUsers) { <tr><td class="item-title"><span class="user-name"><span class="user-initials">@Initials(user.Name)</span>@user.Name</span></td><td>@user.Identifier</td><td>@user.Email</td><td><span class="role-badge @RoleClass(user.Role)">@user.Role</span></td><td>@user.ReportCount</td><td><span class="status-badge @(user.Suspended ? "status-rejected" : "status-found")">@(user.Suspended ? "Suspended" : "Active")</span></td><td class="row-actions"><button type="button">Edit</button><button class="suspend-action" type="button">@(user.Suspended ? "Restore" : "Suspend")</button></td></tr> }</tbody></table></section>
                     <div class="users-pagination"><span>Showing 1-7 of 4,812 users</span><div><button type="button">&lt; Previous</button><button type="button">Next &gt;</button></div></div>
                 </section>
@@ -184,6 +183,56 @@
     </div>
 }
 
+@if (SelectedReportDetails is not null)
+{
+    <div class="decision-backdrop" role="presentation" @onclick="CloseReportDetails">
+        <section class="decision-dialog report-details-dialog" role="dialog" aria-modal="true" aria-labelledby="report-details-title" @onclick:stopPropagation>
+            <button class="decision-close" type="button" aria-label="Close" @onclick="CloseReportDetails">&times;</button>
+            <span class="decision-kicker">LF-@SelectedReportDetails.Id.ToString("D4")</span>
+            <h2 id="report-details-title">@SelectedReportDetails.Title</h2>
+            @if (!string.IsNullOrWhiteSpace(SelectedReportDetails.PhotoUrl))
+            {
+                <img class="report-details-image" src="@ReportImageUrl.Resolve(SelectedReportDetails.PhotoUrl)" alt="Photo of @SelectedReportDetails.Title" />
+            }
+            <div class="report-details-grid">
+                <span><strong>Type</strong>@(SelectedReportDetails.Kind.Equals("found", StringComparison.OrdinalIgnoreCase) ? "Found" : "Lost")</span>
+                <span><strong>Category</strong>@CategoryOptions.GetCategoryName(SelectedReportDetails.Category)</span>
+                <span><strong>Location</strong>@SelectedReportDetails.Location</span>
+                <span><strong>Date</strong>@SelectedReportDetails.Date.ToLocalTime().ToString("MMM d, yyyy")</span>
+                <span><strong>Reported by</strong>@SelectedReportDetails.ReportedBy</span>
+                <span><strong>Submitted</strong>@SelectedReportDetails.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</span>
+            </div>
+            <div class="report-details-description">
+                <strong>Description</strong>
+                <p>@SelectedReportDetails.Description</p>
+            </div>
+            <div class="decision-actions">
+                <button class="decision-cancel" type="button" @onclick="CloseReportDetails">Close</button>
+            </div>
+        </section>
+    </div>
+}
+
+@if (SelectedReportForReview is not null)
+{
+    <div class="decision-backdrop" role="presentation" @onclick="CloseReportReview">
+        <section class="decision-dialog" role="dialog" aria-modal="true" aria-labelledby="report-review-title" @onclick:stopPropagation>
+            <button class="decision-close" type="button" aria-label="Close" @onclick="CloseReportReview">&times;</button>
+            <span class="decision-kicker">LF-@SelectedReportForReview.Id.ToString("D4")</span>
+            <h2 id="report-review-title">Review report?</h2>
+            <p class="decision-summary"><strong>@SelectedReportForReview.Title</strong> will be permanently deleted if you continue.</p>
+            @if (!string.IsNullOrWhiteSpace(ReportActionError))
+            {
+                <p class="decision-warning" role="alert">@ReportActionError</p>
+            }
+            <div class="decision-actions">
+                <button class="decision-cancel" type="button" @onclick="CloseReportReview" disabled="@IsDeletingReport">Cancel</button>
+                <button class="decision-reject" type="button" @onclick="DeleteReviewedReport" disabled="@IsDeletingReport">@(IsDeletingReport ? "Deleting..." : "Delete item")</button>
+            </div>
+        </section>
+    </div>
+}
+
 @code {
     private readonly Dictionary<string, string> Sections = new() { ["overview"] = "Overview", ["reports"] = "All Reports", ["matches"] = "Matches", ["claims"] = "Claims", ["users"] = "Users", ["settings"] = "Settings" };
     private readonly string[] MatchStatuses = ["Awaiting Review", "Confirmed", "Dismissed"];
@@ -203,6 +252,10 @@
     private List<ReportItem> Reports { get; set; } = [];
     private string? ErrorMessage { get; set; }
     private bool IsLoading { get; set; }
+    private ReportItem? SelectedReportDetails { get; set; }
+    private ReportItem? SelectedReportForReview { get; set; }
+    private bool IsDeletingReport { get; set; }
+    private string? ReportActionError { get; set; }
     private string SectionTitle => ActiveSection switch { "overview" => "Dashboard Overview", "reports" => "All Reports", "matches" => "Suggested Matches", "claims" => "Claims", "users" => "Users", _ => "Settings" };
     private IEnumerable<ReportItem> FilteredReports => Reports.Where(r => (ReportTypeFilter == "all" || (ReportTypeFilter == "lost" && r.Status == 0) || (ReportTypeFilter == "found" && r.Status == 1)) && (ReportCategoryFilter == "all" || CategoryOptions.GetCategoryName(r.Category) == ReportCategoryFilter) && ($"{r.Title} {r.ReportedBy} {r.Location}".Contains(ReportSearch, StringComparison.OrdinalIgnoreCase)));
     private IEnumerable<SuggestedMatch> FilteredSuggestedMatches => SuggestedMatches.Where(m => m.Status == MatchStatusFilter);
@@ -294,6 +347,44 @@
     {
         if (!IsDeciding)
             SelectedClaim = null;
+    }
+
+    private void OpenReportDetails(ReportItem report) => SelectedReportDetails = report;
+
+    private void CloseReportDetails() => SelectedReportDetails = null;
+
+    private void OpenReportReview(ReportItem report)
+    {
+        SelectedReportForReview = report;
+        ReportActionError = null;
+    }
+
+    private void CloseReportReview()
+    {
+        if (!IsDeletingReport)
+            SelectedReportForReview = null;
+    }
+
+    private async Task DeleteReviewedReport()
+    {
+        if (SelectedReportForReview is null || IsDeletingReport)
+            return;
+
+        IsDeletingReport = true;
+        ReportActionError = null;
+        var report = SelectedReportForReview;
+        var result = await ApiService.DeleteReport(report);
+        if (result.Ok)
+        {
+            Reports.RemoveAll(item => item.Id == report.Id && item.Kind == report.Kind);
+            SelectedReportForReview = null;
+        }
+        else
+        {
+            ReportActionError = result.Error;
+        }
+
+        IsDeletingReport = false;
     }
 
     private async Task ConfirmClaimDecision()

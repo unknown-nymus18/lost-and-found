@@ -20,7 +20,7 @@
                         <td>@Display(report.Location)</td>
                         <td>@DisplayDate(report.Date)</td>
                         <td><span class="status-badge status-active">Active</span></td>
-                        <td class="row-actions"><button type="button">Review</button><button type="button">View</button></td>
+                        <td class="row-actions"><button type="button" @onclick="() => OnReview.InvokeAsync(report)">Review</button><button type="button" @onclick="() => OnView.InvokeAsync(report)">View</button></td>
                     </tr>
                 }
             }
@@ -30,6 +30,8 @@
 
 @code {
     [Parameter, EditorRequired] public IEnumerable<ReportItem> Items { get; set; } = [];
+    [Parameter] public EventCallback<ReportItem> OnReview { get; set; }
+    [Parameter] public EventCallback<ReportItem> OnView { get; set; }
     private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "-" : value;
     private static string DisplayDate(DateTimeOffset value) => value == default ? "-" : value.ToString("MMM d, yyyy");
     private static string StatusClass(int status) => status == 0 ? "status-lost" : status == 1 ? "status-found" : "status-review";

@@ -2,12 +2,9 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 100vh;
-    box-sizing: border-box;
+    height: 100vh;
 }
-.body{
-    margin:0%;
-}
+
 
 .loading-container {
     display: flex;
