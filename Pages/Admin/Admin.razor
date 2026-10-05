@@ -5,6 +5,8 @@
 @using lost_and_found.Services
 @inject ApiService ApiService
 @inject AdminService AdminService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 
 <div class="admin-layout">
     <nav class="sidebar" aria-label="Admin navigation">
@@ -20,7 +22,7 @@
     <div class="main-panel">
         <header class="topbar">
             <h1>@SectionTitle</h1>
-            <div class="admin-profile"><span class="avatar">KT</span><span>Admin - Kwabena T.</span></div>
+            <div class="admin-profile"><span class="avatar">@AdminInitials</span><span>Admin - @AdminDisplayName</span></div>
         </header>
 
         <main class="admin-content">
@@ -256,6 +258,10 @@
     private ReportItem? SelectedReportForReview { get; set; }
     private bool IsDeletingReport { get; set; }
     private string? ReportActionError { get; set; }
+    private string AdminDisplayName => string.IsNullOrWhiteSpace(AuthService.CurrentUser?.name)
+        ? AuthService.CurrentUser?.email ?? "Admin"
+        : AuthService.CurrentUser.name;
+    private string AdminInitials => Initials(AdminDisplayName);
     private string SectionTitle => ActiveSection switch { "overview" => "Dashboard Overview", "reports" => "All Reports", "matches" => "Suggested Matches", "claims" => "Claims", "users" => "Users", _ => "Settings" };
     private IEnumerable<ReportItem> FilteredReports => Reports.Where(r => (ReportTypeFilter == "all" || (ReportTypeFilter == "lost" && r.Status == 0) || (ReportTypeFilter == "found" && r.Status == 1)) && (ReportCategoryFilter == "all" || CategoryOptions.GetCategoryName(r.Category) == ReportCategoryFilter) && ($"{r.Title} {r.ReportedBy} {r.Location}".Contains(ReportSearch, StringComparison.OrdinalIgnoreCase)));
     private IEnumerable<SuggestedMatch> FilteredSuggestedMatches => SuggestedMatches.Where(m => m.Status == MatchStatusFilter);
@@ -266,6 +272,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (AuthService.CurrentUser is null ||
+            !string.Equals(AuthService.CurrentUser.role, "Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
         IsLoading = true;
         try
         {

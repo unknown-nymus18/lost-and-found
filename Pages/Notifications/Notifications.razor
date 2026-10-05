@@ -71,6 +71,17 @@
                         {
                             <a class="action" href="@n.ActionUrl">@n.ActionLabel &rarr;</a>
                         }
+
+                        <div class="notification-actions">
+                            <button type="button" class="notification-action-view"
+                                    @onclick="() => ViewNotificationDetails(n)" @onclick:stopPropagation="true">
+                                View details
+                            </button>
+                            <button type="button" class="notification-action-delete"
+                                    @onclick="IgnoreNotificationAction" @onclick:stopPropagation="true">
+                                Delete
+                            </button>
+                        </div>
                     </div>
 
                     <div class="meta">
@@ -88,6 +99,55 @@
     <p class="footnote">Manage which alerts you receive in Profile &rarr; Notification preferences.</p>
 </div>
 
+@if (IsMatchDetailsOpen)
+{
+    <div class="notification-modal-backdrop" role="presentation" @onclick="CloseMatchDetails">
+        <section class="notification-modal" role="dialog" aria-modal="true" aria-labelledby="match-details-title" @onclick:stopPropagation>
+            <button type="button" class="notification-modal-close" aria-label="Close" @onclick="CloseMatchDetails">&times;</button>
+            <h2 id="match-details-title">Matched item details</h2>
+
+            @if (IsLoadingMatchDetails)
+            {
+                <p class="match-details-status">Loading matched item details...</p>
+            }
+            else if (!string.IsNullOrWhiteSpace(MatchDetailsError))
+            {
+                <p class="match-details-error" role="alert">@MatchDetailsError</p>
+            }
+            else if (SelectedMatchNotification is not null)
+            {
+                <p class="match-details-score">Possible match: <strong>@SelectedMatchNotification.Score%</strong></p>
+                <div class="matched-reports">
+                    <article class="matched-report">
+                        <span class="matched-report-kind">Lost item</span>
+                        <h3>@SelectedMatchNotification.Lost.Title</h3>
+                        @if (!string.IsNullOrWhiteSpace(SelectedMatchNotification.Lost.PhotoUrl))
+                        {
+                            <img src="@ReportImageUrl.Resolve(SelectedMatchNotification.Lost.PhotoUrl)" alt="Photo of @SelectedMatchNotification.Lost.Title" />
+                        }
+                        <p>@SelectedMatchNotification.Lost.Description</p>
+                        <small>@SelectedMatchNotification.Lost.Location · @SelectedMatchNotification.Lost.Date.ToLocalTime().ToString("MMM d, yyyy")</small>
+                    </article>
+                    <article class="matched-report">
+                        <span class="matched-report-kind">Found item</span>
+                        <h3>@SelectedMatchNotification.Found.Title</h3>
+                        @if (!string.IsNullOrWhiteSpace(SelectedMatchNotification.Found.PhotoUrl))
+                        {
+                            <img src="@ReportImageUrl.Resolve(SelectedMatchNotification.Found.PhotoUrl)" alt="Photo of @SelectedMatchNotification.Found.Title" />
+                        }
+                        <p>@SelectedMatchNotification.Found.Description</p>
+                        <small>@SelectedMatchNotification.Found.Location · @SelectedMatchNotification.Found.Date.ToLocalTime().ToString("MMM d, yyyy")</small>
+                    </article>
+                </div>
+            }
+
+            <div class="notification-modal-actions">
+                <button type="button" class="notification-modal-cancel" @onclick="CloseMatchDetails">Close</button>
+            </div>
+        </section>
+    </div>
+}
+
 @code {
     private static readonly string[] Tabs = { "all", "unread", "matches", "claims" };
 
@@ -96,6 +156,10 @@
     private bool isLoading = true;
     private string? errorMessage;
     private System.Threading.Timer? refreshTimer;
+    private bool IsMatchDetailsOpen;
+    private bool IsLoadingMatchDetails;
+    private MatchItem? SelectedMatchNotification;
+    private string? MatchDetailsError;
 
     private int UnreadCount => items.Count(n => !n.IsRead);
 
@@ -190,6 +254,42 @@
         errorMessage = null;
         foreach (var n in items)
             n.IsRead = true;
+    }
+
+    private async Task ViewNotificationDetails(NotificationItem notification)
+    {
+        if (!string.Equals(notification.Type, "match", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        IsMatchDetailsOpen = true;
+        IsLoadingMatchDetails = true;
+        SelectedMatchNotification = null;
+        MatchDetailsError = null;
+
+        if (!notification.ReferenceId.HasValue)
+        {
+            MatchDetailsError = "No matched item reference is available for this notification.";
+            IsLoadingMatchDetails = false;
+            return;
+        }
+
+        var matches = await ApiService.GetMyMatches();
+        SelectedMatchNotification = matches?.FirstOrDefault(match => match.Id == notification.ReferenceId.Value);
+        if (SelectedMatchNotification is null)
+            MatchDetailsError = "The matched item details could not be found.";
+
+        IsLoadingMatchDetails = false;
+    }
+
+    private void IgnoreNotificationAction()
+    {
+        // Delete remains intentionally non-functional for now.
+    }
+
+    private void CloseMatchDetails()
+    {
+        if (!IsLoadingMatchDetails)
+            IsMatchDetailsOpen = false;
     }
 
     private static string FormatTimeAgo(DateTimeOffset date)
